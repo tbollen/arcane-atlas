@@ -1,0 +1,24 @@
+.card {
+	/* Margin Around Card */
+	/* margin: 5mm; */
+
+	/* Standard Poker Size */
+	height: 88mm !important;
+	width: 63mm !important;
+	box-sizing: border-box;
+
+	/* Padding */
+	--padding: 5mm;
+	padding: var(--padding);
+
+	/* Styling */
+	--border: 2px solid var(--obsidian);
+	border: var(--border);
+	color: var(--obsidian);
+	background-color: white;
+
+	/* Sizing */
+	--icon-size: 14pt;
+	--name-size: 13pt;
+	--subname-size: 10pt;
+}

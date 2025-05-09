@@ -1,0 +1,151 @@
+@font-face {
+	font-family: 'Jacquard 12';
+	src: url('./fonts/Jacquard_12/Jacquard12-Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Jacquard 24';
+	src: url('./fonts/Jacquard_24/Jacquard24-Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'JetBrains';
+	src: url('./fonts/JetBrains/JetBrainsMono-VariableFont_wghtt.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	src: url('./fonts/Gotham/Gotham-Book.otf') format('truetype');
+}
+
+/* Gotham Fonts */
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 200;
+	src: url('./fonts/Gotham/Gotham-XLight.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 300;
+	src: url('./fonts/Gotham/Gotham-Light.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 400;
+	src: url('./fonts/Gotham/Gotham-Book.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 500;
+	src: url('./fonts/Gotham/Gotham-Medium.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 600;
+	src: url('./fonts/Gotham/Gotham-Bold.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 700;
+	src: url('./fonts/Gotham/Gotham-Black.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Gotham';
+	font-weight: 800;
+	src: url('./fonts/Gotham/Gotham-Ultra.otf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Pirata One';
+	src: url('./fonts/Pirata_One/PirataOne-Regular.ttf') format('truetype');
+	size-adjust: 110%;
+}
+
+@font-face {
+	font-family: 'UnifrakturCook';
+	src: url('./fonts/UnifrakturCook/UnifrakturCook-Bold.ttf') format('truetype');
+	size-adjust: 110%;
+}
+
+/* Color */
+:root {
+	font-family: 'Gotham', sans-serif;
+
+	/* Size parameters */
+	--navbar-height: 3.2em;
+	/* Color scheme */
+	/* Mains */
+	--pearl: #f7f6f1;
+	--obsidian: #00273c;
+	--blossom: #4f97d1;
+	--weave: #683e86;
+	--threat: #9f332b;
+	/* Surface (Pearl) */
+	--color-pearl-0: #302a17;
+	--color-pearl-1: #5f5741;
+	--color-pearl-2: #949088;
+	--color-pearl-3: #f3f0e9;
+	--color-pearl-4: var(--pearl);
+
+	--color-surface-0: var(--color-pearl-0);
+	--color-surface-1: var(--color-pearl-1);
+	--color-surface-2: var(--color-pearl-2);
+	--color-surface-3: var(--color-pearl-3);
+	--color-surface-4: var(--color-pearl-4);
+
+	/* Text (Obsidian) */
+	--color-obsidian-0: var(--obsidian);
+	--color-obsidian-1: #4e6571;
+	--color-obsidian-2: #708088;
+	--color-obsidian-3: #d5dde1;
+	--color-obsidian-4: #fafdff;
+
+	--color-text-0: var(--color-obsidian-0);
+	--color-text-1: var(--color-obsidian-1);
+	--color-text-2: var(--color-obsidian-2);
+	--color-text-3: var(--color-obsidian-3);
+	--color-text-4: var(--color-obsidian-4);
+
+	/* Accent (Blossom) */
+	--color-blossom-0: #183852;
+	--color-blossom-1: #36658d;
+	--color-blossom-2: var(--blossom);
+	--color-blossom-3: #bbdcf4;
+	--color-blossom-4: #e4ebf1;
+
+	/* Accent (Weave) */
+	--color-weave-0: #402754;
+	--color-weave-1: #2b1a38;
+	--color-weave-2: var(--weave);
+	--color-weave-3: #9c76b4;
+	--color-weave-4: #cfb4d7;
+
+	/* Accent (Threat) */
+	--color-threat-0: #411612;
+	--color-threat-1: #752720;
+	--color-threat-2: var(--threat);
+	--color-threat-3: #c0625a;
+	--color-threat-4: #ebd1ce;
+
+	/* Success */
+	--color-success-0: #2e862e;
+	--color-success-1: #3e8e3e;
+	--color-success-2: #5ca85c;
+	--color-success-3: #7fcc7f;
+	--color-success-4: #a2efa2;
+
+	/* Box Styling */
+	--border-radius: 0.7em;
+	--padding: 0.5em;
+}
+
+.displayText {
+	font-family: 'Jacquard 24', serif;
+	font-weight: 600;
+}
