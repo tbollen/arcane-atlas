@@ -31,6 +31,17 @@
 	let editMode = false;
 	function toggleEditMode() {
 		editMode = !editMode;
+		updateUrlParams();
+	}
+
+	function updateUrlParams() {
+		const url = new URL(window.location.href);
+		if (editMode) {
+			url.searchParams.set('edit', '1');
+		} else {
+			url.searchParams.delete('edit');
+		}
+		window.history.replaceState({}, '', url.toString());
 	}
 
 	// Advanced mode toggle
@@ -79,6 +90,10 @@
 
 		// Set local date
 		localDate = new Date(item.dateCreated).toLocaleDateString();
+
+		// Retrieve URL params for edit mode
+		const urlParams = new URLSearchParams(window.location.search);
+		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
 	});
 </script>
 
