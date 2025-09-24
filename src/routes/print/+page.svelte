@@ -44,12 +44,12 @@
 		console.debug('printing cards...', cards);
 		setCssPage();
 		// print
-		window.print();
+		print();
 		window.onafterprint = () => {
 			// go back
 			goto(`${base}/collection`);
 		};
-		// go back
+		// go back right after printing
 		goto(`${base}/collection`);
 	});
 
