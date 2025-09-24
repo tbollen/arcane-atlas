@@ -128,6 +128,10 @@ class StoredItem extends Item {
 		editItem.update(() => this);
 	}
 }
+
+// Exporting type for easy reference
+export type { StoredItem };
+
 // ItemStore
 class ItemStore {
 	items: StoredItem[] = [];

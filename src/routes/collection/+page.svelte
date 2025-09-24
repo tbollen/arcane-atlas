@@ -62,7 +62,7 @@
 		items.setActiveItem(id);
 		$editItem = items.getActiveItem();
 		// Navigate to editor
-		goto(`${base}/edit`);
+		goto(`${base}/item/${id}?edit=1`);
 	}
 
 	function duplicateCard(id: string) {
