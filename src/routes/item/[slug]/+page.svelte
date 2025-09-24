@@ -100,7 +100,7 @@
 {#if !item}
 	<MainLoader />
 {:else}
-	<main id="main">
+	<main id="main" class:viewMode={!editMode}>
 		<!-- Editor Pane -->
 		{#if editMode}
 			<section id="editor">
@@ -190,6 +190,11 @@
 		grid-template-columns: fit-content max(2fr, fit-content);
 	}
 
+	#main.viewMode {
+		grid-template-areas: 'cardView';
+		grid-template-columns: 1fr;
+	}
+
 	/* Changed layout for mobile */
 	.mobileOnly {
 		display: none;
@@ -244,6 +249,7 @@
 	section#cardView {
 		/* Position */
 		margin: 0 auto;
+		width: 100%;
 	}
 
 	div#cardArea {
