@@ -186,7 +186,8 @@
 		flex-direction: column;
 		gap: 0.2em;
 		/* Sizing */
-		height: calc-size(0px, size);
+		height: 0px; /*Fallback for other browsers*/
+		height: calc-size(0px, size); /*Works only in Chrome!*/
 		overflow: hidden;
 		width: min-content;
 		min-width: max(100%, 8rem);
@@ -207,6 +208,8 @@
 	}
 
 	.navItem:hover .navDropdownMenu {
+		/* Transition to auto size, fallback added for non-chrome browsers */
+		height: auto;
 		height: calc-size(auto, size);
 	}
 
