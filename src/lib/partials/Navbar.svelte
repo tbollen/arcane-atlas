@@ -3,7 +3,7 @@
 	// Set Routes
 	import { base } from '$app/paths';
 	interface BaseRoute {
-		path?: string;
+		path: string;
 		name: string;
 		icon: string;
 		hidden?: boolean;
@@ -11,6 +11,7 @@
 	interface MasterRoute {
 		name: string;
 		icon: string;
+		path: string;
 		hidden?: boolean;
 		dropdown: BaseRoute[]; // An array that can contain either a BaseRoute or a MasterRoute, these will display on hover
 	}
@@ -24,6 +25,7 @@
 		{
 			name: 'Campaign',
 			icon: 'mdi:book',
+			path: 'campaign',
 			hidden: true,
 			dropdown: [
 				{
@@ -36,6 +38,7 @@
 		{
 			name: 'Character',
 			icon: 'mdi:account',
+			path: 'character',
 			dropdown: [
 				{
 					path: 'character',
@@ -52,19 +55,20 @@
 
 		{
 			name: 'Cards',
-			icon: 'mdi:cards',
-			dropdown: [
-				{
-					path: 'collection',
-					name: 'Overview',
-					icon: 'mdi:view-grid'
-				},
-				{
-					path: 'edit',
-					name: 'Editor',
-					icon: 'mdi:pencil'
-				}
-			]
+			path: 'collection',
+			icon: 'mdi:cards'
+			// dropdown: [
+			// 	{
+			// 		path: 'collection',
+			// 		name: 'Collection',
+			// 		icon: 'mdi:view-grid'
+			// 	},
+			// 	{
+			// 		path: 'edit',
+			// 		name: 'Editor',
+			// 		icon: 'mdi:pencil'
+			// 	}
+			// ]
 		},
 
 		{
@@ -88,7 +92,7 @@
 </script>
 
 <section id="navigation" class="navbar">
-	<a href="{base}/" id="logo" class="displayText websiteLogo">Card Builder</a>
+	<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Companion</a>
 	<!-- Navigation -->
 	<nav class="links">
 		{#each routes as route}
@@ -96,17 +100,17 @@
 				<!-- Skip hidden routes -->
 			{:else if typeof route === 'object' && 'dropdown' in route}
 				<!-- Route is a MasterRoute, show dropdown on hover -->
-				<div class="navItem navDropdown navUnderline">
+				<a href="{base}/{route.path}" class="navItem navDropdown navUnderline">
 					{route.name}
 					<div class="navDropdownMenu">
 						{#each route.dropdown as dropdownRoute}
-							<div class="dropdownNavItem">
+							<a href="{base}/{dropdownRoute.path}" class="dropdownNavItem">
 								<Icon icon={dropdownRoute.icon} />
-								<a href="{base}/{dropdownRoute.path}"> {dropdownRoute.name}</a>
-							</div>
+								{dropdownRoute.name}
+							</a>
 						{/each}
 					</div>
-				</div>
+				</a>
 			{:else}
 				<!-- BaseRoute -->
 				<div class="navItem navUnderline" class:active={currentRoute === route.path}>
@@ -157,6 +161,10 @@
 	}
 
 	.navItem {
+		/* Unset default link properties */
+		color: unset;
+		text-decoration: unset;
+		/* Layout */
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -275,7 +283,7 @@
 	}
 
 	.websiteLogo::before {
-		content: 'Card Builder';
+		content: 'Arcane Companion';
 		position: absolute;
 		z-index: -1;
 		inset: 0;
