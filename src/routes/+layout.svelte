@@ -13,4 +13,8 @@
 	:global(main section) {
 		padding: var(--padding);
 	}
+
+	:global(body) {
+		margin: 0;
+	}
 </style>
