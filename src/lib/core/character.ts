@@ -2,16 +2,26 @@
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 import { type Image } from '$lib/utils/types/image';
 
+type unsetCampaign = 'no_campagin_set';
+
 // CHARACTER CLASS
 export class Character {
-	id: Prefixed_UUID<'character'> = generatePrefixedUUID('character');
-	name: string = 'New Character';
-	avatar: Image = this.setDefaultAvatar();
+	id: Prefixed_UUID<'character'>;
+	name: string;
+	avatar: Image;
+	user_id: Prefixed_UUID<'user'>;
+	campaign_id: Prefixed_UUID<'campaign'> | unsetCampaign;
 
-	constructor(name?: string) {
-		if (name) {
-			this.name = name;
-		}
+	constructor(
+		user_id: Prefixed_UUID<'user'>,
+		campaign_id?: Prefixed_UUID<'campaign'>,
+		name?: string
+	) {
+		this.id = generatePrefixedUUID('character');
+		this.user_id = user_id;
+		this.name = name ?? 'New Character';
+		this.avatar = this.setDefaultAvatar();
+		this.campaign_id = campaign_id ?? 'no_campagin_set';
 	}
 
 	private setDefaultAvatar(): Image {
