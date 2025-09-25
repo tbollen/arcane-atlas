@@ -1,0 +1,9 @@
+<h1>Character</h1>
+<ul>
+	<li>ID</li>
+	<li>Name</li>
+	<li>Avatar</li>
+	<li>Stats</li>
+	<li>Story</li>
+	<li>Cards</li>
+</ul>
