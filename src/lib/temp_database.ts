@@ -1,10 +1,10 @@
-import { User } from './core/user';
+import { User, type Users } from './core/user';
 import { Character } from './core/character';
 
 // User DB
-const users: User[] = [];
+const users: Users = [];
 
-export function getUsers(): User[] {
+export function getUsers(): Users {
 	return users;
 }
 
