@@ -212,8 +212,13 @@ class ItemStore {
 
 	// Item Management
 
+	setActiveTemplate(_template: Partial<StoredItem>) {
+		this.activeTemplate = _template;
+		this.save(); // Save to make sure states persist between pages
+	}
+
 	/**
-	 * Prepares a new StoredItem with a unique ID, ready to be added to the store.
+	 * Prepares a new StoredItem with a unique ID, ready to be added to the store. Resets the active template if used.
 	 *
 	 * @param _item Optional partial item to prepare. If not given, active item will be used. If no active item, an empty object will be used
 	 * @returns A new StoredItem with a unique ID. The ID will always be newly generated, even if _item has an ID.
@@ -221,6 +226,8 @@ class ItemStore {
 	prepareItem(_item?: Partial<StoredItem>): StoredItem {
 		// Use given item, or active item, or empty object
 		let itemToPrepare = _item ?? this.activeTemplate ?? {};
+		// If activeTemplate is used, reset to default (empty)
+		if (!_item) this.activeTemplate = undefined;
 		// Create new StoredItem, always generate a new unique ID
 		const newItem = new StoredItem(itemToPrepare, this.generateUniqueId());
 		// Return the new item
