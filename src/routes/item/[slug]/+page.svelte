@@ -210,8 +210,12 @@
 		<section id="cardView">
 			<div class="buttonRow">
 				<!-- Back to Collection -->
-				<Button color="threat" click={() => goto(`${base}/collection`)} icon="mdi:arrow-left"
-					>Back</Button
+				<Button
+					color="threat"
+					disabled={!cardIsSaved}
+					click={() => goto(`${base}/collection`)}
+					title={!cardIsSaved ? 'Please save the card before leaving' : 'Back to Collection'}
+					icon="mdi:arrow-left">Back</Button
 				>
 				<!-- Toggle Edit/View Mode -->
 				<Button click={toggleEditMode} icon={editMode ? 'mdi:eye' : 'mdi:pencil'}
