@@ -20,7 +20,7 @@ export type SkillCheck = {
 	skill?: (typeof characteristics)[number];
 };
 
-const defaultCard: Item = {
+export const fallbackCardInfo: Item = {
 	name: 'New Item',
 	type: 'Item',
 	description: 'Item Description',
@@ -66,7 +66,7 @@ export class Item {
 	style: CardStyleOptions = defaultCardStyle;
 
 	constructor(_item?: Partial<Item>) {
-		let _itemReference: Item = defaultCard;
+		let _itemReference: Item = fallbackCardInfo;
 		if (_item) {
 			_itemReference = JSON.parse(JSON.stringify(_item)); // JSON methods for deep cloning
 		}

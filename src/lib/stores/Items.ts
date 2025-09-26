@@ -140,6 +140,7 @@ class ItemStore {
 		setName: 'c'
 	};
 	activeItem?: StoredItem;
+	activeTemplate?: Partial<Item>;
 
 	constructor(
 		i: {
@@ -193,6 +194,11 @@ class ItemStore {
 	setItem(_id: string, itemUpdate: Partial<Item>) {
 		// Get the items and update	the selected item
 		let _items = this.items;
+		try {
+			this.getItem(_id); // Check if item exists
+		} catch (error) {
+			throw error;
+		}
 		_items = _items.map((item) => {
 			if (item.id === _id) {
 				return { ...item, ...itemUpdate } as StoredItem; //Override given properties from itemUpdate
@@ -204,31 +210,55 @@ class ItemStore {
 		this.items = _items;
 	}
 
-	//
-	// DEPRECATED
-	//
-
 	// Item Management
+
+	setActiveTemplate(_template: Partial<StoredItem>) {
+		this.activeTemplate = _template;
+		this.save(); // Save to make sure states persist between pages
+	}
+
+	/**
+	 * Prepares a new StoredItem with a unique ID, ready to be added to the store. Resets the active template if used.
+	 *
+	 * @param _item Optional partial item to prepare. If not given, active item will be used. If no active item, an empty object will be used
+	 * @returns A new StoredItem with a unique ID. The ID will always be newly generated, even if _item has an ID.
+	 */
+	prepareItem(_item?: Partial<StoredItem>): StoredItem {
+		// Use given item, or active item, or empty object
+		let itemToPrepare = _item ?? this.activeTemplate ?? {};
+		// If activeTemplate is used, reset to default (empty)
+		if (!_item) this.activeTemplate = undefined;
+		// Create new StoredItem, always generate a new unique ID
+		const newItem = new StoredItem(itemToPrepare, this.generateUniqueId());
+		// Return the new item
+		return newItem;
+	}
+
+	/**
+	 * Adds a new item to the store.
+	 *
+	 * Prepares the item using optional properties, adds it to the items array,
+	 * updates the ID set, saves the changes, and sets the new item as active.
+	 * Logs the addition and returns the new item's ID.
+	 *
+	 * @param _item - Optional partial item data to initialize the new item.
+	 * @returns The unique ID of the newly added item.
+	 */
 	addNewItem(_item?: Partial<StoredItem>): string {
-		let _items = this.items;
-		let _idSet = this.idSet;
-		const newItemId = this.generateUniqueId();
-		const newItem = new StoredItem(_item, newItemId);
+		// Prepare item with optional properties
+		const newItem = this.prepareItem(_item);
 		// Add to items
-		_items = [..._items, newItem];
+		this.items = [...this.items, newItem];
 		// Add id to idSet
-		_idSet.add(newItemId);
-		// Trigger reactivity
-		this.items = _items;
-		this.idSet = _idSet;
+		this.idSet.add(newItem.id);
+		// Save changes
+		this.save();
 		// Set Active Item
-		this.setActiveItem(newItemId);
+		this.setActiveItem(newItem);
 		// Logging
 		console.log(`New${_item ? '' : ' empty'} item added to database:`, newItem);
-		// Save
-		this.save();
 		// Return ID
-		return newItemId;
+		return newItem.id;
 	}
 
 	duplicateItem(_base: string | StoredItem) {

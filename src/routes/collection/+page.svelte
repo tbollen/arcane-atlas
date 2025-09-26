@@ -75,15 +75,12 @@
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Item) {
-		items.addNewItem(base);
-		updateItems();
+		items.setActiveTemplate(base);
+		addNew();
 	}
 
 	function addNew() {
-		items.addNewItem();
-		// goto editor
-		updateItems();
-		editCard(items.getActiveItem().id);
+		goto(`${base}/item/new?edit=1`);
 	}
 
 	function updateItems() {
@@ -128,7 +125,7 @@
 			<Button
 				icon={imageView ? 'mdi:file-image' : 'mdi:file-document'}
 				stateOn={imageView}
-				click={() => (imageView = !imageView)}>View</Button
+				click={() => (imageView = !imageView)}>Change View</Button
 			>
 			<!-- Upload with JSON -->
 			<Button icon="mdi:upload" click={() => items.upload()}>Upload</Button>
@@ -177,13 +174,15 @@
 							Template
 						</div>
 						<div class="editOptions">
-							<Button icon="mdi:zoom-in" stopPropagation />
 							<Button
 								color="weave"
+								title="Create card from this template"
 								icon="mdi:content-copy"
 								stopPropagation
 								click={() => createFromTemplate(card)}
-							/>
+							>
+								Create</Button
+							>
 						</div>
 						<div class="frontSideCard">
 							<Gamecard item={card} />
@@ -205,12 +204,33 @@
 				>
 					<!-- Edit Options -->
 					<div class="editOptions">
-						<Button icon="mdi:zoom-in" stopPropagation click={() => viewCard(card.id)} />
-						<Button icon="mdi:pencil" stopPropagation click={() => editCard(card.id)} />
-						<Button icon="mdi:content-copy" stopPropagation click={() => duplicateCard(card.id)} />
-						<Button icon="mdi:download" stopPropagation click={() => items.download(card.id)} />
+						<Button
+							icon="mdi:zoom-in"
+							title="Show card"
+							stopPropagation
+							click={() => viewCard(card.id)}
+						/>
+						<Button
+							icon="mdi:pencil"
+							title="Edit Card"
+							stopPropagation
+							click={() => editCard(card.id)}
+						/>
+						<Button
+							icon="mdi:content-copy"
+							title="Duplicate Card"
+							stopPropagation
+							click={() => duplicateCard(card.id)}
+						/>
+						<Button
+							icon="mdi:download"
+							title="Download as JSON"
+							stopPropagation
+							click={() => items.download(card.id)}
+						/>
 						<Button
 							icon="mdi:trash-can"
+							title="Delete Card"
 							color="threat"
 							stopPropagation
 							click={() => deleteCard(card.id)}
