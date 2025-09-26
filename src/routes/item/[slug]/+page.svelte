@@ -18,6 +18,7 @@
 	import ItemEditor from '$lib/partials/ItemEditor.svelte';
 	import Button from '$lib/components/coreComponents/Button.svelte';
 
+	$: isNewCard = slug_id === 'new';
 	function newEmptyItem() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
 		if (saveFirst) {
@@ -64,13 +65,38 @@
 		items.download(item.id);
 	}
 
-	// Save stuff
-	let showSaved: boolean = false;
+	// Check if card is saved
+	let cardIsSaved: boolean = true;
+	let savedItem: {} = {}; // Store the last saved item to compare with current item
+	$: item, updateSaveState(); // Mark as unsaved when item changes
+
+	function updateSaveState() {
+		console.error('Checking if saved...');
+		if (!item || !savedItem) return (cardIsSaved = false);
+		console.error('Current Item:', item, 'Saved Item:', savedItem);
+		cardIsSaved = JSON.stringify(item) === JSON.stringify(savedItem);
+	}
+
+	// Save item function
 	function saveItem() {
-		items.setItem(item.id, item);
+		// Create new item if new
+		if (isNewCard) {
+			console.debug('Saving new item...');
+			items.addNewItem(item); // Add new item to store
+			items.setActiveItem(item); // Set active item to the new item
+		} else {
+			console.debug('Saving existing item...');
+			items.setItem(item.id, item); // Update item in store, create new if not found
+		}
 		items.save();
-		showSaved = true;
-		setTimeout(() => (showSaved = false), 2000);
+		savedItem = { ...item }; // Update saved item
+		updateSaveState(); // Update save state
+		// setTimeout(() => (cardIsSaved = false), 2000);
+
+		// If it was a new item, redirect to the new item's page
+		if (slug_id === 'new') {
+			goto(`${base}/item/${item.id}?edit=1`);
+		}
 	}
 
 	// Edit Date
@@ -81,7 +107,17 @@
 	onMount(() => {
 		// Retrieve Item
 		try {
-			item = items.getItem(slug_id);
+			// If the slug_id is 'new', get the active item or redirect to collection page if none found
+			if (slug_id === 'new') {
+				console.debug('Creating new item...');
+				item = items.prepareItem();
+			} else {
+				// Get item from store
+				item = items.getItem(slug_id);
+			}
+			// Store a copy of the item to compare later
+			console.debug('Item retrieved:', item);
+			savedItem = { ...item };
 		} catch {
 			// Redirect to collection page when item not found
 			alert(`No item found with id: ${slug_id}, redirecting to collection page...`);
@@ -144,9 +180,9 @@
 						<!-- Save -->
 						<Button
 							click={saveItem}
-							color={showSaved ? 'success' : 'blossom'}
+							color={cardIsSaved ? 'success' : 'blossom'}
 							variant="filled"
-							icon={showSaved ? 'mdi:check' : 'memory:floppy-disk'}
+							icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'}
 							size="small">Save</Button
 						>
 						<!-- Print -->
@@ -169,7 +205,11 @@
 				<Button click={toggleEditMode} icon={editMode ? 'mdi:eye' : 'mdi:pencil'}
 					>{editMode ? 'Viewing Mode' : 'Edit Card'}</Button
 				>
-				<Button click={newEmptyItem} icon="mdi:plus">New Card</Button>
+
+				<!-- New Card -->
+				{#if !isNewCard}
+					<Button click={newEmptyItem} icon="mdi:plus">New Card</Button>
+				{/if}
 
 				<a class="mobileOnly" href="#editor">Go to editor</a>
 			</div>
