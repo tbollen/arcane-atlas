@@ -123,8 +123,7 @@ class StoredItem extends Item {
 	}
 
 	private update() {
-		// Trigger reactivity (hacky, but effective)
-		editItem.update(() => this);
+		// TODO: Remove or fix!
 	}
 }
 
@@ -485,4 +484,3 @@ export let items =
 	localStoreItems instanceof ItemStore
 		? new ItemStore({ _store: localStoreItems })
 		: new ItemStore();
-export let editItem = writable<StoredItem>(items.getActiveItem());

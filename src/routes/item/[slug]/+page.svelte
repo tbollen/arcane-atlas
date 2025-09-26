@@ -154,7 +154,7 @@
 					</div>
 				</header>
 				<div id="itemEditor">
-					<ItemEditor />
+					<ItemEditor bind:item />
 				</div>
 			</section>
 		{/if}

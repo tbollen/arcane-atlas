@@ -4,7 +4,6 @@
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 
-	import { editItem } from '$lib/stores/Items';
 	import { items } from '$lib/stores/Items';
 	let _items = items;
 
@@ -35,7 +34,6 @@
 		// Set last clicked card to be active
 		items.setActiveItem(id);
 		updateItems();
-		$editItem = items.getActiveItem();
 		// Force svelte to recognise changes
 		$selectedItems = $selectedItems;
 	}
@@ -59,8 +57,6 @@
 	}
 
 	function editCard(id: string) {
-		items.setActiveItem(id);
-		$editItem = items.getActiveItem();
 		// Navigate to editor
 		goto(`${base}/item/${id}?edit=1`);
 	}

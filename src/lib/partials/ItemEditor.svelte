@@ -3,8 +3,9 @@
 	import Button from '$lib/components/coreComponents/Button.svelte';
 	import Accordion from '$lib/components/coreComponents/Accordion.svelte';
 
-	// DEPRECATED
-	import { editItem } from '$lib/stores/Items';
+	// Ask for an StoredItem to edit
+	import { type StoredItem } from '$lib/stores/Items';
+	export let item: StoredItem;
 
 	// Load selected item
 	import { items } from '$lib/stores/Items';
@@ -39,8 +40,8 @@
 
 	//
 
-	let selectedSkill: (typeof characteristics)[number] | undefined = $editItem.skillCheck?.skill;
-	let selectedChar: keyof typeof skillList | undefined = $editItem.skillCheck?.characteristic;
+	let selectedSkill: (typeof characteristics)[number] | undefined = item.skillCheck?.skill;
+	let selectedChar: keyof typeof skillList | undefined = item.skillCheck?.characteristic;
 	$: selectedChar && updateSkill('char');
 	$: selectedSkill && updateSkill('skill');
 
@@ -49,12 +50,12 @@
 			(priority == 'char' && selectedChar == undefined) ||
 			(priority == 'skill' && selectedSkill == undefined)
 		) {
-			$editItem.skillCheck = undefined;
+			item.skillCheck = undefined;
 			return;
 		}
 		console.debug('Updating skill', selectedChar, selectedSkill);
 		if (selectedChar == undefined && selectedSkill == undefined) {
-			$editItem.skillCheck = undefined;
+			item.skillCheck = undefined;
 			return;
 		}
 		if (
@@ -76,38 +77,33 @@
 				skillList[char as keyof typeof skillList].some((skill) => skill == selectedSkill)
 			) as keyof typeof skillList;
 		}
-		$editItem.skillCheck = { characteristic: selectedChar, skill: selectedSkill };
+		item.skillCheck = { characteristic: selectedChar, skill: selectedSkill };
 	}
 
 	function resetSkill() {
-		$editItem.skillCheck = null;
+		item.skillCheck = null;
 	}
 
 	// Button to add new fields
 	import { onMount } from 'svelte';
-	import { derived } from 'svelte/store';
 
 	function presetToCustom() {
-		// $editItem.stylePreset = 'custom';
-		$editItem.useStylePreset('custom');
+		// item.stylePreset = 'custom';
+		item.useStylePreset('custom');
 	}
 
 	// Style components for looping
-	const availableColorOptions = Object.keys(
-		$editItem.style.color
-	) as (keyof typeof $editItem.style.color)[];
-	const availableFontOptions = Object.keys(
-		$editItem.style.font
-	) as (keyof typeof $editItem.style.font)[];
+	const availableColorOptions = Object.keys(item.style.color) as (keyof typeof item.style.color)[];
+	const availableFontOptions = Object.keys(item.style.font) as (keyof typeof item.style.font)[];
 	const availableFontSizeOptions = Object.keys(
-		$editItem.style.fontsize
-	) as (keyof typeof $editItem.style.fontsize)[];
+		item.style.fontsize
+	) as (keyof typeof item.style.fontsize)[];
 
-	$: console.debug('Logging the editItem', $editItem);
+	$: console.debug('Logging the editItem', item);
 
 	let mounted = false;
 	onMount(() => {
-		loadIconFromIconify($editItem.icon);
+		loadIconFromIconify(item.icon);
 		mounted = true;
 	});
 </script>
@@ -122,14 +118,14 @@
 		<div slot="content" class="inputGrid">
 			<!-- Name -->
 			<label for="name">Name</label>
-			<input type="text" id="name" bind:value={$editItem.name} placeholder="Name" />
+			<input type="text" id="name" bind:value={item.name} placeholder="Name" />
 			<!-- Subtitle -->
 			<label for="subtitle">Subtitle</label>
-			<input type="text" id="subtitle" bind:value={$editItem.subtitle} placeholder="Subtitle" />
+			<input type="text" id="subtitle" bind:value={item.subtitle} placeholder="Subtitle" />
 
 			<!-- Type -->
 			<label for="type">Type</label>
-			<select id="type" bind:value={$editItem.type} placeholder="Type">
+			<select id="type" bind:value={item.type} placeholder="Type">
 				{#each cardTypes as cardType}
 					<option value={cardType.name}>{cardType.name}</option>
 				{/each}
@@ -143,10 +139,10 @@
 				<input
 					type="text"
 					id="iconOverride"
-					class:warning={!iconExists($editItem?.icon || 'mdi:sack')}
-					bind:value={$editItem.icon}
-					on:input={() => loadIconFromIconify($editItem.icon)}
-					placeholder={cardTypes.find((type) => type.name == $editItem.type)?.icon ||
+					class:warning={!iconExists(item?.icon || 'mdi:sack')}
+					bind:value={item.icon}
+					on:input={() => loadIconFromIconify(item.icon)}
+					placeholder={cardTypes.find((type) => type.name == item.type)?.icon ||
 						'Icon from Iconify'}
 				/>
 			{/if}
@@ -164,7 +160,7 @@
 				id="description"
 				rows="3"
 				placeholder="Edit the description here"
-				bind:value={$editItem.description}
+				bind:value={item.description}
 			/>
 			<small class="useTip"
 				>You can add dice icons like such '[pr]'' = {@html renderMarkdown('[pr]')}
@@ -172,9 +168,9 @@
 			</small>
 			<!-- Aspects -->
 			<label for="editorAspects" class="category buttonLine"> Aspects </label>
-			{#if $editItem.aspects?.length}
+			{#if item.aspects?.length}
 				<div class="fieldList">
-					{#each $editItem.aspects as aspect, i}
+					{#each item.aspects as aspect, i}
 						<div class="fieldItem">
 							<label for="aspect-{i}-name">Name</label>
 							<input type="text" id="aspect-{i}-name" bind:value={aspect.name} />
@@ -191,22 +187,20 @@
 									color="plain"
 									icon="mdi:trash"
 									size="small"
-									click={() => $editItem.removeField('aspects', i)}
+									click={() => item.removeField('aspects', i)}
 								/>
 							</div>
 						</div>
 					{/each}
 				</div>
 			{/if}
-			<Button icon="mdi:plus" size="small" click={() => $editItem.addEmptyField('aspects')}
-				>Add</Button
-			>
+			<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('aspects')}>Add</Button>
 			<hr class="divider" />
 			<!-- Specials -->
 			<label for="editorSpecials" class="category buttonLine"> Specials </label>
-			{#if $editItem.specials?.length}
+			{#if item.specials?.length}
 				<div class="fieldList">
-					{#each $editItem.specials as special, i}
+					{#each item.specials as special, i}
 						<div class="fieldItem">
 							<label for="special-{i}-name">Name</label>
 							<input type="text" id="special-{i}-name" bind:value={special.name} />
@@ -223,16 +217,14 @@
 									color="plain"
 									icon="mdi:trash"
 									size="small"
-									click={() => $editItem.removeField('specials', i)}
+									click={() => item.removeField('specials', i)}
 								/>
 							</div>
 						</div>
 					{/each}
 				</div>
 			{/if}
-			<Button icon="mdi:plus" size="small" click={() => $editItem.addEmptyField('specials')}
-				>Add</Button
-			>
+			<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('specials')}>Add</Button>
 		</div>
 	</Accordion>
 	<!-- Fields -->
@@ -245,7 +237,7 @@
 				<div class="fieldItem">
 					<label for="characteristic">Characteristic</label>
 					<select id="characteristic" bind:value={selectedChar}>
-						{#if !$editItem.skillCheck || selectedChar == undefined}
+						{#if !item.skillCheck || selectedChar == undefined}
 							<option selected disabled value="">None selected</option>
 						{/if}
 						{#each characteristics as characteristic}
@@ -254,7 +246,7 @@
 					</select>
 					<label for="skill">Skill</label>
 					<select id="skill" bind:value={selectedSkill}>
-						{#if !$editItem.skillCheck || selectedChar == undefined}
+						{#if !item.skillCheck || selectedChar == undefined}
 							<option selected disabled value="">None selected</option>
 						{/if}
 						{#each Object.entries(skillList) as [charName, skills]}
@@ -271,8 +263,8 @@
 					</div>
 				</div>
 				<hr class="divider" />
-				{#if $editItem.fields?.length}
-					{#each $editItem.fields as field, i}
+				{#if item.fields?.length}
+					{#each item.fields as field, i}
 						<div class="fieldItem">
 							<label for="special-{i}-name">Name</label>
 							<input type="text" id="special-{i}-name" bind:value={field.name} />
@@ -281,7 +273,7 @@
 									color="plain"
 									icon="mdi:trash"
 									size="small"
-									click={() => $editItem.removeField('fields', i)}
+									click={() => item.removeField('fields', i)}
 								/>
 							</div>
 							<label for="special-{i}-description">Value</label>
@@ -291,7 +283,7 @@
 				{/if}
 			</div>
 			<label for="editorSpecials" class="category buttonLine">
-				<Button icon="mdi:plus" size="small" click={() => $editItem.addEmptyField('fields')}
+				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('fields')}
 					>Add Field</Button
 				>
 			</label>
@@ -308,41 +300,31 @@
 					Name
 					<Icon class="advancedIcon" icon="memory:anvil" />
 				</label>
-				<input
-					type="text"
-					id="imgName"
-					bind:value={$editItem.image.name}
-					placeholder={$editItem.name}
-				/>
+				<input type="text" id="imgName" bind:value={item.image.name} placeholder={item.name} />
 			{/if}
 
 			<!-- URL -->
 			<label for="url">URL</label>
-			<input
-				type="text"
-				id="url"
-				bind:value={$editItem.image.url}
-				placeholder="Paste image URL here"
-			/>
+			<input type="text" id="url" bind:value={item.image.url} placeholder="Paste image URL here" />
 
 			<!-- Position X -->
-			<label for="xPosition">X Offset: {Math.round($editItem.image.x_offset || 0)}</label>
+			<label for="xPosition">X Offset: {Math.round(item.image.x_offset || 0)}</label>
 			<input
 				type="range"
 				name="xPosition"
 				id="xPosition"
-				bind:value={$editItem.image.x_offset}
+				bind:value={item.image.x_offset}
 				min="-50"
 				max="50"
 				list="positions"
 			/>
 			<!-- Position Y -->
-			<label for="yPosition">Y Offset: {Math.round($editItem.image.y_offset || 0)}</label>
+			<label for="yPosition">Y Offset: {Math.round(item.image.y_offset || 0)}</label>
 			<input
 				type="range"
 				name="yPosition"
 				id="yPosition"
-				bind:value={$editItem.image.y_offset}
+				bind:value={item.image.y_offset}
 				min="-50"
 				max="50"
 				list="positions"
@@ -353,24 +335,24 @@
 				<option value="10" />
 			</datalist>
 			<!-- Rotation -->
-			<label for="rotation">Rotation: {Math.round($editItem.image.rotation || 0)}°</label>
+			<label for="rotation">Rotation: {Math.round(item.image.rotation || 0)}°</label>
 			<input
 				type="range"
 				name="rotation"
 				id="rotation"
-				bind:value={$editItem.image.rotation}
+				bind:value={item.image.rotation}
 				min="-180"
 				max="180"
 				list="rotations"
 			/>
 			<!-- Scale -->
-			<label for="scale">Scale: {$editItem.image.scale}%</label>
+			<label for="scale">Scale: {item.image.scale}%</label>
 			<input
 				type="range"
 				name="scale"
 				id="scale"
 				list="scales"
-				bind:value={$editItem.image.scale}
+				bind:value={item.image.scale}
 				min="25"
 				max="300"
 			/>
@@ -386,12 +368,7 @@
 				<option value="90" />
 				<option value="-90" />
 			</datalist>
-			<Button
-				color="plain"
-				icon="mdi:refresh"
-				size="small"
-				click={() => $editItem.resetImagePosition()}
-			>
+			<Button color="plain" icon="mdi:refresh" size="small" click={() => item.resetImagePosition()}>
 				Reset Position</Button
 			>
 		</div>
@@ -407,20 +384,20 @@
 				<select
 					style="height: 2em;"
 					id="preset"
-					bind:value={$editItem.stylePreset}
-					on:change={(e) => $editItem.useStylePreset($editItem.stylePreset || 'custom')}
+					bind:value={item.stylePreset}
+					on:change={(e) => item.useStylePreset(item.stylePreset || 'custom')}
 					placeholder="Preset"
 				>
 					{#each Object.keys(cardStylePresets) as preset}
 						<option value={preset}>{preset}</option>
 					{/each}
 				</select>
-				{#if $editItem.stylePreset !== 'default'}
+				{#if item.stylePreset !== 'default'}
 					<Button
 						color="plain"
 						icon="mdi:backup-restore"
 						size="small"
-						click={() => $editItem.useStylePreset('default')}
+						click={() => item.useStylePreset('default')}
 					/>
 				{:else}
 					<Button
@@ -428,7 +405,7 @@
 						icon="mdi:dice"
 						size="small"
 						click={() => {
-							$editItem.useStylePreset('random');
+							item.useStylePreset('random');
 						}}
 					/>
 				{/if}
@@ -449,19 +426,19 @@
 							<input
 								type="color"
 								id="color-{colorType}"
-								bind:value={$editItem.style.color[colorType]}
+								bind:value={item.style.color[colorType]}
 								on:change={presetToCustom}
 								list="colorSuggestions"
 							/>
-							<span>{$editItem.style.color[colorType]}</span>
+							<span>{item.style.color[colorType]}</span>
 						</div>
-						{#if $editItem.stylePreset === 'custom'}
+						{#if item.stylePreset === 'custom'}
 							<Button
 								color="plain"
 								icon="mdi:restore"
 								size="small"
 								click={() => {
-									$editItem.style.color[colorType] = defaultCardStyle.color[colorType];
+									item.style.color[colorType] = defaultCardStyle.color[colorType];
 									presetToCustom();
 								}}
 							/>
@@ -473,7 +450,7 @@
 							click={() => {
 								presetToCustom();
 								const randomHex = Math.floor(Math.random() * 16777215).toString(16);
-								$editItem.style.color[colorType] = `#${randomHex}`;
+								item.style.color[colorType] = `#${randomHex}`;
 							}}
 						/>
 					</div>
@@ -495,7 +472,7 @@
 						<input
 							type="number"
 							id="fontSize-{fontSizeOption}"
-							bind:value={$editItem.style.fontsize[fontSizeOption]}
+							bind:value={item.style.fontsize[fontSizeOption]}
 							on:change={presetToCustom}
 						/>
 						<Button
@@ -503,8 +480,7 @@
 							icon="mdi:restore"
 							size="small"
 							click={() => {
-								$editItem.style.fontsize[fontSizeOption] =
-									defaultCardStyle.fontsize[fontSizeOption];
+								item.style.fontsize[fontSizeOption] = defaultCardStyle.fontsize[fontSizeOption];
 							}}
 						/>
 					</div>
@@ -517,7 +493,7 @@
 					<div class="buttonLine">
 						<select
 							id="font-{fontOption}"
-							bind:value={$editItem.style.font[fontOption]}
+							bind:value={item.style.font[fontOption]}
 							on:change={presetToCustom}
 						>
 							{#each availableFonts as font}
@@ -529,7 +505,7 @@
 							icon="mdi:restore"
 							size="small"
 							click={() => {
-								$editItem.style.font[fontOption] = defaultCardStyle.font[fontOption];
+								item.style.font[fontOption] = defaultCardStyle.font[fontOption];
 							}}
 						/>
 					</div>
