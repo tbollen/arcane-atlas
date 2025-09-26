@@ -196,14 +196,6 @@
 					id={card.id}
 					on:click={() => toggleCardSelection(card.id)}
 				>
-					<!-- Is Active Label -->
-					{#if items.getActiveItem().id === card.id && $selectedItems.size < 2}
-						<div class="cardLabel activeLabel">
-							<Icon icon="mdi:pencil" />
-							Editor
-						</div>
-					{/if}
-
 					<!-- Edit Options -->
 					<div class="editOptions">
 						<Button icon="mdi:zoom-in" stopPropagation />
