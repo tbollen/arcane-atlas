@@ -1,12 +1,12 @@
 <script lang="ts">
 	// Svelte stuff
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 
 	// Page params
-	const slug_id = $page.params.slug;
+	const slug_id = page.params.slug;
 
 	// Item stores, types and modules
 	import { items, type StoredItem } from '$lib/stores/Items';
