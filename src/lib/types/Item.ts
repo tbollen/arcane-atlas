@@ -20,7 +20,7 @@ export type SkillCheck = {
 	skill?: (typeof characteristics)[number];
 };
 
-const defaultCard: Item = {
+export const defaultCard: Item = {
 	name: 'New Item',
 	type: 'Item',
 	description: 'Item Description',

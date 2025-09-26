@@ -80,10 +80,7 @@
 	}
 
 	function addNew() {
-		items.addNewItem();
-		// goto editor
-		updateItems();
-		editCard(items.getActiveItem().id);
+		goto(`${base}/item/new?edit=1`);
 	}
 
 	function updateItems() {
