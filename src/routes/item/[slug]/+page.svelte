@@ -161,6 +161,11 @@
 		<!-- Card Pane -->
 		<section id="cardView">
 			<div class="buttonRow">
+				<!-- Back to Collection -->
+				<Button color="threat" click={() => goto(`${base}/collection`)} icon="mdi:arrow-left"
+					>Back</Button
+				>
+				<!-- Toggle Edit/View Mode -->
 				<Button click={toggleEditMode} icon={editMode ? 'mdi:eye' : 'mdi:pencil'}
 					>{editMode ? 'Viewing Mode' : 'Edit Card'}</Button
 				>

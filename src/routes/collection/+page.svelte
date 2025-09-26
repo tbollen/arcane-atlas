@@ -56,6 +56,11 @@
 		}
 	}
 
+	function viewCard(id: string) {
+		// Navigate to viewer
+		goto(`${base}/item/${id}`);
+	}
+
 	function editCard(id: string) {
 		// Navigate to editor
 		goto(`${base}/item/${id}?edit=1`);
@@ -78,6 +83,7 @@
 		items.addNewItem();
 		// goto editor
 		updateItems();
+		editCard(items.getActiveItem().id);
 	}
 
 	function updateItems() {
@@ -195,10 +201,11 @@
 					class:isSelected={$selectedItems.has(card.id)}
 					id={card.id}
 					on:click={() => toggleCardSelection(card.id)}
+					on:dblclick={() => viewCard(card.id)}
 				>
 					<!-- Edit Options -->
 					<div class="editOptions">
-						<Button icon="mdi:zoom-in" stopPropagation />
+						<Button icon="mdi:zoom-in" stopPropagation click={() => viewCard(card.id)} />
 						<Button icon="mdi:pencil" stopPropagation click={() => editCard(card.id)} />
 						<Button icon="mdi:content-copy" stopPropagation click={() => duplicateCard(card.id)} />
 						<Button icon="mdi:download" stopPropagation click={() => items.download(card.id)} />
