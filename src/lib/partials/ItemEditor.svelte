@@ -16,7 +16,7 @@
 	// Import card types for editing options
 	import { cardTypes } from '$lib/modules/cardTypes';
 	import Icon, { iconExists, loadIcon } from '@iconify/svelte';
-	import { cardStylePresets, defaultCardStyle } from '$lib/types/colors';
+	import { cardStylePresets, defaultCardStyle } from '$lib/core/presets/cardStylePresets';
 	import { suggestedColors } from '$lib/styles/colorScheme';
 	import { availableFonts } from '$lib/types/fonts';
 

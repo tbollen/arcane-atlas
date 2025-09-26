@@ -2,13 +2,12 @@ import { skillList } from '$lib/modules/skillCheckList';
 const characteristics = Object.values(skillList).flat();
 
 // Styling Types
-import { type Color } from '$lib/types/colors';
+import { type CardStyleOptions } from '$lib/utils/types/style';
 import {
 	type CardStylePreset,
 	defaultCardStyle,
-	cardStylePresets,
-	type CardStyleOptions
-} from '$lib/types/colors';
+	cardStylePresets
+} from '$lib/core/presets/cardStylePresets';
 import { type AvailableFonts } from '$lib/types/fonts';
 import { type IsCardType } from '$lib/modules/cardTypes';
 export type ItemFields = {

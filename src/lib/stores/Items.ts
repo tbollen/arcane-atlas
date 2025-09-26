@@ -3,11 +3,10 @@ import { Item } from '$lib/types/Item';
 import { defaultTemplates } from '$lib/stores/defaultTemplates';
 import { startingItems } from '$lib/stores/defaultTemplates';
 import {
-	type CardStyleOptions,
 	type CardStylePreset,
 	cardStylePresets,
 	defaultCardStyle
-} from '$lib/types/colors';
+} from '$lib/core/presets/cardStylePresets';
 import { localStorageKeys as lsk } from '$lib/metadata/localStorageKeys';
 
 // Env variables
