@@ -75,8 +75,8 @@
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Item) {
-		items.addNewItem(base);
-		updateItems();
+		items.setActiveTemplate(base);
+		addNew();
 	}
 
 	function addNew() {
