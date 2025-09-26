@@ -6,7 +6,7 @@ import {
 	type CardStylePreset,
 	cardStylePresets,
 	defaultCardStyle
-} from '$lib/core/presets/cardStylePresets';
+} from '$lib/core/items/cardStylePresets';
 import { localStorageKeys as lsk } from '$lib/metadata/localStorageKeys';
 
 // Env variables
