@@ -140,6 +140,7 @@ class ItemStore {
 		setName: 'c'
 	};
 	activeItem?: StoredItem;
+	activeTemplate?: Partial<Item>;
 
 	constructor(
 		i: {
@@ -215,17 +216,13 @@ class ItemStore {
 	 * Prepares a new StoredItem with a unique ID, ready to be added to the store.
 	 *
 	 * @param _item Optional partial item to prepare. If not given, active item will be used. If no active item, an empty object will be used
-	 * @returns A new StoredItem with a unique ID
+	 * @returns A new StoredItem with a unique ID. The ID will always be newly generated, even if _item has an ID.
 	 */
 	prepareItem(_item?: Partial<StoredItem>): StoredItem {
 		// Use given item, or active item, or empty object
-		let itemToPrepare = _item ?? {};
-		// If item has an ID that already exists, generate a new one
-		if (itemToPrepare.id && this.idSet.has(itemToPrepare.id)) {
-			itemToPrepare = { ...itemToPrepare, id: this.generateUniqueId() };
-		}
-		// Create new StoredItem
-		const newItem = new StoredItem(itemToPrepare, itemToPrepare.id || this.generateUniqueId());
+		let itemToPrepare = _item ?? this.activeTemplate ?? {};
+		// Create new StoredItem, always generate a new unique ID
+		const newItem = new StoredItem(itemToPrepare, this.generateUniqueId());
 		// Return the new item
 		return newItem;
 	}
