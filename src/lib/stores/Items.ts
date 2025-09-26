@@ -144,13 +144,20 @@ class ItemStore {
 
 	constructor(
 		i: {
+			_multiStore?: ItemStore[];
 			_store?: ItemStore;
 			_items?: StoredItem[];
 			_templates?: Item[];
 		} = {}
 	) {
 		// If an exisiting store is given,
-		if (i._store) {
+		if (i._multiStore) {
+			// Merge all stores together
+			i._multiStore.forEach((store) => {
+				this.items = [...this.items, ...store.items];
+				this.templates = [...this.templates, ...store.templates];
+			});
+		} else if (i._store) {
 			// Override all other values
 			i._items = i._store.items;
 			i._templates = i._store.templates;
