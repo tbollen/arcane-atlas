@@ -78,7 +78,7 @@
 	}
 
 	// Save item function
-	function saveItem() {
+	function saveItem(preventRedirect = false) {
 		// Create new item if new
 		if (isNewCard) {
 			console.debug('Saving new item...');
@@ -114,10 +114,10 @@
 			} else {
 				// Get item from store
 				item = items.getItem(slug_id);
+				savedItem = { ...item };
 			}
 			// Store a copy of the item to compare later
 			console.debug('Item retrieved:', item);
-			savedItem = { ...item };
 		} catch {
 			// Redirect to collection page when item not found
 			alert(`No item found with id: ${slug_id}, redirecting to collection page...`);
@@ -131,7 +131,19 @@
 		const urlParams = new URLSearchParams(window.location.search);
 		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
 	});
+
+	function beforeUnload(event: BeforeUnloadEvent) {
+		// Prevent closing if card is not saved (with dialog)
+		if (!cardIsSaved) {
+			event.preventDefault();
+			// Old Chrome browsers requires returnValue to be set
+			event.returnValue = '';
+		}
+	}
 </script>
+
+<!-- Svelte Window -->
+<svelte:window on:beforeunload={beforeUnload} />
 
 {#if !item}
 	<MainLoader />
