@@ -53,6 +53,9 @@ export class CardStore {
 		this.idSet = new Set(this.cards.map((item) => item.id));
 	}
 
+	///////////////////
+	// GET Functions //
+	///////////////////
 	getCard(_target: CardID | StoredCard): StoredCard {
 		if (_target instanceof StoredCard) return _target; // If it's already a StoredCard, return it
 		const _card = this.cards.find((card) => card.id.toString() === _target.toString());
@@ -65,6 +68,53 @@ export class CardStore {
 		return this.getCard(_card).id;
 	}
 
+	///////////////////
+	// SET Functions //
+	///////////////////
+
+	// Settintg / updating properties of a specific card
+	setCard(_id: CardID, cardUpdate: Partial<StoredCard>): StoredCard {
+		// Ensure the card exists
+		try {
+			this.getCard(_id); // Check if the card exists
+		} catch (error) {
+			throw error;
+		}
+		// Create an updated card
+		const _card = this.getCard(_id);
+		const updatedCard = new StoredCard(_card.id, { ..._card, ...cardUpdate });
+		// Update the cards array
+		this.cards = this.cards.map((card) => (card.id === _id ? updatedCard : card));
+		// Save changes
+		this.save();
+		// Return the updated card (for optional further processing)
+		return updatedCard;
+	}
+
+	///////////
+	// UTILS //
+	///////////
+
+	/////////////////////
+	// Store Functions //
+	/////////////////////
+
+	// Creating a new card
+	addNew(card?: Partial<Card>): StoredCard {
+		// Create a new ID
+		const newId = this.returnUniqueId();
+		// Instantiate a new card
+		const newCard = new StoredCard(newId, card);
+		// Add the new card to the store
+		this.cards = [...this.cards, newCard];
+		// Update the idSet
+		this.idSet.add(newId);
+		// Save changes
+		this.save();
+		// Return the new card (for optional further processing)
+		return newCard;
+	}
+
 	// Saving
 	save() {
 		const _items = JSON.stringify(this.cards);
@@ -73,18 +123,19 @@ export class CardStore {
 	}
 
 	// Removing a card
-	destroy(id: CardID | CardID[]): void {
-		if (!Array.isArray(id)) id = [id];
-		const nameArray = id.map((id) => this.getCard(id).name);
+	destroy(_id: CardID | CardID[]): void {
+		if (!Array.isArray(_id)) id: _id = [_id];
+		const nameArray = _id.map((id) => this.getCard(id).name);
 		if (!window.confirm(`Are you sure you want to delete ${nameArray.join(', ')}?`)) return;
-		if (id.length > 1) {
+		if (_id.length > 1) {
 			// If multiple items are deleted, ask if really want to delete them all
 			if (!window.confirm(`Are you really sure? Multiple items will be deleted!`)) return;
 		}
-		id.forEach((id) => this.sudoDestroy(id));
+		_id.forEach((id) => this.sudoDestroy(id));
 	}
-
-	// Private Functions
+	///////////////////////
+	// Private Functions //
+	///////////////////////
 	private returnUniqueId(): CardID {
 		let newId: CardID;
 		// Create a new ID until it's unique
