@@ -18,3 +18,26 @@ model Item {
   id   String @id @default(uuid())
   name String
 }
+
+// Cards
+model Card {
+  // DB Info
+  id String @id @unique
+  creatorId String
+  createdAt DateTime
+  updatedAt DateTime
+  userIds String[]
+  campaignIds String[]
+  characterIds String[]
+  // Card Info
+  name String
+  type String
+  subtitle String
+  icon String
+  description String
+  image Json
+  stylePreset String
+  style Json
+  systems String[]
+  mechanics Json
+}

@@ -3,7 +3,7 @@ import { db } from '$lib/server/db';
 
 // GET: fetch all items
 export const GET: RequestHandler = async () => {
-	const items = await db.item.findMany();
+	const items = await db.card.findMany();
 	return new Response(JSON.stringify(items), { status: 200 });
 };
 
@@ -12,6 +12,5 @@ export const POST: RequestHandler = async ({ request }) => {
 	const { name } = await request.json();
 	if (!name) return new Response(JSON.stringify({ error: 'Missing name' }), { status: 400 });
 
-	const item = await db.item.create({ data: { name } });
 	return new Response(JSON.stringify(item), { status: 201 });
 };

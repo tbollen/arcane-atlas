@@ -41,6 +41,9 @@ export class Card {
 	creatorId: Prefixed_UUID<'user'> | null = null;
 	createdAt: Date;
 	updatedAt: Date;
+	userIds: Prefixed_UUID<'user'>[] = []; // Users that have access to this card (for multi-user support)
+	campaignIds: Prefixed_UUID<'campaign'>[] = []; // Campaigns that use this card (for filtering)
+	characterIds: Prefixed_UUID<'character'>[] = []; // Characters that use this card (for filtering)
 	// Main info
 	name: string;
 	type: IsCardType;
