@@ -7,14 +7,17 @@ import { Card } from './card';
 type CardID = Prefixed_UUID<'card'>;
 
 // StoredCard Class (Card with ID)
-class StoredCard extends Card {
+export class StoredCard extends Card {
 	id: CardID;
 	constructor(id: CardID, card?: Partial<Card>) {
 		super(card);
 		this.id = id;
 	}
 }
-// ItemStore Class
+
+/////////////////////
+// ItemStore Class //
+/////////////////////
 export class CardStore {
 	cards: StoredCard[] = [];
 	templates: Partial<Card>[] = [];
