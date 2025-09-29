@@ -7,7 +7,7 @@ import {
 	type CardStylePreset,
 	defaultCardStyle,
 	cardStylePresets
-} from '$lib/core/items/cardStylePresets';
+} from '$lib/core/cards/cardStylePresets';
 import { type AvailableFonts } from '$lib/types/fonts';
 import { type IsCardType } from '$lib/modules/cardTypes';
 export type ItemFields = {

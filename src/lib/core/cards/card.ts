@@ -4,7 +4,7 @@ import {
 	type CardStylePreset,
 	cardStylePresets,
 	defaultCardStyle
-} from '$lib/core/items/cardStylePresets';
+} from '$lib/core/cards/cardStylePresets';
 import { type IsCardType } from '$lib/modules/cardTypes';
 
 // Basic Types
