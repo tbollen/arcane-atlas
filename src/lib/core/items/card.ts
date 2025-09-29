@@ -1,6 +1,10 @@
 // Styling Types
 import { type CardStyleOptions } from '$lib/utils/types/style';
-import { type CardStylePreset, defaultCardStyle } from '$lib/core/items/cardStylePresets';
+import {
+	type CardStylePreset,
+	cardStylePresets,
+	defaultCardStyle
+} from '$lib/core/items/cardStylePresets';
 import { type IsCardType } from '$lib/modules/cardTypes';
 
 // Basic Types
@@ -89,5 +93,33 @@ export class Card {
 		// Set mechanics based on system
 		this.systems = _cardReference.systems ?? [];
 		this.mechanics = { ...(_cardReference.mechanics ?? {}) };
+	}
+
+	// Style and Default settings func
+	// Image editing
+	resetImagePosition(property?: 'x_offset' | 'y_offset' | 'rotation' | 'scale') {
+		if (this.image == undefined) return;
+		if (property) this.image[property] = property == 'scale' ? 100 : 0;
+		this.image.x_offset = 0;
+		this.image.y_offset = 0;
+		this.image.rotation = 0;
+		this.image.scale = 100;
+	}
+
+	// Styling
+	useStylePreset(preset: CardStylePreset | 'random') {
+		if (preset == 'random') {
+			const _presets = Object.keys(cardStylePresets).filter(
+				(key) => key != 'custom' && key != 'default'
+			);
+			preset = _presets[Math.floor(Math.random() * _presets.length)];
+		}
+		const _stylePreset = cardStylePresets[preset];
+		// Assign for each category the values from the preset
+		this.style.color = Object.assign(this.style.color, _stylePreset.color);
+		this.style.font = Object.assign(this.style.font, _stylePreset.font);
+		this.style.fontsize = Object.assign(this.style.fontsize, _stylePreset.fontsize);
+		// Set preset
+		this.stylePreset = preset;
 	}
 }
