@@ -1,7 +1,8 @@
 // Basic Types
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 
-import { Card } from './card';
+import { Card } from '$lib/core/cards/card';
+// import type { Card as PrismaCard } from '@prisma/client';
 
 // Shorthand for card id
 type CardID = Prefixed_UUID<'card'>;
@@ -9,6 +10,7 @@ type CardID = Prefixed_UUID<'card'>;
 // StoredCard Class (Card with ID)
 export class StoredCard extends Card {
 	id: CardID;
+
 	constructor(id: CardID, card?: Partial<Card>) {
 		super(card);
 		this.id = id;
@@ -22,7 +24,6 @@ export class CardStore {
 	cards: StoredCard[] = [];
 	templates: Partial<Card>[] = [];
 	private idSet: Set<CardID> = new Set();
-	activeTemplate?: Partial<Card>;
 
 	constructor(
 		_: {
@@ -56,6 +57,8 @@ export class CardStore {
 	///////////////////
 	// GET Functions //
 	///////////////////
+
+	// Get Card from local Store
 	getCard(_target: CardID | StoredCard): StoredCard {
 		if (_target instanceof StoredCard) return _target; // If it's already a StoredCard, return it
 		const _card = this.cards.find((card) => card.id.toString() === _target.toString());
@@ -91,9 +94,27 @@ export class CardStore {
 		return updatedCard;
 	}
 
-	///////////
-	// UTILS //
-	///////////
+	//////////////////
+	// DB Functions //
+	//////////////////
+
+	private async addCardToDB(card: StoredCard) {
+		// Push the new card to the database
+		const response = fetch(`/api/cards`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(card)
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log(data);
+			})
+			.catch((error) => {
+				console.error(error);
+			});
+	}
 
 	/////////////////////
 	// Store Functions //

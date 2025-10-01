@@ -21,7 +21,8 @@ export class User {
 	id: Prefixed_UUID<'user'> = generatePrefixedUUID('user');
 	username: Username;
 	nickname: string = 'New User';
-	character_ids: Prefixed_UUID<'character'>[] = [];
+	characterIds: Prefixed_UUID<'character'>[] = [];
+	campaignIds: Prefixed_UUID<'campaign'>[] = [];
 	role: UserRole = 'basic_user';
 
 	constructor(username: Username, nickname?: string) {
