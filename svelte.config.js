@@ -17,9 +17,6 @@ const config = {
 		},
 		prerender: {
 			handleHttpError: 'warn'
-		},
-		alias: {
-			$server: 'src/server'
 		}
 	}
 };

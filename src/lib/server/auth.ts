@@ -1,8 +1,8 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-// If your Prisma file is located elsewhere, you can change the path
 import { PrismaClient } from '@prisma/client';
-import { nextCookies } from 'better-auth/next-js';
+
+// Plugins
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 // Cookies for SvelteKit imports
 import { getRequestEvent } from '$app/server';
@@ -10,7 +10,7 @@ import { getRequestEvent } from '$app/server';
 const prisma = new PrismaClient();
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {
-		provider: 'sqlite' // or "mysql", "postgresql", ...etc
+		provider: 'postgresql' // or "mysql", "postgresql", ...etc
 	}),
 	session: {
 		cookieCache: {
@@ -18,7 +18,7 @@ export const auth = betterAuth({
 			maxAge: 60 * 5 // 5 minutes
 		}
 	},
-	plugins: [sveltekitCookies(getRequestEvent)],
+	// plugins: [sveltekitCookies(getRequestEvent)],
 	emailAndPassword: {
 		enabled: true
 	}
