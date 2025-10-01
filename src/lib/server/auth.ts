@@ -27,13 +27,13 @@ export const auth = betterAuth({
 	socialProviders: {
 		github: {
 			clientId: process.env.GITHUB_CLIENT_ID as string,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-			profileFields: ['id', 'email', 'name', 'picture']
+			clientSecret: process.env.GITHUB_CLIENT_SECRET as string
+			// profileFields: ['id', 'email', 'name', 'picture']
 		},
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID as string,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-			profileFields: ['id', 'email', 'name', 'picture']
+		discord: {
+			clientId: process.env.DISCORD_CLIENT_ID as string,
+			clientSecret: process.env.DISCORD_CLIENT_SECRET as string
 		}
-	}
+	},
+	plugins: [sveltekitCookies(getRequestEvent)]
 });
