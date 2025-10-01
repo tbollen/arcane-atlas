@@ -22,6 +22,6 @@ import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/cards';
 
 export const gameCardSystems = {
 	[genericSystem.id]: {},
-	[arcaneRiftSystemInfo.id]: {} as ArcaneRiftCard
+	[arcaneRiftSystemInfo.id]: {}
 	// ADD MORE WHEN MORE SYSTEMS ARE ADDED
-} as { [key: string]: any };
+};
