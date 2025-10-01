@@ -19,7 +19,7 @@ const config = {
 			handleHttpError: 'warn'
 		},
 		alias: {
-			$server: 'server'
+			$server: 'src/server'
 		}
 	}
 };

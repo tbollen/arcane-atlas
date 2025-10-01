@@ -8,10 +8,10 @@ export const authClient = createAuthClient({
 
 // export const { signIn, signUp, useSession } = createAuthClient();
 
-authClient.useSession();
+// authClient.useSession();
 
-authClient.signUp.email({
-	email: 'example@email.com',
-	password: 'yourPassword123',
-	name: 'koekiemonster'
-});
+// authClient.signUp.email({
+// 	email: 'example@email.com',
+// 	password: 'yourPassword123',
+// 	name: 'koekiemonster'
+// });
