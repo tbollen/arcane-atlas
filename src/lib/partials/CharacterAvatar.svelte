@@ -1,21 +1,34 @@
 <script lang="ts">
-	export let character = {
+	import { page } from '$app/stores';
+
+	export let fallbackUser = {
 		name: 'Character',
 		image: 'https://robohash.org/test',
 		id: 'test'
 	};
+
+	// Get session data (user info)
+	$: user = $page.data.user || fallbackUser;
+	$: console.log('user:', user);
 </script>
 
-<button id="characterAvatar">
-	<img src={character.image} alt={character.name} />
-	<span>{character.name}</span>
-</button>
+{#if !user}
+	<a href="./account" id="characterAvatar">
+		<img src={user.image || `https://robohash.org/${user.name}`} alt={user.name} />
+		<span>{user.name}</span>
+	</a>
+{:else}
+	<a href="./login" id="characterAvatar">
+		<img src={user.image || `https://robohash.org/${user.name}`} alt="login" />
+		<span>Login</span>
+	</a>
+{/if}
 
 <style>
-	button {
+	a#characterAvatar {
 		/* Reset */
-		all: unset;
-		cursor: pointer;
+		color: unset;
+		text-decoration: unset;
 	}
 	#characterAvatar {
 		height: 2rem;
