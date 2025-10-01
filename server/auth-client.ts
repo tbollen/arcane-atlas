@@ -6,4 +6,12 @@ export const authClient = createAuthClient({
 	baseURL: 'http://localhost:3000'
 });
 
-export const { signIn, signUp, useSession } = createAuthClient();
+// export const { signIn, signUp, useSession } = createAuthClient();
+
+authClient.useSession();
+
+authClient.signUp.email({
+	email: 'example@email.com',
+	password: 'yourPassword123',
+	name: 'koekiemonster'
+});
