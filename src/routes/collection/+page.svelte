@@ -58,12 +58,12 @@
 
 	function viewCard(id: string) {
 		// Navigate to viewer
-		goto(`${base}/item/${id}`);
+		goto(`${base}/card/${id}`);
 	}
 
 	function editCard(id: string) {
 		// Navigate to editor
-		goto(`${base}/item/${id}?edit=1`);
+		goto(`${base}/card/${id}?edit=1`);
 	}
 
 	function duplicateCard(id: string) {
@@ -80,7 +80,7 @@
 	}
 
 	function addNew() {
-		goto(`${base}/item/new?edit=1`);
+		goto(`${base}/card/new?edit=1`);
 	}
 
 	function updateItems() {
