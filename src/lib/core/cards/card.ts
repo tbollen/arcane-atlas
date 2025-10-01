@@ -10,11 +10,14 @@ import { type IsCardType } from '$lib/modules/cardTypes';
 // Basic Types
 import { type Prefixed_UUID } from '$lib/utils/uuid';
 
-// Importing mechanics for various systems (dynamically)
-import { gameCardSystems } from '$lib/system/gameSystems';
-type System = keyof typeof gameCardSystems; // e.g., 'arcane-rift', 'dnd5e', etc.
-type CardMechanics = { [K in keyof typeof gameCardSystems]?: (typeof gameCardSystems)[K] };
-// End of Type Magic
+// Import Mechanics
+import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/cards';
+
+type Mechanics = {
+	['arcaneRift']?: ArcaneRiftCard;
+	generic?: {};
+};
+type System = keyof Mechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
 
 // Basic Card fields
 export type CardFields = {
@@ -71,7 +74,7 @@ export class Card {
 	style: CardStyleOptions = defaultCardStyle;
 	// Mechanics
 	systems: System[]; // Can have 0, 1 or more compatible systems
-	mechanics: CardMechanics; // Object containing mechanics per available system
+	mechanics: Mechanics; // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
 	constructor(_card?: Partial<Card>) {
@@ -94,7 +97,7 @@ export class Card {
 		this.stylePreset = _cardReference.stylePreset ?? fallbackCardInfo.stylePreset!;
 		this.style = { ...defaultCardStyle, ...(_cardReference.style ?? {}) };
 		// Set mechanics based on system
-		this.systems = _cardReference.systems ?? [];
+		this.systems = []; //TODO: make dynamic
 		this.mechanics = { ...(_cardReference.mechanics ?? {}) };
 	}
 
