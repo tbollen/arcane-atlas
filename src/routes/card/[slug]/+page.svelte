@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	// Svelte stuff
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
@@ -18,7 +20,6 @@
 	import ItemEditor from '$lib/partials/ItemEditor.svelte';
 	import Button from '$lib/components/coreComponents/Button.svelte';
 
-	$: isNewCard = slug_id === 'new';
 	function newEmptyItem() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
 		if (saveFirst) {
@@ -29,7 +30,7 @@
 	}
 
 	// Edit Mode stuff
-	let editMode = false;
+	let editMode = $state(false);
 	function toggleEditMode() {
 		editMode = !editMode;
 		updateUrlParams();
@@ -66,9 +67,8 @@
 	}
 
 	// Check if card is saved
-	let cardIsSaved: boolean = true;
+	let cardIsSaved: boolean = $state(true);
 	let savedItem: {} = {}; // Store the last saved item to compare with current item
-	$: item, updateSaveState(); // Mark as unsaved when item changes
 
 	function updateSaveState() {
 		console.error('Checking if saved...');
@@ -100,10 +100,10 @@
 	}
 
 	// Edit Date
-	let localDate: string = '';
+	let localDate: string = $state('');
 
 	// Initialize item on page load
-	let item: StoredItem;
+	let item: StoredItem = $state();
 	onMount(() => {
 		// Retrieve Item
 		try {
@@ -140,10 +140,14 @@
 			event.returnValue = '';
 		}
 	}
+	let isNewCard = $derived(slug_id === 'new');
+	run(() => {
+		item, updateSaveState();
+	}); // Mark as unsaved when item changes
 </script>
 
 <!-- Svelte Window -->
-<svelte:window on:beforeunload={beforeUnload} />
+<svelte:window onbeforeunload={beforeUnload} />
 
 {#if !item}
 	<MainLoader />

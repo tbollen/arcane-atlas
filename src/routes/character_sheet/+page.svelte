@@ -6,7 +6,7 @@
 		aspects: ['Aspect 1', 'Aspect 2', 'Aspect 3', 'Aspect 4', 'Aspect 5']
 	}; //TODO get character and user data
 
-	let values: number[] = [];
+	let values: number[] = $state([]);
 
 	function updateCharacteristicValue(index: number) {
 		values[index] = Math.min(Math.max(Number(values[index]), cr.minPoints), cr.maxPoints);
@@ -17,10 +17,10 @@
 		}
 	}
 
-	$: totalCharacteristicsPoints = values.reduce((acc, curr) => acc + curr, 0);
-	$: totalPointsExceeded = totalCharacteristicsPoints > cr.totalPoints;
 
 	import { characteristics, characteristicRules as cr } from '$lib/modules/mechanics';
+	let totalCharacteristicsPoints = $derived(values.reduce((acc, curr) => acc + curr, 0));
+	let totalPointsExceeded = $derived(totalCharacteristicsPoints > cr.totalPoints);
 </script>
 
 <section id="sheet">
@@ -40,7 +40,7 @@
 				<div class="name" id={characteristic.name}>{characteristic.name}</div>
 				<input
 					type="number"
-					on:change={() => updateCharacteristicValue(index)}
+					onchange={() => updateCharacteristicValue(index)}
 					bind:value={values[index]}
 					min={cr.minPoints}
 					max={cr.maxPoints}

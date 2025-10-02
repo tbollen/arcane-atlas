@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	// Core Components
 	import Button from '$lib/components/coreComponents/Button.svelte';
 	import Accordion from '$lib/components/coreComponents/Accordion.svelte';
 
 	// Ask for an StoredItem to edit
 	import { type StoredItem } from '$lib/stores/Items';
-	export let item: StoredItem;
 
 	// Load selected item
 	import { items } from '$lib/stores/Items';
@@ -40,10 +41,8 @@
 
 	//
 
-	let selectedSkill: (typeof characteristics)[number] | undefined = item.skillCheck?.skill;
-	let selectedChar: keyof typeof skillList | undefined = item.skillCheck?.characteristic;
-	$: selectedChar && updateSkill('char');
-	$: selectedSkill && updateSkill('skill');
+	let selectedSkill: (typeof characteristics)[number] | undefined = $state(item.skillCheck?.skill);
+	let selectedChar: keyof typeof skillList | undefined = $state(item.skillCheck?.characteristic);
 
 	function updateSkill(priority?: 'char' | 'skill') {
 		if (
@@ -86,6 +85,11 @@
 
 	// Button to add new fields
 	import { onMount } from 'svelte';
+	interface Props {
+		item: StoredItem;
+	}
+
+	let { item = $bindable() }: Props = $props();
 
 	function presetToCustom() {
 		// item.stylePreset = 'custom';
@@ -99,12 +103,20 @@
 		item.style.fontsize
 	) as (keyof typeof item.style.fontsize)[];
 
-	$: console.debug('Logging the editItem', item);
 
 	let mounted = false;
 	onMount(() => {
 		loadIconFromIconify(item.icon);
 		mounted = true;
+	});
+	run(() => {
+		selectedChar && updateSkill('char');
+	});
+	run(() => {
+		selectedSkill && updateSkill('skill');
+	});
+	run(() => {
+		console.debug('Logging the editItem', item);
 	});
 </script>
 
@@ -114,404 +126,424 @@
 	<!-- Editing -->
 	<!-- Main Fields -->
 	<Accordion>
-		<div slot="head">Name and Type</div>
-		<div slot="content" class="inputGrid">
-			<!-- Name -->
-			<label for="name">Name</label>
-			<input type="text" id="name" bind:value={item.name} placeholder="Name" />
-			<!-- Subtitle -->
-			<label for="subtitle">Subtitle</label>
-			<input type="text" id="subtitle" bind:value={item.subtitle} placeholder="Subtitle" />
+		{#snippet head()}
+				<div >Name and Type</div>
+			{/snippet}
+		{#snippet content()}
+				<div  class="inputGrid">
+				<!-- Name -->
+				<label for="name">Name</label>
+				<input type="text" id="name" bind:value={item.name} placeholder="Name" />
+				<!-- Subtitle -->
+				<label for="subtitle">Subtitle</label>
+				<input type="text" id="subtitle" bind:value={item.subtitle} placeholder="Subtitle" />
 
-			<!-- Type -->
-			<label for="type">Type</label>
-			<select id="type" bind:value={item.type} placeholder="Type">
-				{#each cardTypes as cardType}
-					<option value={cardType.name}>{cardType.name}</option>
-				{/each}
-			</select>
-			<!-- Icon Override -->
-			{#if $advancedMode}
-				<label for="iconOverride">
-					Icon
-					<Icon class="advancedIcon" icon="memory:anvil" />
-				</label>
-				<input
-					type="text"
-					id="iconOverride"
-					class:warning={!iconExists(item?.icon || 'mdi:sack')}
-					bind:value={item.icon}
-					on:input={() => loadIconFromIconify(item.icon)}
-					placeholder={cardTypes.find((type) => type.name == item.type)?.icon ||
-						'Icon from Iconify'}
-				/>
-			{/if}
-		</div>
+				<!-- Type -->
+				<label for="type">Type</label>
+				<select id="type" bind:value={item.type} placeholder="Type">
+					{#each cardTypes as cardType}
+						<option value={cardType.name}>{cardType.name}</option>
+					{/each}
+				</select>
+				<!-- Icon Override -->
+				{#if $advancedMode}
+					<label for="iconOverride">
+						Icon
+						<Icon class="advancedIcon" icon="memory:anvil" />
+					</label>
+					<input
+						type="text"
+						id="iconOverride"
+						class:warning={!iconExists(item?.icon || 'mdi:sack')}
+						bind:value={item.icon}
+						oninput={() => loadIconFromIconify(item.icon)}
+						placeholder={cardTypes.find((type) => type.name == item.type)?.icon ||
+							'Icon from Iconify'}
+					/>
+				{/if}
+			</div>
+			{/snippet}
 	</Accordion>
 	<!-- END -->
 	<hr class="divider" />
 	<Accordion>
-		<div slot="head">Main Text</div>
+		{#snippet head()}
+				<div >Main Text</div>
+			{/snippet}
 		<!-- Description -->
-		<div slot="content" class="mainFields">
-			<label for="description">Description</label>
-			<textarea
-				name="description"
-				id="description"
-				rows="3"
-				placeholder="Edit the description here"
-				bind:value={item.description}
-			/>
-			<small class="useTip"
-				>You can add dice icons like such '[pr]'' = {@html renderMarkdown('[pr]')}
-				<a href="{base}/about">click here</a> for more info
-			</small>
-			<!-- Aspects -->
-			<label for="editorAspects" class="category buttonLine"> Aspects </label>
-			{#if item.aspects?.length}
-				<div class="fieldList">
-					{#each item.aspects as aspect, i}
-						<div class="fieldItem">
-							<label for="aspect-{i}-name">Name</label>
-							<input type="text" id="aspect-{i}-name" bind:value={aspect.name} />
-							<label for="aspect-{i}-description">Description</label>
-							<textarea
-								name="description"
-								id="editorAspects"
-								rows="2"
-								placeholder="Edit the description here"
-								bind:value={aspect.description}
-							/>
-							<div class="fieldButtons">
-								<Button
-									color="plain"
-									icon="mdi:trash"
-									size="small"
-									click={() => item.removeField('aspects', i)}
-								/>
+		{#snippet content()}
+				<div  class="mainFields">
+				<label for="description">Description</label>
+				<textarea
+					name="description"
+					id="description"
+					rows="3"
+					placeholder="Edit the description here"
+					bind:value={item.description}
+				></textarea>
+				<small class="useTip"
+					>You can add dice icons like such '[pr]'' = {@html renderMarkdown('[pr]')}
+					<a href="{base}/about">click here</a> for more info
+				</small>
+				<!-- Aspects -->
+				<label for="editorAspects" class="category buttonLine"> Aspects </label>
+				{#if item.aspects?.length}
+					<div class="fieldList">
+						{#each item.aspects as aspect, i}
+							<div class="fieldItem">
+								<label for="aspect-{i}-name">Name</label>
+								<input type="text" id="aspect-{i}-name" bind:value={aspect.name} />
+								<label for="aspect-{i}-description">Description</label>
+								<textarea
+									name="description"
+									id="editorAspects"
+									rows="2"
+									placeholder="Edit the description here"
+									bind:value={aspect.description}
+								></textarea>
+								<div class="fieldButtons">
+									<Button
+										color="plain"
+										icon="mdi:trash"
+										size="small"
+										click={() => item.removeField('aspects', i)}
+									/>
+								</div>
 							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-			<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('aspects')}>Add</Button>
-			<hr class="divider" />
-			<!-- Specials -->
-			<label for="editorSpecials" class="category buttonLine"> Specials </label>
-			{#if item.specials?.length}
-				<div class="fieldList">
-					{#each item.specials as special, i}
-						<div class="fieldItem">
-							<label for="special-{i}-name">Name</label>
-							<input type="text" id="special-{i}-name" bind:value={special.name} />
-							<label for="special-{i}-description">Description</label>
-							<textarea
-								name="description"
-								id="editorAspects"
-								rows="2"
-								placeholder="Edit the description here"
-								bind:value={special.description}
-							/>
-							<div class="fieldButtons">
-								<Button
-									color="plain"
-									icon="mdi:trash"
-									size="small"
-									click={() => item.removeField('specials', i)}
-								/>
+						{/each}
+					</div>
+				{/if}
+				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('aspects')}>Add</Button>
+				<hr class="divider" />
+				<!-- Specials -->
+				<label for="editorSpecials" class="category buttonLine"> Specials </label>
+				{#if item.specials?.length}
+					<div class="fieldList">
+						{#each item.specials as special, i}
+							<div class="fieldItem">
+								<label for="special-{i}-name">Name</label>
+								<input type="text" id="special-{i}-name" bind:value={special.name} />
+								<label for="special-{i}-description">Description</label>
+								<textarea
+									name="description"
+									id="editorAspects"
+									rows="2"
+									placeholder="Edit the description here"
+									bind:value={special.description}
+								></textarea>
+								<div class="fieldButtons">
+									<Button
+										color="plain"
+										icon="mdi:trash"
+										size="small"
+										click={() => item.removeField('specials', i)}
+									/>
+								</div>
 							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-			<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('specials')}>Add</Button>
-		</div>
+						{/each}
+					</div>
+				{/if}
+				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('specials')}>Add</Button>
+			</div>
+			{/snippet}
 	</Accordion>
 	<!-- Fields -->
 	<hr class="divider" />
 	<Accordion>
-		<div slot="head">Fields</div>
-		<div slot="content" class="mainFields">
-			<!-- Fields -->
-			<div class="fieldList">
-				<div class="fieldItem">
-					<label for="characteristic">Characteristic</label>
-					<select id="characteristic" bind:value={selectedChar}>
-						{#if !item.skillCheck || selectedChar == undefined}
-							<option selected disabled value="">None selected</option>
-						{/if}
-						{#each characteristics as characteristic}
-							<option value={characteristic}>{characteristic}</option>
-						{/each}
-					</select>
-					<label for="skill">Skill</label>
-					<select id="skill" bind:value={selectedSkill}>
-						{#if !item.skillCheck || selectedChar == undefined}
-							<option selected disabled value="">None selected</option>
-						{/if}
-						{#each Object.entries(skillList) as [charName, skills]}
-							{#each skills as skill}
-								<option
-									class:preferredOption={selectedChar && skillList[selectedChar].includes(skill)}
-									value={skill}>[{charName}]: {skill}</option
-								>
+		{#snippet head()}
+				<div >Fields</div>
+			{/snippet}
+		{#snippet content()}
+				<div  class="mainFields">
+				<!-- Fields -->
+				<div class="fieldList">
+					<div class="fieldItem">
+						<label for="characteristic">Characteristic</label>
+						<select id="characteristic" bind:value={selectedChar}>
+							{#if !item.skillCheck || selectedChar == undefined}
+								<option selected disabled value="">None selected</option>
+							{/if}
+							{#each characteristics as characteristic}
+								<option value={characteristic}>{characteristic}</option>
 							{/each}
-						{/each}
-					</select>
-					<div class="fieldButtons">
-						<Button color="plain" icon="mdi:trash" size="small" click={resetSkill} />
-					</div>
-				</div>
-				<hr class="divider" />
-				{#if item.fields?.length}
-					{#each item.fields as field, i}
-						<div class="fieldItem">
-							<label for="special-{i}-name">Name</label>
-							<input type="text" id="special-{i}-name" bind:value={field.name} />
-							<div class="fieldButtons">
-								<Button
-									color="plain"
-									icon="mdi:trash"
-									size="small"
-									click={() => item.removeField('fields', i)}
-								/>
-							</div>
-							<label for="special-{i}-description">Value</label>
-							<input type="text" id="special-{i}-description" bind:value={field.description} />
+						</select>
+						<label for="skill">Skill</label>
+						<select id="skill" bind:value={selectedSkill}>
+							{#if !item.skillCheck || selectedChar == undefined}
+								<option selected disabled value="">None selected</option>
+							{/if}
+							{#each Object.entries(skillList) as [charName, skills]}
+								{#each skills as skill}
+									<option
+										class:preferredOption={selectedChar && skillList[selectedChar].includes(skill)}
+										value={skill}>[{charName}]: {skill}</option
+									>
+								{/each}
+							{/each}
+						</select>
+						<div class="fieldButtons">
+							<Button color="plain" icon="mdi:trash" size="small" click={resetSkill} />
 						</div>
-					{/each}
-				{/if}
+					</div>
+					<hr class="divider" />
+					{#if item.fields?.length}
+						{#each item.fields as field, i}
+							<div class="fieldItem">
+								<label for="special-{i}-name">Name</label>
+								<input type="text" id="special-{i}-name" bind:value={field.name} />
+								<div class="fieldButtons">
+									<Button
+										color="plain"
+										icon="mdi:trash"
+										size="small"
+										click={() => item.removeField('fields', i)}
+									/>
+								</div>
+								<label for="special-{i}-description">Value</label>
+								<input type="text" id="special-{i}-description" bind:value={field.description} />
+							</div>
+						{/each}
+					{/if}
+				</div>
+				<label for="editorSpecials" class="category buttonLine">
+					<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('fields')}
+						>Add Field</Button
+					>
+				</label>
 			</div>
-			<label for="editorSpecials" class="category buttonLine">
-				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('fields')}
-					>Add Field</Button
-				>
-			</label>
-		</div>
+			{/snippet}
 	</Accordion>
 	<!-- Image -->
 	<hr class="divider" />
 	<Accordion>
-		<div slot="head">Image</div>
-		<div slot="content" class="inputGrid">
-			{#if $advancedMode}
-				<!-- Image Name -->
-				<label for="imgName">
-					Name
-					<Icon class="advancedIcon" icon="memory:anvil" />
-				</label>
-				<input type="text" id="imgName" bind:value={item.image.name} placeholder={item.name} />
-			{/if}
+		{#snippet head()}
+				<div >Image</div>
+			{/snippet}
+		{#snippet content()}
+				<div  class="inputGrid">
+				{#if $advancedMode}
+					<!-- Image Name -->
+					<label for="imgName">
+						Name
+						<Icon class="advancedIcon" icon="memory:anvil" />
+					</label>
+					<input type="text" id="imgName" bind:value={item.image.name} placeholder={item.name} />
+				{/if}
 
-			<!-- URL -->
-			<label for="url">URL</label>
-			<input type="text" id="url" bind:value={item.image.url} placeholder="Paste image URL here" />
+				<!-- URL -->
+				<label for="url">URL</label>
+				<input type="text" id="url" bind:value={item.image.url} placeholder="Paste image URL here" />
 
-			<!-- Position X -->
-			<label for="xPosition">X Offset: {Math.round(item.image.x_offset || 0)}</label>
-			<input
-				type="range"
-				name="xPosition"
-				id="xPosition"
-				bind:value={item.image.x_offset}
-				min="-50"
-				max="50"
-				list="positions"
-			/>
-			<!-- Position Y -->
-			<label for="yPosition">Y Offset: {Math.round(item.image.y_offset || 0)}</label>
-			<input
-				type="range"
-				name="yPosition"
-				id="yPosition"
-				bind:value={item.image.y_offset}
-				min="-50"
-				max="50"
-				list="positions"
-			/>
-			<datalist id="positions">
-				<option value="0" />
-				<option value="-10" />
-				<option value="10" />
-			</datalist>
-			<!-- Rotation -->
-			<label for="rotation">Rotation: {Math.round(item.image.rotation || 0)}°</label>
-			<input
-				type="range"
-				name="rotation"
-				id="rotation"
-				bind:value={item.image.rotation}
-				min="-180"
-				max="180"
-				list="rotations"
-			/>
-			<!-- Scale -->
-			<label for="scale">Scale: {item.image.scale}%</label>
-			<input
-				type="range"
-				name="scale"
-				id="scale"
-				list="scales"
-				bind:value={item.image.scale}
-				min="25"
-				max="300"
-			/>
-			<datalist id="scales">
-				<option value="50" />
-				<option value="100" />
-				<option value="150" />
-				<option value="200" />
-				<option value="250" />
-			</datalist>
-			<datalist id="rotations">
-				<option value="0" />
-				<option value="90" />
-				<option value="-90" />
-			</datalist>
-			<Button color="plain" icon="mdi:refresh" size="small" click={() => item.resetImagePosition()}>
-				Reset Position</Button
-			>
-		</div>
+				<!-- Position X -->
+				<label for="xPosition">X Offset: {Math.round(item.image.x_offset || 0)}</label>
+				<input
+					type="range"
+					name="xPosition"
+					id="xPosition"
+					bind:value={item.image.x_offset}
+					min="-50"
+					max="50"
+					list="positions"
+				/>
+				<!-- Position Y -->
+				<label for="yPosition">Y Offset: {Math.round(item.image.y_offset || 0)}</label>
+				<input
+					type="range"
+					name="yPosition"
+					id="yPosition"
+					bind:value={item.image.y_offset}
+					min="-50"
+					max="50"
+					list="positions"
+				/>
+				<datalist id="positions">
+					<option value="0"></option>
+					<option value="-10"></option>
+					<option value="10"></option>
+				</datalist>
+				<!-- Rotation -->
+				<label for="rotation">Rotation: {Math.round(item.image.rotation || 0)}°</label>
+				<input
+					type="range"
+					name="rotation"
+					id="rotation"
+					bind:value={item.image.rotation}
+					min="-180"
+					max="180"
+					list="rotations"
+				/>
+				<!-- Scale -->
+				<label for="scale">Scale: {item.image.scale}%</label>
+				<input
+					type="range"
+					name="scale"
+					id="scale"
+					list="scales"
+					bind:value={item.image.scale}
+					min="25"
+					max="300"
+				/>
+				<datalist id="scales">
+					<option value="50"></option>
+					<option value="100"></option>
+					<option value="150"></option>
+					<option value="200"></option>
+					<option value="250"></option>
+				</datalist>
+				<datalist id="rotations">
+					<option value="0"></option>
+					<option value="90"></option>
+					<option value="-90"></option>
+				</datalist>
+				<Button color="plain" icon="mdi:refresh" size="small" click={() => item.resetImagePosition()}>
+					Reset Position</Button
+				>
+			</div>
+			{/snippet}
 	</Accordion>
 	<!-- Styling -->
 	<hr class="divider" />
 	<Accordion>
-		<div slot="head">Styling</div>
-		<div slot="content" class="inputGrid">
-			<!-- Preset -->
-			<label for="preset"> Style Preset </label>
-			<div class="buttonLine">
-				<select
-					style="height: 2em;"
-					id="preset"
-					bind:value={item.stylePreset}
-					on:change={(e) => item.useStylePreset(item.stylePreset || 'custom')}
-					placeholder="Preset"
-				>
-					{#each Object.keys(cardStylePresets) as preset}
-						<option value={preset}>{preset}</option>
-					{/each}
-				</select>
-				{#if item.stylePreset !== 'default'}
-					<Button
-						color="plain"
-						icon="mdi:backup-restore"
-						size="small"
-						click={() => item.useStylePreset('default')}
-					/>
-				{:else}
-					<Button
-						color="plain"
-						icon="mdi:dice"
-						size="small"
-						click={() => {
-							item.useStylePreset('random');
-						}}
-					/>
-				{/if}
-			</div>
-			<div />
-			{#if $advancedMode}
-				<div class="fullLine headerLine">
-					<Icon class="advancedIcon" icon="memory:anvil" />
-					Custom Styling Options
-				</div>
-
-				<!-- Color Options -->
-				<div class="fullLine headerLine">Color</div>
-				{#each availableColorOptions as colorType}
-					<label for="color-{colorType}">{colorType}</label>
-					<div class="buttonLine">
-						<div class="colorPickerLine">
-							<input
-								type="color"
-								id="color-{colorType}"
-								bind:value={item.style.color[colorType]}
-								on:change={presetToCustom}
-								list="colorSuggestions"
-							/>
-							<span>{item.style.color[colorType]}</span>
-						</div>
-						{#if item.stylePreset === 'custom'}
-							<Button
-								color="plain"
-								icon="mdi:restore"
-								size="small"
-								click={() => {
-									item.style.color[colorType] = defaultCardStyle.color[colorType];
-									presetToCustom();
-								}}
-							/>
-						{/if}
+		{#snippet head()}
+				<div >Styling</div>
+			{/snippet}
+		{#snippet content()}
+				<div  class="inputGrid">
+				<!-- Preset -->
+				<label for="preset"> Style Preset </label>
+				<div class="buttonLine">
+					<select
+						style="height: 2em;"
+						id="preset"
+						bind:value={item.stylePreset}
+						onchange={(e) => item.useStylePreset(item.stylePreset || 'custom')}
+						placeholder="Preset"
+					>
+						{#each Object.keys(cardStylePresets) as preset}
+							<option value={preset}>{preset}</option>
+						{/each}
+					</select>
+					{#if item.stylePreset !== 'default'}
+						<Button
+							color="plain"
+							icon="mdi:backup-restore"
+							size="small"
+							click={() => item.useStylePreset('default')}
+						/>
+					{:else}
 						<Button
 							color="plain"
 							icon="mdi:dice"
 							size="small"
 							click={() => {
-								presetToCustom();
-								const randomHex = Math.floor(Math.random() * 16777215).toString(16);
-								item.style.color[colorType] = `#${randomHex}`;
+								item.useStylePreset('random');
 							}}
 						/>
+					{/if}
+				</div>
+				<div></div>
+				{#if $advancedMode}
+					<div class="fullLine headerLine">
+						<Icon class="advancedIcon" icon="memory:anvil" />
+						Custom Styling Options
 					</div>
-				{/each}
 
-				<!-- Color Suggestions -->
-				<datalist id="colorSuggestions">
-					<option value="#ffffff" />
-					{#each suggestedColors as c}
-						<option value={c} />
+					<!-- Color Options -->
+					<div class="fullLine headerLine">Color</div>
+					{#each availableColorOptions as colorType}
+						<label for="color-{colorType}">{colorType}</label>
+						<div class="buttonLine">
+							<div class="colorPickerLine">
+								<input
+									type="color"
+									id="color-{colorType}"
+									bind:value={item.style.color[colorType]}
+									onchange={presetToCustom}
+									list="colorSuggestions"
+								/>
+								<span>{item.style.color[colorType]}</span>
+							</div>
+							{#if item.stylePreset === 'custom'}
+								<Button
+									color="plain"
+									icon="mdi:restore"
+									size="small"
+									click={() => {
+										item.style.color[colorType] = defaultCardStyle.color[colorType];
+										presetToCustom();
+									}}
+								/>
+							{/if}
+							<Button
+								color="plain"
+								icon="mdi:dice"
+								size="small"
+								click={() => {
+									presetToCustom();
+									const randomHex = Math.floor(Math.random() * 16777215).toString(16);
+									item.style.color[colorType] = `#${randomHex}`;
+								}}
+							/>
+						</div>
 					{/each}
-				</datalist>
 
-				<!-- Font Size Options -->
-				<div class="fullLine headerLine">Text Size</div>
-				{#each availableFontSizeOptions as fontSizeOption}
-					<label for="fontSize-{fontSizeOption}">{fontSizeOption}</label>
-					<div class="buttonLine">
-						<input
-							type="number"
-							id="fontSize-{fontSizeOption}"
-							bind:value={item.style.fontsize[fontSizeOption]}
-							on:change={presetToCustom}
-						/>
-						<Button
-							color="plain"
-							icon="mdi:restore"
-							size="small"
-							click={() => {
-								item.style.fontsize[fontSizeOption] = defaultCardStyle.fontsize[fontSizeOption];
-							}}
-						/>
-					</div>
-				{/each}
+					<!-- Color Suggestions -->
+					<datalist id="colorSuggestions">
+						<option value="#ffffff"></option>
+						{#each suggestedColors as c}
+							<option value={c}></option>
+						{/each}
+					</datalist>
 
-				<!-- Font Options -->
-				<div class="fullLine headerLine">Fonts</div>
-				{#each availableFontOptions as fontOption}
-					<label for="font-{fontOption}">{fontOption}</label>
-					<div class="buttonLine">
-						<select
-							id="font-{fontOption}"
-							bind:value={item.style.font[fontOption]}
-							on:change={presetToCustom}
-						>
-							{#each availableFonts as font}
-								<option value={font}>{font}</option>
-							{/each}
-						</select>
-						<Button
-							color="plain"
-							icon="mdi:restore"
-							size="small"
-							click={() => {
-								item.style.font[fontOption] = defaultCardStyle.font[fontOption];
-							}}
-						/>
-					</div>
-				{/each}
-			{/if}
-		</div>
+					<!-- Font Size Options -->
+					<div class="fullLine headerLine">Text Size</div>
+					{#each availableFontSizeOptions as fontSizeOption}
+						<label for="fontSize-{fontSizeOption}">{fontSizeOption}</label>
+						<div class="buttonLine">
+							<input
+								type="number"
+								id="fontSize-{fontSizeOption}"
+								bind:value={item.style.fontsize[fontSizeOption]}
+								onchange={presetToCustom}
+							/>
+							<Button
+								color="plain"
+								icon="mdi:restore"
+								size="small"
+								click={() => {
+									item.style.fontsize[fontSizeOption] = defaultCardStyle.fontsize[fontSizeOption];
+								}}
+							/>
+						</div>
+					{/each}
+
+					<!-- Font Options -->
+					<div class="fullLine headerLine">Fonts</div>
+					{#each availableFontOptions as fontOption}
+						<label for="font-{fontOption}">{fontOption}</label>
+						<div class="buttonLine">
+							<select
+								id="font-{fontOption}"
+								bind:value={item.style.font[fontOption]}
+								onchange={presetToCustom}
+							>
+								{#each availableFonts as font}
+									<option value={font}>{font}</option>
+								{/each}
+							</select>
+							<Button
+								color="plain"
+								icon="mdi:restore"
+								size="small"
+								click={() => {
+									item.style.font[fontOption] = defaultCardStyle.font[fontOption];
+								}}
+							/>
+						</div>
+					{/each}
+				{/if}
+			</div>
+			{/snippet}
 	</Accordion>
 </div>
 

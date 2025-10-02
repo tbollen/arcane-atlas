@@ -45,7 +45,11 @@
 		}
 	};
 
-	export let dice: keyof typeof diceDict;
+	interface Props {
+		dice: keyof typeof diceDict;
+	}
+
+	let { dice }: Props = $props();
 </script>
 
 <span class="dice {diceDict[dice].type}" style="color: {diceDict[dice].color};">

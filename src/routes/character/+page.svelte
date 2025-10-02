@@ -1,10 +1,11 @@
+<!-- @migration-task Error while migrating Svelte code: Cannot bind to derived state -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { User, userNameExists } from '$lib/core/user';
 
-	let username: string;
-	let nickname: string;
-	let users: User[] = [];
+	let username: string = $derived(userNameExists(username, users));
+	let nickname: string = $state();
+	let users: User[] = $state([]);
 
 	async function fetchUsers(): Promise<User[]> {
 		const res = await fetch('/api/users');
@@ -12,7 +13,7 @@
 		return users;
 	}
 
-	$: check_userNameExists = userNameExists(username, users);
+	
 
 	async function createUser(): Promise<void> {
 		if (!username) throw new Error('Username cannot be empty');
@@ -51,7 +52,7 @@
 {#if check_userNameExists}
 	<p style="color: red;">Username already exists!</p>
 {/if}
-<button on:click={createUser}>Create User</button>
+<button onclick={createUser}>Create User</button>
 
 <table>
 	<thead>

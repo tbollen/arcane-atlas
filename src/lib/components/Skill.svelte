@@ -1,6 +1,10 @@
 <script lang="ts">
-	export let card;
-	export let colorize: boolean | string = true;
+	interface Props {
+		card: any;
+		colorize?: boolean | string;
+	}
+
+	let { card, colorize = true }: Props = $props();
 	let _color = typeof colorize !== 'string' ? 'var(--threat)' : colorize; // Set default if not set
 </script>
 

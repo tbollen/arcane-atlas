@@ -1,43 +1,65 @@
 <script lang="ts">
+	import { stopPropagation as stopPropagation_1, handlers } from 'svelte/legacy';
+
 	import Icon, { iconExists } from '@iconify/svelte';
 	import { slide } from 'svelte/transition';
 
-	export let disabled: boolean = false;
-	export let click: () => void = () => {};
-	export let icon: string | undefined = undefined;
-	export let size: 'small' | 'medium' | 'large' = 'medium';
-	export let iconClick: undefined | (() => void) = undefined;
-	export let placement: 'left' | 'right' = 'left';
-	export let stateOn: boolean = true;
-	export let color: 'plain' | 'blossom' | 'weave' | 'threat' | 'success' = 'blossom';
-	export let variant: 'filled' | 'outlined' | 'flipped' | 'contrast-outlined' = 'filled';
-	export let disableTransition: boolean = false;
-	export let hideSlotOnHover: boolean = false;
-	export let hideSlot: boolean = false;
-	export let stopPropagation: boolean = false;
-	export let title = '';
+	interface Props {
+		disabled?: boolean;
+		click?: () => void;
+		icon?: string | undefined;
+		size?: 'small' | 'medium' | 'large';
+		iconClick?: undefined | (() => void);
+		placement?: 'left' | 'right';
+		stateOn?: boolean;
+		color?: 'plain' | 'blossom' | 'weave' | 'threat' | 'success';
+		variant?: 'filled' | 'outlined' | 'flipped' | 'contrast-outlined';
+		disableTransition?: boolean;
+		hideSlotOnHover?: boolean;
+		hideSlot?: boolean;
+		stopPropagation?: boolean;
+		title?: string;
+		children?: import('svelte').Snippet;
+	}
 
-	let isHovering: boolean = false;
+	let {
+		disabled = false,
+		click = () => {},
+		icon = undefined,
+		size = 'medium',
+		iconClick = undefined,
+		placement = 'left',
+		stateOn = true,
+		color = 'blossom',
+		variant = 'filled',
+		disableTransition = false,
+		hideSlotOnHover = false,
+		hideSlot = false,
+		stopPropagation = false,
+		title = '',
+		children
+	}: Props = $props();
 
-	$: clickFunc = !disabled ? click : () => {};
+	let isHovering: boolean = $state(false);
+
+	let clickFunc = $derived(!disabled ? click : () => {});
 </script>
 
 <button
 	{title}
-	on:click|stopPropagation={stopPropagation ? () => {} : clickFunc}
-	on:click|stopPropagation={!stopPropagation ? () => {} : clickFunc}
+	onclick={handlers(stopPropagation_1(stopPropagation ? () => {} : clickFunc), stopPropagation_1(!stopPropagation ? () => {} : clickFunc))}
 	class="coreButton {color} {variant} {placement} {size}"
 	class:disableTransition
 	class:stateOff={!stateOn}
-	class:noGap={!$$slots.default || !icon}
+	class:noGap={!children || !icon}
 	{disabled}
-	on:mouseenter={() => (isHovering = true)}
-	on:mouseleave={() => (isHovering = false)}
+	onmouseenter={() => (isHovering = true)}
+	onmouseleave={() => (isHovering = false)}
 >
 	<!-- Icon -->
 	<div class="icon">
 		{#if icon && iconExists(icon) && typeof iconClick === 'function' && iconClick}
-			<button on:click|stopPropagation={iconClick} {disabled} class="iconButton">
+			<button onclick={stopPropagation_1(iconClick)} {disabled} class="iconButton">
 				<Icon {icon} />
 			</button>
 		{:else if icon && iconExists(icon)}
@@ -47,9 +69,9 @@
 		{/if}
 	</div>
 	<!-- Slot -->
-	{#if (($$slots.default && hideSlotOnHover && isHovering) || !hideSlotOnHover) && !hideSlot}
+	{#if ((children && hideSlotOnHover && isHovering) || !hideSlotOnHover) && !hideSlot}
 		<span class:slot={hideSlotOnHover} transition:slide={{ axis: 'x', duration: 200 }}>
-			<slot />
+			{@render children?.()}
 		</span>
 	{/if}
 </button>

@@ -1,12 +1,16 @@
 <script lang="ts">
-	export let item;
-	export let nameOnBack: boolean = false;
 
 	import '$lib/styles/cardStyle.css';
+	interface Props {
+		item: any;
+		nameOnBack?: boolean;
+	}
 
-	$: src =
-		item.image?.url ||
-		'https://64.media.tumblr.com/6d54812f7cd2e4ef1edce4b0f4c2ea2f/d234e2e2d3d0be5b-3d/s1280x1920/7db18f6c90f00e81f45f79ba20a30c464528b85e.jpg';
+	let { item, nameOnBack = false }: Props = $props();
+
+	let src =
+		$derived(item.image?.url ||
+		'https://64.media.tumblr.com/6d54812f7cd2e4ef1edce4b0f4c2ea2f/d234e2e2d3d0be5b-3d/s1280x1920/7db18f6c90f00e81f45f79ba20a30c464528b85e.jpg');
 </script>
 
 <div

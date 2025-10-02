@@ -2,8 +2,6 @@
 	// Import Item Store
 	import { type Item } from '$lib/types/Item';
 	//
-	export let item: Item;
-	export let print: boolean = true;
 
 	// Card Components
 	import Skill from './Skill.svelte';
@@ -11,21 +9,27 @@
 	import '$lib/styles/cardStyle.css';
 
 	import Icon, { iconExists } from '@iconify/svelte';
-	import { updated } from '$app/stores';
+	import { updated } from '$app/state';
 
 	// import card type options and icons
 	import { cardTypes } from '$lib/modules/cardTypes';
 
-	// Get card type, if not found use default [0]
-	$: cardType = cardTypes.find((type) => type.name === item.type) || cardTypes[0];
 
 	// Update the item description for renderering
 	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
 	import { skillList } from '$lib/modules/skillCheckList';
-	$: renderedItemDescription = renderMarkdown(item.description);
+	interface Props {
+		item: Item;
+		print?: boolean;
+	}
 
+	let { item, print = true }: Props = $props();
+
+	// Get card type, if not found use default [0]
+	let cardType = $derived(cardTypes.find((type) => type.name === item.type) || cardTypes[0]);
+	let renderedItemDescription = $derived(renderMarkdown(item.description));
 	// Check for icon
-	$: iconOverride = item?.icon && iconExists(item.icon) ? item.icon : undefined;
+	let iconOverride = $derived(item?.icon && iconExists(item.icon) ? item.icon : undefined);
 </script>
 
 <div
@@ -107,7 +111,7 @@
 
 	<div id="fields" data-field-number={item?.fields?.length} class:hasSkillCheck={item?.skillCheck}>
 		{#if (item?.fields && item?.fields?.length > 0) || item?.skillCheck}
-			<div class="fieldDivider" />
+			<div class="fieldDivider"></div>
 		{/if}
 		{#if item?.fields}
 			{#each item.fields as field, i}

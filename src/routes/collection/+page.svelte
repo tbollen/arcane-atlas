@@ -5,7 +5,7 @@
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 
 	import { items } from '$lib/stores/Items';
-	let _items = items;
+	let _items = $state(items);
 
 	// Svelte stuff
 	import { onMount } from 'svelte';
@@ -17,7 +17,7 @@
 	// Selected Items
 	import { selectedItems } from '$lib/stores/selectedItems';
 
-	let imageView: boolean = false;
+	let imageView: boolean = $state(false);
 
 	// Functions
 
@@ -89,12 +89,12 @@
 
 	// UI
 
-	let showTemplates = false;
+	let showTemplates = $state(false);
 	function toggleTemplates() {
 		showTemplates = !showTemplates;
 	}
 
-	let renderCards = false;
+	let renderCards = $state(false);
 	onMount(() => {
 		renderCards = true;
 	});
@@ -199,8 +199,8 @@
 					class:imageView
 					class:isSelected={$selectedItems.has(card.id)}
 					id={card.id}
-					on:click={() => toggleCardSelection(card.id)}
-					on:dblclick={() => viewCard(card.id)}
+					onclick={() => toggleCardSelection(card.id)}
+					ondblclick={() => viewCard(card.id)}
 				>
 					<!-- Edit Options -->
 					<div class="editOptions">

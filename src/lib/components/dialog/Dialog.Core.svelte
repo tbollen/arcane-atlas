@@ -1,17 +1,33 @@
 <script lang="ts">
+	import { run, self, createBubbler, stopPropagation } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { fly } from 'svelte/transition';
 	import Button from '$lib/components/coreComponents/Button.svelte';
 	import { type Option } from './dialogService';
 
 	// Define the props
-	export let message: string = '';
-	export let options: Option[] = [];
-	export let close: (response: any) => void; // Add close as a prop
-	export let slot: any;
+	interface Props {
+		message?: string;
+		options?: Option[];
+		close: (response: any) => void;
+		slot: any;
+		children?: import('svelte').Snippet;
+	}
 
-	let dialog: HTMLDialogElement;
+	let {
+		message = '',
+		options = [],
+		close,
+		slot,
+		children
+	}: Props = $props();
 
-	$: if (dialog) dialog.showModal();
+	let dialog: HTMLDialogElement = $state();
+
+	run(() => {
+		if (dialog) dialog.showModal();
+	});
 
 	function dismiss() {
 		close(null); // Pass null or a default value
@@ -23,10 +39,10 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
-<dialog bind:this={dialog} on:click|self={dismiss} transition:fly>
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div on:click|stopPropagation>
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+<dialog bind:this={dialog} onclick={self(dismiss)} transition:fly>
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div onclick={stopPropagation(bubble('click'))}>
 		<section id="head">
 			<span class="message">{message}</span>
 			<div class="closeButton">
@@ -37,7 +53,7 @@
 		<!-- Slot content -->
 		{#if slot}
 			<div id="slot-container">
-				<slot><span id="dialogSlot">{slot}</span></slot>
+				{#if children}{@render children()}{:else}<span id="dialogSlot">{slot}</span>{/if}
 			</div>
 		{/if}
 

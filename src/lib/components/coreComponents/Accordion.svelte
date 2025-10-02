@@ -1,19 +1,24 @@
 <script>
-	export let open = false;
-	export let icon = 'mdi:chevron-down';
 	// Imports
 	import { slide } from 'svelte/transition';
 
 	// Components
 	import Icon from '@iconify/svelte';
+	/** @type {{open?: boolean, icon?: string, head?: import('svelte').Snippet<[any]>, content?: import('svelte').Snippet}} */
+	let {
+		open = $bindable(false),
+		icon = 'mdi:chevron-down',
+		head,
+		content
+	} = $props();
 
 	// Functions
 	const handleClick = () => (open = !open);
 </script>
 
 <div class="accordion" class:open>
-	<button class="header" class:open on:click={handleClick}>
-		<slot name="head" class="accordionHead"></slot>
+	<button class="header" class:open onclick={handleClick}>
+		{@render head?.({ class: "accordionHead", })}
 		<div class="icon" class:open>
 			<Icon {icon} />
 		</div>
@@ -21,7 +26,7 @@
 
 	<div class="contentWrapper" class:open>
 		<div class="content" transition:slide>
-			<slot name="content"></slot>
+			{@render content?.()}
 		</div>
 	</div>
 </div>

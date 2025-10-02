@@ -83,12 +83,12 @@
 		id: 'neovald',
 		image: 'https://robohash.org/Neovald'
 	};
-	let currentRoute: string;
-	$: currentRoute = $page.url.pathname;
+	let currentRoute: string = $derived(page.url.pathname);
+	
 
 	// Imports
 	import Icon from '@iconify/svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <section id="navigation" class="navbar">

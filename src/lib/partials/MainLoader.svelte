@@ -4,7 +4,7 @@
 <main>
 	<div class="loaderContainer">
 		<span>Loading...</span>
-		<div class="loader" />
+		<div class="loader"></div>
 	</div>
 </main>
 

@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import Dialog from './Dialog.Core.svelte';
+import { mount } from "svelte";
 
 export type Option = { name: string; response: any; icon?: string };
 
@@ -29,10 +30,10 @@ function createDialog() {
 	};
 
 	// Instantiate the Dialog component
-	dialogInstance = new Dialog({
-		target: wrapper,
-		props: dialogProps
-	});
+	dialogInstance = mount(Dialog, {
+    		target: wrapper,
+    		props: dialogProps
+    	});
 
 	// Clean up when the dialog is closed
 	dialogInstance.$on('close', closeDialog);
