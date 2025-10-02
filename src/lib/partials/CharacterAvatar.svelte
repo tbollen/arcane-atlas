@@ -12,7 +12,7 @@
 	$: console.log('user:', user);
 </script>
 
-{#if !user}
+{#if $page.data.user}
 	<a href="./account" id="characterAvatar">
 		<img src={user.image || `https://robohash.org/${user.name}`} alt={user.name} />
 		<span>{user.name}</span>
