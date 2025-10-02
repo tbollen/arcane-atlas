@@ -2,7 +2,7 @@
 	import AbsoluteBackground from '$lib/components/coreComponents/AbsoluteBackground.svelte';
 	import { getImageData } from '$lib/metadata/imageAttributionList';
 
-	$: firstTimeVisit = true;
+	let firstTimeVisit = $derived(true);
 	const welcomeImage = getImageData('Pixel Art Village');
 </script>
 

@@ -1,18 +1,26 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { run } from 'svelte/legacy';
 
-	export let fallbackUser = {
+	import { page } from '$app/state';
+
+	interface Props {
+		fallbackUser?: any;
+	}
+
+	let { fallbackUser = {
 		name: 'Character',
 		image: 'https://robohash.org/test',
 		id: 'test'
-	};
+	} }: Props = $props();
 
 	// Get session data (user info)
-	$: user = $page.data.user || fallbackUser;
-	$: console.log('user:', user);
+	let user = $derived(page.data.user || fallbackUser);
+	run(() => {
+		console.log('user:', user);
+	});
 </script>
 
-{#if $page.data.user}
+{#if page.data.user}
 	<a href="./account" id="characterAvatar">
 		<img src={user.image || `https://robohash.org/${user.name}`} alt={user.name} />
 		<span>{user.name}</span>

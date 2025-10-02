@@ -8,7 +8,11 @@
 	let session: any;
 
 	// +page.server.ts form actions return 'form' as an object with the form data
-	export let form;
+	interface Props {
+		form: any;
+	}
+
+	let { form }: Props = $props();
 
 	onMount(async () => {
 		session = await authClient.getSession();

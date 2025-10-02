@@ -9,14 +9,15 @@
 
 <script lang="ts">
 	import { type ImageAttribution } from '$lib/types/imageAttribution';
-	export let image: ImageAttribution | undefined = undefined;
-	let classModifier: string | undefined = undefined;
-	export { classModifier as class };
-	export let background: string = 'transparent';
-	export let colorOpacity: number = 0.5;
-	export let opacity: number = 0.5;
-	export let imagePosition: string = 'initial';
-	export let blendMode:
+	
+	interface Props {
+		image?: ImageAttribution | undefined;
+		class?: string | undefined;
+		background?: string;
+		colorOpacity?: number;
+		opacity?: number;
+		imagePosition?: string;
+		blendMode?: 
 		| 'normal'
 		| 'multiply'
 		| 'screen'
@@ -32,7 +33,20 @@
 		| 'hue'
 		| 'saturation'
 		| 'color'
-		| 'luminosity' = 'normal';
+		| 'luminosity';
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		image = undefined,
+		class: classModifier = undefined,
+		background = 'transparent',
+		colorOpacity = 0.5,
+		opacity = 0.5,
+		imagePosition = 'initial',
+		blendMode = 'normal',
+		children
+	}: Props = $props();
 
 	const imageList: any = import.meta.glob(['$lib/images/*'], { as: 'url', eager: true });
 	const imagePath = '/src/lib/images/' + image?.fileUrl;
@@ -42,14 +56,14 @@
 </script>
 
 <div class="{classModifier || ''} absoluteBackground">
-	<slot />
+	{@render children?.()}
 	<div class="absoluteBackground_wrapper" style:opacity>
 		<div
 			class="absoluteBackground_bg"
 			style:mix-blend-mode={blendMode}
 			style:background
 			style:opacity={colorOpacity}
-		/>
+		></div>
 		{#if image}
 			<img
 				class="absoluteBackground_img"
@@ -62,7 +76,7 @@
 	{#if requiresAttribution && image}
 		<div class="absoluteBackground_attribution">
 			{#if image.webUrl}
-				<svelte:element this="a" href={image.webUrl} target="_blank">
+				<svelte:element this={"a"} href={image.webUrl} target="_blank">
 					image by <span class="absoluteBackground_creator">{image.creator}</span>
 					<span class="absoluteBackground_license">({image.license})</span>
 				</svelte:element>

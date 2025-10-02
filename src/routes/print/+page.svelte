@@ -10,7 +10,7 @@
 	import { selectedItems } from '$lib/stores/selectedItems';
 	//
 	let cards = $selectedItems;
-	let cardSet: typeof items.items = [];
+	let cardSet: typeof items.items = $state([]);
 	// Set Cards
 	cardSet = items.items.filter((item) => cards.has(item.id));
 

@@ -1,14 +1,21 @@
 <script lang="ts">
+	import { run, self, createBubbler, stopPropagation } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { fly } from 'svelte/transition';
 	import Button from './Button.svelte';
 
 	// Props
-	let show: boolean = false;
-	export let message: string = '';
-	export let options: { name: string; response: any }[] = [
+	let show: boolean = $state(false);
+	interface Props {
+		message?: string;
+		options?: { name: string; response: any }[];
+	}
+
+	let { message = '', options = [
 		{ name: 'Ok', response: true },
 		{ name: 'Cancel', response: false }
-	];
+	] }: Props = $props();
 
 	// Promises
 	let resolvePromise: (value: any) => void;
@@ -29,15 +36,17 @@
 		response !== null ? resolvePromise(response) : rejectPromise('Dialog closed');
 	}
 
-	let dialog: HTMLDialogElement;
+	let dialog: HTMLDialogElement = $state();
 
-	$: if (dialog && show) dialog.showModal();
+	run(() => {
+		if (dialog && show) dialog.showModal();
+	});
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
-<dialog bind:this={dialog} on:click|self={() => closeDialog(null)} transition:fly>
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div on:click|stopPropagation>
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+<dialog bind:this={dialog} onclick={self(() => closeDialog(null))} transition:fly>
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div onclick={stopPropagation(bubble('click'))}>
 		<section id="head">
 			<span class="message">{message}</span>
 			<div class="closeButton">

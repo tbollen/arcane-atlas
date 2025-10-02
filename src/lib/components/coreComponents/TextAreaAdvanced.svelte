@@ -1,10 +1,21 @@
 <script lang="ts">
-	export let text = '';
-	export let placeholder = 'Input text here...';
-	export let rows;
-	export let name;
-	export let id;
-	export let disableShortcuts = false;
+	interface Props {
+		text?: string;
+		placeholder?: string;
+		rows: any;
+		name: any;
+		id: any;
+		disableShortcuts?: boolean;
+	}
+
+	let {
+		text = $bindable(''),
+		placeholder = 'Input text here...',
+		rows,
+		name,
+		id,
+		disableShortcuts = false
+	}: Props = $props();
 
 	document.addEventListener('keydown', (event) => {
 		if (!disableShortcuts) {
