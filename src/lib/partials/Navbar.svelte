@@ -84,7 +84,6 @@
 		image: 'https://robohash.org/Neovald'
 	};
 	let currentRoute: string = $derived(page.url.pathname);
-	
 
 	// Imports
 	import Icon from '@iconify/svelte';
@@ -100,8 +99,10 @@
 				<!-- Skip hidden routes -->
 			{:else if typeof route === 'object' && 'dropdown' in route}
 				<!-- Route is a MasterRoute, show dropdown on hover -->
-				<a href="{base}/{route.path}" class="navItem navDropdown navUnderline">
-					{route.name}
+				<div class="navItem navDropdown">
+					<a class="navUnderline" href="{base}/{route.path}">
+						{route.name}
+					</a>
 					<div class="navDropdownMenu">
 						{#each route.dropdown as dropdownRoute}
 							<a href="{base}/{dropdownRoute.path}" class="dropdownNavItem">
@@ -110,7 +111,7 @@
 							</a>
 						{/each}
 					</div>
-				</a>
+				</div>
 			{:else}
 				<!-- BaseRoute -->
 				<div class="navItem navUnderline" class:active={currentRoute === route.path}>
@@ -134,10 +135,9 @@
 <style>
 	#navigation {
 		display: grid;
-		height: var(--navbar-height, 3rem);
 		box-sizing: border-box;
 		/* Keep it centered */
-		grid-template-columns: 1fr min-content 1fr;
+		grid-template-columns: max-content 1fr max-content;
 		padding: 5px;
 		align-items: center;
 		/* Areas */
@@ -158,6 +158,7 @@
 		display: flex;
 		gap: 1.5rem;
 		align-items: center;
+		justify-content: center;
 	}
 
 	.navItem {
