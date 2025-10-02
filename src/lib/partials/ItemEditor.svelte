@@ -5,6 +5,12 @@
 	import Button from '$lib/components/coreComponents/Button.svelte';
 	import Accordion from '$lib/components/coreComponents/Accordion.svelte';
 
+	// ShadCN UI
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
+	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
+	import * as Select from '$lib/components/ui/select';
+
 	// Ask for an StoredItem to edit
 	import { type StoredItem } from '$lib/stores/Items';
 
@@ -126,19 +132,39 @@
 	<!-- Main Fields -->
 	<Accordion>
 		{#snippet head()}
-			<div>Name and Type</div>
+			<div>Card Info</div>
 		{/snippet}
 		{#snippet content()}
 			<div class="inputGrid">
 				<!-- Name -->
-				<label for="name">Name</label>
-				<input type="text" id="name" bind:value={item.name} placeholder="Name" />
+				<Label for="name">Name</Label>
+				<Input type="text" id="name" bind:value={item.name} placeholder="Name" />
 				<!-- Subtitle -->
-				<label for="subtitle">Subtitle</label>
-				<input type="text" id="subtitle" bind:value={item.subtitle} placeholder="Subtitle" />
-
+				<Label for="subtitle">Subtitle</Label>
+				<Input type="text" id="subtitle" bind:value={item.subtitle} placeholder="Subtitle" />
+				<!-- Description -->
+				<Label for="description">Description</Label>
+				<Textarea
+					name="description"
+					id="description"
+					rows={3}
+					placeholder="Edit the description here"
+					bind:value={item.description}
+				></Textarea>
+				<p class="useTip col-span-full text-sm text-muted-foreground">
+					You can add dice icons like such '[pr]'' = {@html renderMarkdown('[pr]')}
+					<a href="{base}/about">click here</a> for more info
+				</p>
 				<!-- Type -->
-				<label for="type">Type</label>
+				<Label for="type">Type</Label>
+				<Select.Root type="single" name="type" bind:value={item.type}>
+					<Select.Trigger class="w-[180px]">{item.type}</Select.Trigger>
+					<Select.Content>
+						{#each cardTypes as cardType}
+							<Select.Item value={cardType.name}>{cardType.name}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 				<select id="type" bind:value={item.type} placeholder="Type">
 					{#each cardTypes as cardType}
 						<option value={cardType.name}>{cardType.name}</option>
@@ -172,18 +198,6 @@
 		<!-- Description -->
 		{#snippet content()}
 			<div class="mainFields">
-				<label for="description">Description</label>
-				<textarea
-					name="description"
-					id="description"
-					rows="3"
-					placeholder="Edit the description here"
-					bind:value={item.description}
-				></textarea>
-				<small class="useTip"
-					>You can add dice icons like such '[pr]'' = {@html renderMarkdown('[pr]')}
-					<a href="{base}/about">click here</a> for more info
-				</small>
 				<!-- Aspects -->
 				<label for="editorAspects" class="category buttonLine"> Aspects </label>
 				{#if item.aspects?.length}
@@ -569,7 +583,7 @@
 	}
 	.inputGrid {
 		display: grid;
-		grid-template-columns: 6em minmax(0, 16em);
+		grid-template-columns: 7em minmax(0, 1fr);
 		align-items: center;
 		gap: 0.2em;
 	}
@@ -625,6 +639,7 @@
 		gap: 1em;
 		align-items: center;
 		justify-content: space-between;
+		border-bottom: solid 1px var(--color-obsidian-2);
 	}
 
 	label {
