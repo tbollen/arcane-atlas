@@ -41,8 +41,8 @@
 
 	//
 
-	let selectedSkill: (typeof characteristics)[number] | undefined = $state(item.skillCheck?.skill);
-	let selectedChar: keyof typeof skillList | undefined = $state(item.skillCheck?.characteristic);
+	let selectedSkill: (typeof characteristics)[number] | undefined = $state();
+	let selectedChar: keyof typeof skillList | undefined = $state();
 
 	function updateSkill(priority?: 'char' | 'skill') {
 		if (
@@ -103,7 +103,6 @@
 		item.style.fontsize
 	) as (keyof typeof item.style.fontsize)[];
 
-
 	let mounted = false;
 	onMount(() => {
 		loadIconFromIconify(item.icon);
@@ -127,10 +126,10 @@
 	<!-- Main Fields -->
 	<Accordion>
 		{#snippet head()}
-				<div >Name and Type</div>
-			{/snippet}
+			<div>Name and Type</div>
+		{/snippet}
 		{#snippet content()}
-				<div  class="inputGrid">
+			<div class="inputGrid">
 				<!-- Name -->
 				<label for="name">Name</label>
 				<input type="text" id="name" bind:value={item.name} placeholder="Name" />
@@ -162,17 +161,17 @@
 					/>
 				{/if}
 			</div>
-			{/snippet}
+		{/snippet}
 	</Accordion>
 	<!-- END -->
 	<hr class="divider" />
 	<Accordion>
 		{#snippet head()}
-				<div >Main Text</div>
-			{/snippet}
+			<div>Main Text</div>
+		{/snippet}
 		<!-- Description -->
 		{#snippet content()}
-				<div  class="mainFields">
+			<div class="mainFields">
 				<label for="description">Description</label>
 				<textarea
 					name="description"
@@ -213,7 +212,8 @@
 						{/each}
 					</div>
 				{/if}
-				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('aspects')}>Add</Button>
+				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('aspects')}>Add</Button
+				>
 				<hr class="divider" />
 				<!-- Specials -->
 				<label for="editorSpecials" class="category buttonLine"> Specials </label>
@@ -243,18 +243,20 @@
 						{/each}
 					</div>
 				{/if}
-				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('specials')}>Add</Button>
+				<Button icon="mdi:plus" size="small" click={() => item.addEmptyField('specials')}
+					>Add</Button
+				>
 			</div>
-			{/snippet}
+		{/snippet}
 	</Accordion>
 	<!-- Fields -->
 	<hr class="divider" />
 	<Accordion>
 		{#snippet head()}
-				<div >Fields</div>
-			{/snippet}
+			<div>Fields</div>
+		{/snippet}
 		{#snippet content()}
-				<div  class="mainFields">
+			<div class="mainFields">
 				<!-- Fields -->
 				<div class="fieldList">
 					<div class="fieldItem">
@@ -311,16 +313,16 @@
 					>
 				</label>
 			</div>
-			{/snippet}
+		{/snippet}
 	</Accordion>
 	<!-- Image -->
 	<hr class="divider" />
 	<Accordion>
 		{#snippet head()}
-				<div >Image</div>
-			{/snippet}
+			<div>Image</div>
+		{/snippet}
 		{#snippet content()}
-				<div  class="inputGrid">
+			<div class="inputGrid">
 				{#if $advancedMode}
 					<!-- Image Name -->
 					<label for="imgName">
@@ -332,7 +334,12 @@
 
 				<!-- URL -->
 				<label for="url">URL</label>
-				<input type="text" id="url" bind:value={item.image.url} placeholder="Paste image URL here" />
+				<input
+					type="text"
+					id="url"
+					bind:value={item.image.url}
+					placeholder="Paste image URL here"
+				/>
 
 				<!-- Position X -->
 				<label for="xPosition">X Offset: {Math.round(item.image.x_offset || 0)}</label>
@@ -395,20 +402,25 @@
 					<option value="90"></option>
 					<option value="-90"></option>
 				</datalist>
-				<Button color="plain" icon="mdi:refresh" size="small" click={() => item.resetImagePosition()}>
+				<Button
+					color="plain"
+					icon="mdi:refresh"
+					size="small"
+					click={() => item.resetImagePosition()}
+				>
 					Reset Position</Button
 				>
 			</div>
-			{/snippet}
+		{/snippet}
 	</Accordion>
 	<!-- Styling -->
 	<hr class="divider" />
 	<Accordion>
 		{#snippet head()}
-				<div >Styling</div>
-			{/snippet}
+			<div>Styling</div>
+		{/snippet}
 		{#snippet content()}
-				<div  class="inputGrid">
+			<div class="inputGrid">
 				<!-- Preset -->
 				<label for="preset"> Style Preset </label>
 				<div class="buttonLine">
@@ -543,7 +555,7 @@
 					{/each}
 				{/if}
 			</div>
-			{/snippet}
+		{/snippet}
 	</Accordion>
 </div>
 

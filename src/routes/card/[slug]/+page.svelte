@@ -18,7 +18,9 @@
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 	import ItemEditor from '$lib/partials/ItemEditor.svelte';
-	import Button from '$lib/components/coreComponents/Button.svelte';
+	// import Button from '$lib/components/coreComponents/Button.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import Icon from '@iconify/svelte';
 
 	function newEmptyItem() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
@@ -102,11 +104,12 @@
 	// Edit Date
 	let localDate: string = $state('');
 
-	// Initialize item on page load
-	let item: StoredItem = $state();
+	// Initialize item on page load, use a dummy item for init only!!
+	let item: StoredItem = $state<StoredItem>(items.prepareItem());
 	onMount(() => {
 		// Retrieve Item
 		try {
+			if (!slug_id) throw new Error('No slug id found');
 			// If the slug_id is 'new', get the active item or redirect to collection page if none found
 			if (slug_id === 'new') {
 				console.debug('Creating new item...');
@@ -141,14 +144,18 @@
 		}
 	}
 	let isNewCard = $derived(slug_id === 'new');
-	run(() => {
-		item, updateSaveState();
-	}); // Mark as unsaved when item changes
+	$effect(() => {
+		const _item = items;
+		updateSaveState();
+	});
+
+	function test() {
+		alert('test');
+	}
 </script>
 
 <!-- Svelte Window -->
 <svelte:window onbeforeunload={beforeUnload} />
-
 {#if !item}
 	<MainLoader />
 {:else}
@@ -156,8 +163,8 @@
 		<!-- Editor Pane -->
 		{#if editMode}
 			<section id="editor">
+				<div class="displayText editorTitle bg-primary text-secondary">Card Editor</div>
 				<header id="editorHeader">
-					<div class="displayText editorTitle">Card Editor</div>
 					<div id="cardInfo" class="editorRow">
 						<div class="cardInfoBlock">
 							<div id="cardName" class="infoBlockMajor">
@@ -179,30 +186,31 @@
 					<div id="toolbar" class="editorRow">
 						<!-- Advanced -->
 						<Button
-							click={toggleAdvancedMode}
-							stateOn={$advancedMode}
-							variant="flipped"
+							onclick={toggleAdvancedMode}
+							variant={$advancedMode ? 'advanced' : 'default'}
 							color="weave"
-							icon="memory:anvil"
-							size="small"
+							size="sm"
 						>
-							Advanced
+							<Icon icon="memory:anvil" />Advanced
 						</Button>
 						<!-- Download -->
-						<Button click={downloadItem} variant="filled" icon="memory:download" size="small"
-							>Download</Button
+						<Button onclick={downloadItem} variant="default" size="sm"
+							><Icon icon="memory:download" />Download</Button
 						>
 
 						<!-- Save -->
 						<Button
-							click={saveItem}
+							onclick={saveItem}
+							disabled={cardIsSaved}
 							color={cardIsSaved ? 'success' : 'blossom'}
-							variant="filled"
-							icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'}
-							size="small">Save</Button
+							variant="success"
+							size="sm"
+							><Icon icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'} />{cardIsSaved
+								? 'Saved'
+								: 'Save'}</Button
 						>
 						<!-- Print -->
-						<Button click={printCards} icon="mdi:printer" size="small">Print Card</Button>
+						<Button onclick={printCards} size="sm"><Icon icon="mdi:printer" />Print Card</Button>
 					</div>
 				</header>
 				<div id="itemEditor">
@@ -215,20 +223,22 @@
 			<div class="buttonRow">
 				<!-- Back to Collection -->
 				<Button
-					color="threat"
+					variant="link"
 					disabled={!cardIsSaved}
-					click={() => goto(`${base}/collection`)}
+					onclick={() => goto(`${base}/collection`)}
 					title={!cardIsSaved ? 'Please save the card before leaving' : 'Back to Collection'}
-					icon="mdi:arrow-left">Back</Button
+					><Icon icon="mdi:arrow-left" />Back</Button
 				>
 				<!-- Toggle Edit/View Mode -->
-				<Button click={toggleEditMode} icon={editMode ? 'mdi:eye' : 'mdi:pencil'}
-					>{editMode ? 'Viewing Mode' : 'Edit Card'}</Button
+				<Button onclick={toggleEditMode}
+					><Icon icon={editMode ? 'mdi:eye' : 'mdi:pencil'} />{editMode
+						? 'Viewing Mode'
+						: 'Edit Card'}</Button
 				>
 
 				<!-- New Card -->
 				{#if !isNewCard}
-					<Button click={newEmptyItem} icon="mdi:plus">New Card</Button>
+					<Button onclick={newEmptyItem}><Icon icon="mdi:plus" />New Card</Button>
 				{/if}
 
 				<a class="mobileOnly" href="#editor">Go to editor</a>
@@ -242,7 +252,7 @@
 {/if}
 
 <!-- Styles -->
-<style>
+<style lang="postcss">
 	:global(body) {
 		margin: 0;
 	}
@@ -291,8 +301,7 @@
 	section#editor {
 		grid-area: editor;
 		/* Styling */
-		background-color: var(--color-surface-4);
-		border-top-left-radius: 1em;
+		border-left: solid 1px var(--color-obsidian-2);
 		/* Layout */
 		display: flex;
 		flex-direction: column;
@@ -349,7 +358,6 @@
 		gap: 0.2em;
 		padding: var(--padding);
 		/* Style */
-		background-color: var(--color-surface-4);
 		border-bottom: solid 1px var(--color-obsidian-2);
 	}
 
