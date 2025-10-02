@@ -1,7 +1,9 @@
 <script lang="ts">
+	import '../app.css';
 	// Import Style
 	import '$lib/styles/main.css';
 	import Navbar from '$lib/partials/Navbar.svelte';
+
 	interface Props {
 		children?: import('svelte').Snippet;
 	}
