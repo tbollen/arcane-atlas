@@ -1,4 +1,4 @@
-import { type Color } from '$lib/types/colors';
+import { type Color } from '$lib/utils/types/style';
 export const colorScheme: Record<string, Record<number, Color>> = {
 	/* Surface (Pearl) */
 	pearl: {

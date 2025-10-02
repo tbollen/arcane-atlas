@@ -2,13 +2,12 @@ import { skillList } from '$lib/modules/skillCheckList';
 const characteristics = Object.values(skillList).flat();
 
 // Styling Types
-import { type Color } from '$lib/types/colors';
+import { type CardStyleOptions } from '$lib/utils/types/style';
 import {
 	type CardStylePreset,
 	defaultCardStyle,
-	cardStylePresets,
-	type CardStyleOptions
-} from '$lib/types/colors';
+	cardStylePresets
+} from '$lib/core/cards/cardStylePresets';
 import { type AvailableFonts } from '$lib/types/fonts';
 import { type IsCardType } from '$lib/modules/cardTypes';
 export type ItemFields = {
@@ -21,7 +20,7 @@ export type SkillCheck = {
 	skill?: (typeof characteristics)[number];
 };
 
-const defaultCard: Item = {
+export const fallbackCardInfo: Item = {
 	name: 'New Item',
 	type: 'Item',
 	description: 'Item Description',
@@ -67,7 +66,7 @@ export class Item {
 	style: CardStyleOptions = defaultCardStyle;
 
 	constructor(_item?: Partial<Item>) {
-		let _itemReference: Item = defaultCard;
+		let _itemReference: Item = fallbackCardInfo;
 		if (_item) {
 			_itemReference = JSON.parse(JSON.stringify(_item)); // JSON methods for deep cloning
 		}

@@ -127,7 +127,7 @@
 		<!-- <a class="badge" href="https://github.com/tbollen/Game_Card_Builder" target="_blank">
 			<Icon icon="mdi:github" />
 		</a> -->
-		<CharacterAvatar {character} />
+		<CharacterAvatar />
 	</div>
 </section>
 

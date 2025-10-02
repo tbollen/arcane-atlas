@@ -1,12 +1,12 @@
 <script lang="ts">
 	// Svelte stuff
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 
 	// Page params
-	const slug_id = $page.params.slug;
+	const slug_id = page.params.slug;
 
 	// Item stores, types and modules
 	import { items, type StoredItem } from '$lib/stores/Items';
@@ -18,6 +18,7 @@
 	import ItemEditor from '$lib/partials/ItemEditor.svelte';
 	import Button from '$lib/components/coreComponents/Button.svelte';
 
+	$: isNewCard = slug_id === 'new';
 	function newEmptyItem() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
 		if (saveFirst) {
@@ -64,13 +65,38 @@
 		items.download(item.id);
 	}
 
-	// Save stuff
-	let showSaved: boolean = false;
-	function saveItem() {
-		items.setItem(item.id, item);
+	// Check if card is saved
+	let cardIsSaved: boolean = true;
+	let savedItem: {} = {}; // Store the last saved item to compare with current item
+	$: item, updateSaveState(); // Mark as unsaved when item changes
+
+	function updateSaveState() {
+		console.error('Checking if saved...');
+		if (!item || !savedItem) return (cardIsSaved = false);
+		console.error('Current Item:', item, 'Saved Item:', savedItem);
+		cardIsSaved = JSON.stringify(item) === JSON.stringify(savedItem);
+	}
+
+	// Save item function
+	function saveItem(preventRedirect = false) {
+		// Create new item if new
+		if (isNewCard) {
+			console.debug('Saving new item...');
+			items.addNewItem(item); // Add new item to store
+			items.setActiveItem(item); // Set active item to the new item
+		} else {
+			console.debug('Saving existing item...');
+			items.setItem(item.id, item); // Update item in store, create new if not found
+		}
 		items.save();
-		showSaved = true;
-		setTimeout(() => (showSaved = false), 2000);
+		savedItem = { ...item }; // Update saved item
+		updateSaveState(); // Update save state
+		// setTimeout(() => (cardIsSaved = false), 2000);
+
+		// If it was a new item, redirect to the new item's page
+		if (slug_id === 'new') {
+			goto(`${base}/item/${item.id}?edit=1`);
+		}
 	}
 
 	// Edit Date
@@ -81,7 +107,17 @@
 	onMount(() => {
 		// Retrieve Item
 		try {
-			item = items.getItem(slug_id);
+			// If the slug_id is 'new', get the active item or redirect to collection page if none found
+			if (slug_id === 'new') {
+				console.debug('Creating new item...');
+				item = items.prepareItem();
+			} else {
+				// Get item from store
+				item = items.getItem(slug_id);
+				savedItem = { ...item };
+			}
+			// Store a copy of the item to compare later
+			console.debug('Item retrieved:', item);
 		} catch {
 			// Redirect to collection page when item not found
 			alert(`No item found with id: ${slug_id}, redirecting to collection page...`);
@@ -95,7 +131,19 @@
 		const urlParams = new URLSearchParams(window.location.search);
 		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
 	});
+
+	function beforeUnload(event: BeforeUnloadEvent) {
+		// Prevent closing if card is not saved (with dialog)
+		if (!cardIsSaved) {
+			event.preventDefault();
+			// Old Chrome browsers requires returnValue to be set
+			event.returnValue = '';
+		}
+	}
 </script>
+
+<!-- Svelte Window -->
+<svelte:window on:beforeunload={beforeUnload} />
 
 {#if !item}
 	<MainLoader />
@@ -144,9 +192,9 @@
 						<!-- Save -->
 						<Button
 							click={saveItem}
-							color={showSaved ? 'success' : 'blossom'}
+							color={cardIsSaved ? 'success' : 'blossom'}
 							variant="filled"
-							icon={showSaved ? 'mdi:check' : 'memory:floppy-disk'}
+							icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'}
 							size="small">Save</Button
 						>
 						<!-- Print -->
@@ -154,17 +202,30 @@
 					</div>
 				</header>
 				<div id="itemEditor">
-					<ItemEditor />
+					<ItemEditor bind:item />
 				</div>
 			</section>
 		{/if}
 		<!-- Card Pane -->
 		<section id="cardView">
 			<div class="buttonRow">
+				<!-- Back to Collection -->
+				<Button
+					color="threat"
+					disabled={!cardIsSaved}
+					click={() => goto(`${base}/collection`)}
+					title={!cardIsSaved ? 'Please save the card before leaving' : 'Back to Collection'}
+					icon="mdi:arrow-left">Back</Button
+				>
+				<!-- Toggle Edit/View Mode -->
 				<Button click={toggleEditMode} icon={editMode ? 'mdi:eye' : 'mdi:pencil'}
 					>{editMode ? 'Viewing Mode' : 'Edit Card'}</Button
 				>
-				<Button click={newEmptyItem} icon="mdi:plus">New Card</Button>
+
+				<!-- New Card -->
+				{#if !isNewCard}
+					<Button click={newEmptyItem} icon="mdi:plus">New Card</Button>
+				{/if}
 
 				<a class="mobileOnly" href="#editor">Go to editor</a>
 			</div>

@@ -15,6 +15,7 @@
 	export let hideSlotOnHover: boolean = false;
 	export let hideSlot: boolean = false;
 	export let stopPropagation: boolean = false;
+	export let title = '';
 
 	let isHovering: boolean = false;
 
@@ -22,6 +23,7 @@
 </script>
 
 <button
+	{title}
 	on:click|stopPropagation={stopPropagation ? () => {} : clickFunc}
 	on:click|stopPropagation={!stopPropagation ? () => {} : clickFunc}
 	class="coreButton {color} {variant} {placement} {size}"

@@ -4,7 +4,6 @@
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 
-	import { editItem } from '$lib/stores/Items';
 	import { items } from '$lib/stores/Items';
 	let _items = items;
 
@@ -35,7 +34,6 @@
 		// Set last clicked card to be active
 		items.setActiveItem(id);
 		updateItems();
-		$editItem = items.getActiveItem();
 		// Force svelte to recognise changes
 		$selectedItems = $selectedItems;
 	}
@@ -58,11 +56,14 @@
 		}
 	}
 
+	function viewCard(id: string) {
+		// Navigate to viewer
+		goto(`${base}/card/${id}`);
+	}
+
 	function editCard(id: string) {
-		items.setActiveItem(id);
-		$editItem = items.getActiveItem();
 		// Navigate to editor
-		goto(`${base}/item/${id}?edit=1`);
+		goto(`${base}/card/${id}?edit=1`);
 	}
 
 	function duplicateCard(id: string) {
@@ -74,14 +75,12 @@
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Item) {
-		items.addNewItem(base);
-		updateItems();
+		items.setActiveTemplate(base);
+		addNew();
 	}
 
 	function addNew() {
-		items.addNewItem();
-		// goto editor
-		updateItems();
+		goto(`${base}/card/new?edit=1`);
 	}
 
 	function updateItems() {
@@ -126,7 +125,7 @@
 			<Button
 				icon={imageView ? 'mdi:file-image' : 'mdi:file-document'}
 				stateOn={imageView}
-				click={() => (imageView = !imageView)}>View</Button
+				click={() => (imageView = !imageView)}>Change View</Button
 			>
 			<!-- Upload with JSON -->
 			<Button icon="mdi:upload" click={() => items.upload()}>Upload</Button>
@@ -175,13 +174,15 @@
 							Template
 						</div>
 						<div class="editOptions">
-							<Button icon="mdi:zoom-in" stopPropagation />
 							<Button
 								color="weave"
+								title="Create card from this template"
 								icon="mdi:content-copy"
 								stopPropagation
 								click={() => createFromTemplate(card)}
-							/>
+							>
+								Create</Button
+							>
 						</div>
 						<div class="frontSideCard">
 							<Gamecard item={card} />
@@ -199,23 +200,37 @@
 					class:isSelected={$selectedItems.has(card.id)}
 					id={card.id}
 					on:click={() => toggleCardSelection(card.id)}
+					on:dblclick={() => viewCard(card.id)}
 				>
-					<!-- Is Active Label -->
-					{#if items.getActiveItem().id === card.id && $selectedItems.size < 2}
-						<div class="cardLabel activeLabel">
-							<Icon icon="mdi:pencil" />
-							Editor
-						</div>
-					{/if}
-
 					<!-- Edit Options -->
 					<div class="editOptions">
-						<Button icon="mdi:zoom-in" stopPropagation />
-						<Button icon="mdi:pencil" stopPropagation click={() => editCard(card.id)} />
-						<Button icon="mdi:content-copy" stopPropagation click={() => duplicateCard(card.id)} />
-						<Button icon="mdi:download" stopPropagation click={() => items.download(card.id)} />
+						<Button
+							icon="mdi:zoom-in"
+							title="Show card"
+							stopPropagation
+							click={() => viewCard(card.id)}
+						/>
+						<Button
+							icon="mdi:pencil"
+							title="Edit Card"
+							stopPropagation
+							click={() => editCard(card.id)}
+						/>
+						<Button
+							icon="mdi:content-copy"
+							title="Duplicate Card"
+							stopPropagation
+							click={() => duplicateCard(card.id)}
+						/>
+						<Button
+							icon="mdi:download"
+							title="Download as JSON"
+							stopPropagation
+							click={() => items.download(card.id)}
+						/>
 						<Button
 							icon="mdi:trash-can"
+							title="Delete Card"
 							color="threat"
 							stopPropagation
 							click={() => deleteCard(card.id)}
