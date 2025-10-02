@@ -34,5 +34,25 @@ export const actions: Actions = {
 			return { success: true, message: 'Login successful' };
 		}
 		return fail(400, { success: false, message: 'Failed to log in. Invalid email or password' });
+	},
+
+	signUp: async ({ request }) => {
+		const formData = await request.formData();
+		const name = formData.get('name')?.toString();
+		const email = formData.get('email')?.toString();
+		const password = formData.get('password')?.toString();
+
+		if (!name || !email || !password) {
+			return fail(400, { success: false, message: 'Missing name, email or password' });
+		}
+		// Try sign up
+		const response = await auth.api.signUpEmail({
+			body: { name, email, password },
+			asResponse: true
+		});
+		if (response.ok) {
+			return { success: true, message: 'Sign up successful' };
+		}
+		return fail(400, { success: false, message: 'Failed to sign up. Email already in use' });
 	}
 };

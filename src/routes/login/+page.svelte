@@ -20,7 +20,7 @@
 	{#if form?.message}
 		<p>{form.success ? 'Success' : 'Error'}: {form.message}</p>
 	{/if}
-	<!-- TEST -->
+	<h1>Sign In</h1>
 	<form method="POST" use:enhance>
 		<label for="email">Email</label>
 		<input type="email" name="email" />
@@ -28,26 +28,17 @@
 		<input type="password" name="password" />
 		<button formaction="?/signIn" type="submit">Sign In</button>
 	</form>
-	<!--  -->
-	<h1>Sign In</h1>
-	<form>
-		<label for="emailInput">Email</label>
-		<input type="email" required />
-		<label for="passwordInput">Password</label>
-		<input type="password" required />
-		<button type="submit">Sign In</button>
-	</form>
 	<br />
 
 	<h1>Sign Up</h1>
-	<form>
+	<form method="POST" use:enhance>
 		<label for="name">Name</label>
-		<input type="text" required />
-		<label for="emailInput">Email</label>
-		<input type="email" required />
-		<label for="passwordInput">Password</label>
-		<input type="password" required />
-		<button type="submit">Sign Up</button>
+		<input type="text" name="name" required />
+		<label for="email">Email</label>
+		<input type="email" name="email" required />
+		<label for="password">Password</label>
+		<input type="password" name="password" required />
+		<button type="submit" formaction="?/signUp">Sign Up</button>
 	</form>
 </main>
 
