@@ -4,7 +4,7 @@ model User {
   name          String
   email         String
   emailVerified Boolean   @default(false)
-  image         String?
+  image         String?   @default("https://robohash.org/default")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]

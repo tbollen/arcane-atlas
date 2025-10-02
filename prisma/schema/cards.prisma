@@ -1,5 +1,5 @@
 // Cards
-model Card {
+model card {
   // DB Info
   id String @id @unique
   creatorId String
