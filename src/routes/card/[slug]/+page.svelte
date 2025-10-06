@@ -11,7 +11,7 @@
 	const slug_id = page.params.slug;
 
 	// Item stores, types and modules
-	import { items, type StoredItem } from '$lib/stores/Items';
+	import { items, type StoredItem } from '$lib/stores/Items.svelte';
 
 	// Components and Partials
 	import MainLoader from '$lib/partials/MainLoader.svelte';

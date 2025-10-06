@@ -6,7 +6,7 @@
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 	// Stores
-	import { items } from '$lib/stores/Items';
+	import { items } from '$lib/stores/Items.svelte';
 	import { selectedItems } from '$lib/stores/selectedItems';
 	//
 	let cards = $selectedItems;

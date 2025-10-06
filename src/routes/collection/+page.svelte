@@ -8,8 +8,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 
-	import { items } from '$lib/stores/Items';
+	import { items } from '$lib/stores/Items.svelte';
 	let _items = $state(items);
+	let _cards = $state(items.items);
 
 	// Svelte stuff
 	import { onMount } from 'svelte';
@@ -75,7 +76,7 @@
 		updateItems();
 	}
 
-	import { type Item } from '$lib/types/Item';
+	import { type Item } from '$lib/types/Item.svelte';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Item) {
@@ -124,6 +125,28 @@
 	import SearchInput from '$lib/partials/SearchInput.svelte';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
+	let filteredItems: string[] = [];
+	console.error(items);
+	$effect(() => {
+		if (enableFiltering) {
+			// Filter which match name or description includes the search term
+			filteredItems = _items.items
+				.filter((item) => {
+					return (
+						item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+						item.description.toLowerCase().includes(searchTerm.toLowerCase())
+					);
+				})
+				// Return their ID's
+				.map((item) => item.id);
+		}
+		// Set _items.items to only include the items that match the search term
+		if (filteredItems.length === 0) {
+			_cards = _items.items;
+		} else {
+			_cards = items.items.filter((item) => filteredItems.includes(item.id));
+		}
+	});
 </script>
 
 <main>
@@ -190,9 +213,8 @@
 	{#if enableFiltering}
 		<section
 			id="filters"
-			class="flex flex-row gap-4 rounded-xl border bg-card p-6 text-card-foreground shadow-sm"
+			class=" flex flex-row items-baseline gap-4 border-b border-primary bg-card p-6 text-card-foreground"
 		>
-			<h1 class="bold text-lg">Filters</h1>
 			<div id="filterContainer" class="">
 				<SearchInput bind:searchTerm />
 			</div>
@@ -231,7 +253,7 @@
 					</button>
 				{/each}
 			{/if}
-			{#each _items.items as card}
+			{#each _cards as card}
 				<button
 					class="cardInViewer"
 					class:imageView

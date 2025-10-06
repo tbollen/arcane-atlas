@@ -37,15 +37,15 @@ export const fallbackCardInfo: Item = {
 // Class for the Item
 export class Item {
 	// Initialise
-	name: string = 'New Item';
-	type: IsCardType = 'Item';
-	subtitle?: string;
-	icon?: string;
-	description: string = 'Item Description';
-	aspects?: ItemFields[];
-	specials?: ItemFields[];
-	skillCheck?: SkillCheck | null;
-	fields?: ItemFields[];
+	name: string = $state('New Item');
+	type: IsCardType = $state('Item');
+	subtitle?: string = $state(undefined);
+	icon?: string = $state(undefined);
+	description: string = $state('Item Description');
+	aspects?: ItemFields[] = $state([]);
+	specials?: ItemFields[] = $state([]);
+	skillCheck?: SkillCheck | null = $state(null);
+	fields?: ItemFields[] = $state([]);
 	image: {
 		url?: string;
 		encodedImage?: string;
@@ -55,15 +55,15 @@ export class Item {
 		scale: number;
 		x_offset: number;
 		y_offset: number;
-	} = {
+	} = $state({
 		// Defaults for image
 		rotation: 0,
 		scale: 100,
 		x_offset: 0,
 		y_offset: 0
-	};
-	stylePreset: CardStylePreset = 'default';
-	style: CardStyleOptions = defaultCardStyle;
+	});
+	stylePreset: CardStylePreset = $state('default');
+	style: CardStyleOptions = $state(defaultCardStyle);
 
 	constructor(_item?: Partial<Item>) {
 		let _itemReference: Item = fallbackCardInfo;

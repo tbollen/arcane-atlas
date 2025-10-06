@@ -12,10 +12,10 @@
 	import * as Select from '$lib/components/ui/select';
 
 	// Ask for an StoredItem to edit
-	import { type StoredItem } from '$lib/stores/Items';
+	import { type StoredItem } from '$lib/stores/Items.svelte';
 
 	// Load selected item
-	import { items } from '$lib/stores/Items';
+	import { items } from '$lib/stores/Items.svelte';
 
 	// Popup & Tooltips
 	import { tooltip } from '$lib/modules/tooltip';

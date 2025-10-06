@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Import Item Store
-	import { type Item } from '$lib/types/Item';
+	import { type Item } from '$lib/types/Item.svelte';
 	//
 
 	// Card Components
@@ -13,7 +13,6 @@
 
 	// import card type options and icons
 	import { cardTypes } from '$lib/modules/cardTypes';
-
 
 	// Update the item description for renderering
 	import renderMarkdown from '$lib/modules/renderDiceIconsInText';

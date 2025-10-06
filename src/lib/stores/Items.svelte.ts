@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { Item } from '$lib/types/Item';
+import { Item } from '$lib/types/Item.svelte';
 import { defaultTemplates } from '$lib/stores/defaultTemplates';
 import { startingItems } from '$lib/stores/defaultTemplates';
 import {
@@ -132,15 +132,15 @@ export type { StoredItem };
 
 // ItemStore
 class ItemStore {
-	items: StoredItem[] = [];
-	templates: Item[] = [];
-	idSet: Set<string> = new Set();
+	items: StoredItem[] = $state([]);
+	templates: Item[] = $state([]);
+	idSet: Set<string> = $state(new Set());
 	idSettings = {
 		idLength: 8,
 		setName: 'c'
 	};
-	activeItem?: StoredItem;
-	activeTemplate?: Partial<Item>;
+	activeItem?: StoredItem = $state();
+	activeTemplate?: Partial<Item> = $state();
 
 	constructor(
 		i: {
