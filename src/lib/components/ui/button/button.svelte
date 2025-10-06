@@ -7,7 +7,7 @@
 		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
-				default: 'bg-secondary text-secondary-foreground hover:bg-obsidian-200/40 active:scale-95',
+				default: 'bg-secondary text-secondary-foreground hover:bg-obsidian-200 active:scale-95',
 				blossom: 'bg-blossom-700 text-primary-foreground hover:bg-blossom-800 active:scale-95',
 				bold: 'bg-obsidian-900 text-primary-foreground hover:bg-obsidian-800 active:scale-95',
 				advanced: 'bg-weave-500 text-primary-foreground hover:bg-weave-600/90 active:scale-95',
