@@ -7,21 +7,12 @@
 </script>
 
 <main id="main">
-	{#if firstTimeVisit}
-		<section id="welcome">
-			<AbsoluteBackground
-				image={welcomeImage}
-				background="linear-gradient(90deg, var(--color-threat-2), var(--color-weave-2))"
-				colorOpacity={0.5}
-				blendMode="multiply"
-				opacity={0.2}
-				class="ab_welcome"
-			>
-				<div class="displayText welcomeMessage">Welcome to the Card Builder</div>
-				<div class="subText">A digital companion for building TTRPG cards</div>
-			</AbsoluteBackground>
-		</section>
-	{/if}
+	<section id="welcome">
+		<div id="titleWrapper" class="">
+			<h1 id="title" class="displayText bg-obsidian-800 text-secondary">Arcane Companion</h1>
+			<div id="subtitle">A digital companion for building TTRPG cards</div>
+		</div>
+	</section>
 </main>
 
 <!-- Styles -->
@@ -54,5 +45,27 @@
 
 	.subText {
 		text-align: center;
+	}
+
+	#titleWrapper {
+		/* General Layout */
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+		gap: 0.5em;
+		position: relative;
+		/* Sizing */
+		max-width: min(80svw, 800px);
+		margin: 0 auto;
+		/* Styling */
+		overflow: hidden;
+	}
+
+	#title {
+		font-size: 3rem;
+		text-align: center;
+		padding: 0.2em;
+		width: 100%;
 	}
 </style>
