@@ -348,6 +348,7 @@
 
 	.buttonRow {
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--padding);
 	}
 
