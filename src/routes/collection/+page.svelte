@@ -1,8 +1,11 @@
 <!-- Collection -->
 <script lang="ts">
-	import Button from '$lib/components/coreComponents/Button.svelte';
+	// import Button from '$lib/components/coreComponents/Button.svelte';
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
+
+	// UI Components
+	import { Button } from '$lib/components/ui/button';
 
 	import { items } from '$lib/stores/Items';
 	let _items = $state(items);
@@ -120,42 +123,54 @@
 	<section id="controls">
 		<div class="toolbarCategory">
 			<!-- Create New Card -->
-			<Button icon="mdi:plus" color="threat" click={addNew}>New Card</Button>
+			<Button variant="destructive" onclick={addNew}>
+				<Icon icon="mdi:plus" />
+				New Card</Button
+			>
 			<!-- Image View -->
-			<Button
-				icon={imageView ? 'mdi:file-image' : 'mdi:file-document'}
-				stateOn={imageView}
-				click={() => (imageView = !imageView)}>Change View</Button
+			<Button variant={imageView ? 'blossom' : 'default'} onclick={() => (imageView = !imageView)}>
+				<Icon icon={imageView ? 'mdi:file-image' : 'mdi:file-document'} />
+				Change View</Button
 			>
 			<!-- Upload with JSON -->
-			<Button icon="mdi:upload" click={() => items.upload()}>Upload</Button>
-			<!-- Download -->
-			{#if $selectedItems.size > 0}
-				<Button icon="mdi:download" click={() => items.download(Array.from($selectedItems))}
-					>Download ({$selectedItems.size})</Button
-				>
-			{:else}
-				<Button icon="mdi:download" click={() => items.download()}>Download</Button>
-			{/if}
-			<Button
-				icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'}
-				stateOn={showTemplates}
-				click={toggleTemplates}>Show Templates</Button
+			<Button onclick={() => items.upload()}>
+				<Icon icon="mdi:upload" />
+				Upload</Button
 			>
+			<!-- Show Templates -->
+			<Button variant={showTemplates ? 'advanced' : 'default'} onclick={toggleTemplates}>
+				<Icon icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'} />
+				Show Templates</Button
+			>
+			<!-- Download -->
+			{#if $selectedItems.size > 0}{:else}
+				<Button onclick={() => items.download()}>
+					<Icon icon="mdi:download" />
+					Download All</Button
+				>
+			{/if}
 		</div>
 		{#if $selectedItems.size > 0}
 			<div class="toolbarCategory">
-				<div class="toolbarLabel">{$selectedItems.size} Items Selected</div>
-				<Button
-					size="small"
-					variant="outlined"
-					icon="mdi:content-copy"
-					click={() => ($selectedItems = new Set())}
-				>
+				<div class="toolbarLabel text-sm text-muted-foreground">
+					{$selectedItems.size} cards selected
+				</div>
+				<Button variant="outline" onclick={() => ($selectedItems = new Set())}>
+					<Icon icon="mdi:content-copy" />
 					Deselect
 				</Button>
-				<Button size="small" icon="mdi:printer" click={printDialog}>Print</Button>
-				<Button size="small" icon="mdi:trash" click={deleteSelected} color="threat">Delete</Button>
+				<Button onclick={printDialog}>
+					<Icon icon="mdi:printer" />
+					Print</Button
+				>
+				<Button onclick={() => items.download(Array.from($selectedItems))}>
+					<Icon icon="mdi:download" />
+					Download
+				</Button>
+				<Button onclick={deleteSelected} variant="destructive">
+					<Icon icon="mdi:trash" />
+					Delete</Button
+				>
 			</div>
 		{/if}
 	</section>
@@ -175,12 +190,11 @@
 						</div>
 						<div class="editOptions">
 							<Button
-								color="weave"
+								variant="advanced"
 								title="Create card from this template"
-								icon="mdi:content-copy"
-								stopPropagation
-								click={() => createFromTemplate(card)}
+								onclick={() => createFromTemplate(card)}
 							>
+								<Icon icon="mdi:content-copy" />
 								Create</Button
 							>
 						</div>
@@ -205,36 +219,58 @@
 					<!-- Edit Options -->
 					<div class="editOptions">
 						<Button
-							icon="mdi:zoom-in"
 							title="Show card"
-							stopPropagation
-							click={() => viewCard(card.id)}
-						/>
+							size="icon"
+							onclick={(e) => {
+								e.stopPropagation();
+								viewCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:zoom-in" />
+						</Button>
 						<Button
-							icon="mdi:pencil"
+							size="icon"
 							title="Edit Card"
-							stopPropagation
-							click={() => editCard(card.id)}
-						/>
+							onclick={(e) => {
+								e.stopPropagation();
+								editCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:pencil" />
+						</Button>
 						<Button
-							icon="mdi:content-copy"
-							title="Duplicate Card"
-							stopPropagation
-							click={() => duplicateCard(card.id)}
-						/>
-						<Button
-							icon="mdi:download"
+							size="icon"
 							title="Download as JSON"
-							stopPropagation
-							click={() => items.download(card.id)}
-						/>
+							onclick={(e) => {
+								e.stopPropagation();
+								items.download(card.id);
+							}}
+						>
+							<Icon icon="mdi:download" />
+						</Button>
 						<Button
-							icon="mdi:trash-can"
+							variant="advanced"
+							size="icon"
+							title="Duplicate Card"
+							onclick={(e) => {
+								e.stopPropagation();
+								duplicateCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:content-copy" />
+						</Button>
+						<Button
+							size="icon"
+							variant="destructive"
 							title="Delete Card"
 							color="threat"
-							stopPropagation
-							click={() => deleteCard(card.id)}
-						/>
+							onclick={(e) => {
+								e.stopPropagation();
+								deleteCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:trash" />
+						</Button>
 					</div>
 					<div class="frontSideCard">
 						<Gamecard item={card} />
@@ -278,8 +314,6 @@
 	}
 
 	.toolbarLabel {
-		font-weight: 600;
-		font-size: 9pt;
 		/* Placement */
 		position: absolute;
 		top: calc(100% + 2.5px);
