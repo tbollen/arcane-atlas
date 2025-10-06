@@ -9,34 +9,26 @@
 	} = $props();
 </script>
 
-<section
-	id="filters"
-	class="flex flex-row gap-4 rounded-xl border bg-card p-6 text-card-foreground shadow-sm"
->
-	<h1 class="bold text-lg">Filters</h1>
-	<div id="filterContainer" class="">
-		<InputGroup.Root>
-			<InputGroup.Input
-				value={searchTerm}
-				placeholder="Search..."
-				oninput={(e) => {
-					// @ts-ignore
-					const _value = e.target?.value || '';
-					searchTerm = _value;
-				}}
-			/>
-			<InputGroup.Addon>
-				<Icon icon="mdi:magnify" />
-			</InputGroup.Addon>
-			{#if searchTerm}
-				<InputGroup.Addon align="inline-end">
-					<InputGroup.Button
-						onclick={() => {
-							searchTerm = '';
-						}}><Icon icon="mdi:remove" /></InputGroup.Button
-					>
-				</InputGroup.Addon>
-			{/if}
-		</InputGroup.Root>
-	</div>
-</section>
+<InputGroup.Root>
+	<InputGroup.Input
+		value={searchTerm}
+		placeholder="Search..."
+		oninput={(e) => {
+			// @ts-ignore
+			const _value = e.target?.value || '';
+			searchTerm = _value;
+		}}
+	/>
+	<InputGroup.Addon>
+		<Icon icon="mdi:magnify" />
+	</InputGroup.Addon>
+	{#if searchTerm}
+		<InputGroup.Addon align="inline-end">
+			<InputGroup.Button
+				onclick={() => {
+					searchTerm = '';
+				}}><Icon icon="mdi:remove" /></InputGroup.Button
+			>
+		</InputGroup.Addon>
+	{/if}
+</InputGroup.Root>

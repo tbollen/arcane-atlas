@@ -118,11 +118,23 @@
 		if (printType === null) return;
 		goto(`${base}/print?printMode=${printType}`);
 	}
+
+	// SEARCHING
+
+	import SearchInput from '$lib/partials/SearchInput.svelte';
+	let enableFiltering: boolean = $state(false);
+	let searchTerm: string = $state('');
 </script>
 
 <main>
 	<section id="controls">
 		<div class="toolbarCategory">
+			<!-- Filter -->
+			<Button
+				variant={enableFiltering ? 'advanced' : 'default'}
+				onclick={() => (enableFiltering = !enableFiltering)}
+				><Icon icon="mdi:filter" />Filter</Button
+			>
 			<!-- Create New Card -->
 			<Button variant="destructive" onclick={addNew}>
 				<Icon icon="mdi:plus" />
@@ -175,6 +187,17 @@
 			</div>
 		{/if}
 	</section>
+	{#if enableFiltering}
+		<section
+			id="filters"
+			class="flex flex-row gap-4 rounded-xl border bg-card p-6 text-card-foreground shadow-sm"
+		>
+			<h1 class="bold text-lg">Filters</h1>
+			<div id="filterContainer" class="">
+				<SearchInput bind:searchTerm />
+			</div>
+		</section>
+	{/if}
 	{#if renderCards}
 		<section
 			id="viewer"
