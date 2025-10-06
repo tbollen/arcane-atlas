@@ -25,15 +25,7 @@
 		{
 			name: 'Campaign',
 			icon: 'mdi:book',
-			path: 'campaign',
-			hidden: true,
-			dropdown: [
-				{
-					path: 'overview',
-					name: 'Overview',
-					icon: 'mdi:view-grid'
-				}
-			]
+			path: 'campaign'
 		},
 		{
 			name: 'Character',
