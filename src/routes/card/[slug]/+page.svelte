@@ -106,6 +106,13 @@
 
 	// Initialize item on page load, use a dummy item for init only!!
 	let item: StoredItem = $state<StoredItem>(items.prepareItem());
+	let boundItem: StoredItem = $derived(item);
+	let flatItem: {} = $derived({ ...item });
+	$effect(() => {
+		const serializedItem = JSON.stringify(boundItem);
+		console.error('Serialized Item:', serializedItem);
+	});
+
 	onMount(() => {
 		// Retrieve Item
 		try {
@@ -164,7 +171,7 @@
 		{#if editMode}
 			<section id="editor">
 				<div class="displayText editorTitle bg-primary text-secondary">Card Editor</div>
-				<header id="editorHeader">
+				<header id="editorHeader" class="bg-secondary">
 					<div id="cardInfo" class="editorRow">
 						<div class="cardInfoBlock">
 							<div id="cardName" class="infoBlockMajor">
@@ -177,7 +184,7 @@
 
 						<div class="cardInfoBlock">
 							<div id="cardCreator" class="infoBlockMajor">
-								{item?.creator}
+								<span class="mr-1 text-sm text-muted-foreground">by</span>{item?.creator}
 							</div>
 							<div id="cardDate" class="infoBlockMinor">{localDate}</div>
 						</div>
@@ -194,27 +201,30 @@
 							<Icon icon="memory:anvil" />Advanced
 						</Button>
 						<!-- Download -->
-						<Button onclick={downloadItem} variant="default" size="sm"
+						<Button onclick={downloadItem} variant="outline" size="sm"
 							><Icon icon="memory:download" />Download</Button
+						>
+						<!-- Print -->
+						<Button onclick={printCards} size="sm" variant="outline"
+							><Icon icon="mdi:printer" />Print Card</Button
 						>
 
 						<!-- Save -->
 						<Button
-							onclick={saveItem}
+							onclick={() => saveItem()}
 							disabled={cardIsSaved}
 							color={cardIsSaved ? 'success' : 'blossom'}
 							variant="success"
 							size="sm"
+							class="ml-auto"
 							><Icon icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'} />{cardIsSaved
 								? 'Saved'
 								: 'Save'}</Button
 						>
-						<!-- Print -->
-						<Button onclick={printCards} size="sm"><Icon icon="mdi:printer" />Print Card</Button>
 					</div>
 				</header>
 				<div id="itemEditor">
-					<ItemEditor bind:item />
+					<ItemEditor bind:item={boundItem} />
 				</div>
 			</section>
 		{/if}
