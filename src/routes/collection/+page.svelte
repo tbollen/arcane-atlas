@@ -6,6 +6,7 @@
 
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
 
 	import { items } from '$lib/stores/Items';
 	let _items = $state(items);
@@ -184,10 +185,10 @@
 				{#each _items.templates as card}
 					<button class="cardInViewer cardTemplate" class:imageView>
 						<!-- Edit Options -->
-						<div class="templateLabel cardLabel">
+						<Badge variant="advanced">
 							<Icon icon="mdi:clipboard-outline" />
 							Template
-						</div>
+						</Badge>
 						<div class="editOptions">
 							<Button
 								variant="advanced"
@@ -445,22 +446,6 @@
 		left: 0;
 		top: 0;
 		z-index: 1;
-		/* Layout */
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 5px;
-		/* Styling */
-		padding: 5px;
-		font-weight: 500;
-		border-radius: 1em;
-		color: var(--color-blossom-2);
-		background: var(--color-blossom-3);
-	}
-
-	.templateLabel {
-		color: var(--color-text-2);
-		background: var(--color-surface-3);
 	}
 
 	.activeLabel {
