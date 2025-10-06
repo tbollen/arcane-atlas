@@ -99,8 +99,8 @@
 				<!-- Skip hidden routes -->
 			{:else if typeof route === 'object' && 'dropdown' in route}
 				<!-- Route is a MasterRoute, show dropdown on hover -->
-				<div class="navItem navDropdown">
-					<a class="navUnderline" href="{base}/{route.path}">
+				<div class="navItem navDropdown navUnderline">
+					<a href="{base}/{route.path}">
 						{route.name}
 					</a>
 					<div class="navDropdownMenu">
@@ -229,6 +229,10 @@
 		text-decoration: unset;
 	}
 
+	/* .navUnderline {
+		background: orange;
+	} */
+
 	.navUnderline::after {
 		content: ' ';
 		/* Placement */
@@ -252,10 +256,6 @@
 
 	.active::after {
 		--width: 100%;
-	}
-
-	.navItem:hover {
-		font-weight: bold;
 	}
 
 	.dropdownNavItem:hover {
