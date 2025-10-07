@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 
-	const user = data.user;
-
 	import { authClient } from '$lib/utils/auth/auth-client';
 	interface Props {
 		data: any;
 	}
 
 	let { data }: Props = $props();
+	const user = data.user;
 
 	async function logOut() {
 		try {

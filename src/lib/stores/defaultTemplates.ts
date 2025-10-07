@@ -1,4 +1,4 @@
-import { Item } from '$lib/types/Item';
+import { Item } from '$lib/types/Item.svelte';
 export const defaultTemplates: Item[] = [
 	new Item({
 		name: 'Melee Weapon',

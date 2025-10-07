@@ -1,11 +1,16 @@
 <!-- Collection -->
 <script lang="ts">
-	import Button from '$lib/components/coreComponents/Button.svelte';
+	// import Button from '$lib/components/coreComponents/Button.svelte';
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 
-	import { items } from '$lib/stores/Items';
+	// UI Components
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+
+	import { items } from '$lib/stores/Items.svelte';
 	let _items = $state(items);
+	let _cards = $state(items.items);
 
 	// Svelte stuff
 	import { onMount } from 'svelte';
@@ -71,7 +76,7 @@
 		updateItems();
 	}
 
-	import { type Item } from '$lib/types/Item';
+	import { type Item } from '$lib/types/Item.svelte';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Item) {
@@ -96,6 +101,7 @@
 
 	let renderCards = $state(false);
 	onMount(() => {
+		console.error(items);
 		renderCards = true;
 	});
 
@@ -114,51 +120,114 @@
 		if (printType === null) return;
 		goto(`${base}/print?printMode=${printType}`);
 	}
+
+	// SEARCHING
+
+	import SearchInput from '$lib/partials/SearchInput.svelte';
+	let enableFiltering: boolean = $state(false);
+	let searchTerm: string = $state('');
+	let filteredItems: string[] = [];
+	console.error(items);
+	$effect(() => {
+		if (enableFiltering) {
+			// Filter which match name or description includes the search term
+			filteredItems = _items.items
+				.filter((item) => {
+					return (
+						item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+						item.description.toLowerCase().includes(searchTerm.toLowerCase())
+					);
+				})
+				// Return their ID's
+				.map((item) => item.id);
+		}
+		// Set _items.items to only include the items that match the search term
+		if (filteredItems.length === 0) {
+			_cards = _items.items;
+		} else {
+			_cards = items.items.filter((item) => filteredItems.includes(item.id));
+		}
+	});
 </script>
 
 <main>
 	<section id="controls">
 		<div class="toolbarCategory">
-			<!-- Create New Card -->
-			<Button icon="mdi:plus" color="threat" click={addNew}>New Card</Button>
-			<!-- Image View -->
+			<!-- Filter -->
 			<Button
-				icon={imageView ? 'mdi:file-image' : 'mdi:file-document'}
-				stateOn={imageView}
-				click={() => (imageView = !imageView)}>Change View</Button
+				variant={enableFiltering ? 'advanced' : 'default'}
+				onclick={() => (enableFiltering = !enableFiltering)}
+				><Icon icon="mdi:filter" />Filter</Button
+			>
+			<!-- Create New Card -->
+			<Button variant="destructive" onclick={addNew}>
+				<Icon icon="mdi:plus" />
+				New Card</Button
+			>
+			<!-- Image View -->
+			<Button variant={imageView ? 'blossom' : 'default'} onclick={() => (imageView = !imageView)}>
+				<Icon icon={imageView ? 'mdi:file-image' : 'mdi:file-document'} />
+				Change View</Button
 			>
 			<!-- Upload with JSON -->
-			<Button icon="mdi:upload" click={() => items.upload()}>Upload</Button>
-			<!-- Download -->
-			{#if $selectedItems.size > 0}
-				<Button icon="mdi:download" click={() => items.download(Array.from($selectedItems))}
-					>Download ({$selectedItems.size})</Button
-				>
-			{:else}
-				<Button icon="mdi:download" click={() => items.download()}>Download</Button>
-			{/if}
-			<Button
-				icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'}
-				stateOn={showTemplates}
-				click={toggleTemplates}>Show Templates</Button
+			<Button onclick={() => items.upload()}>
+				<Icon icon="mdi:upload" />
+				Upload</Button
 			>
+			<!-- Show Templates -->
+			<Button variant={showTemplates ? 'advanced' : 'default'} onclick={toggleTemplates}>
+				<Icon icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'} />
+				Show Templates</Button
+			>
+			<!-- Download -->
+			{#if $selectedItems.size > 0}{:else}
+				<Button onclick={() => items.download()}>
+					<Icon icon="mdi:download" />
+					Download All</Button
+				>
+			{/if}
 		</div>
 		{#if $selectedItems.size > 0}
 			<div class="toolbarCategory">
-				<div class="toolbarLabel">{$selectedItems.size} Items Selected</div>
-				<Button
-					size="small"
-					variant="outlined"
-					icon="mdi:content-copy"
-					click={() => ($selectedItems = new Set())}
-				>
+				<div class="toolbarLabel text-sm text-muted-foreground">
+					{$selectedItems.size} cards selected
+				</div>
+				<Button variant="outline" onclick={() => ($selectedItems = new Set())}>
+					<Icon icon="mdi:content-copy" />
 					Deselect
 				</Button>
-				<Button size="small" icon="mdi:printer" click={printDialog}>Print</Button>
-				<Button size="small" icon="mdi:trash" click={deleteSelected} color="threat">Delete</Button>
+				<Button onclick={printDialog}>
+					<Icon icon="mdi:printer" />
+					Print</Button
+				>
+				<Button onclick={() => items.download(Array.from($selectedItems))}>
+					<Icon icon="mdi:download" />
+					Download
+				</Button>
+				<Button onclick={deleteSelected} variant="destructive">
+					<Icon icon="mdi:trash" />
+					Delete</Button
+				>
 			</div>
 		{/if}
 	</section>
+	{#if enableFiltering}
+		<section
+			id="filters"
+			class=" flex flex-row items-baseline gap-4 border-b border-primary bg-card p-6 text-card-foreground"
+		>
+			<div id="filterContainer" class="">
+				<SearchInput bind:searchTerm />
+			</div>
+			<Button
+				variant="advanced"
+				onclick={() => console.log('Serialized Items: ', items.serialize())}
+			>
+				<Icon icon="mdi:code-json" />
+				Serialize</Button
+			>
+		</section>
+	{/if}
 	{#if renderCards}
 		<section
 			id="viewer"
@@ -169,18 +238,17 @@
 				{#each _items.templates as card}
 					<button class="cardInViewer cardTemplate" class:imageView>
 						<!-- Edit Options -->
-						<div class="templateLabel cardLabel">
+						<Badge variant="advanced">
 							<Icon icon="mdi:clipboard-outline" />
 							Template
-						</div>
+						</Badge>
 						<div class="editOptions">
 							<Button
-								color="weave"
+								variant="advanced"
 								title="Create card from this template"
-								icon="mdi:content-copy"
-								stopPropagation
-								click={() => createFromTemplate(card)}
+								onclick={() => createFromTemplate(card)}
 							>
+								<Icon icon="mdi:content-copy" />
 								Create</Button
 							>
 						</div>
@@ -193,7 +261,7 @@
 					</button>
 				{/each}
 			{/if}
-			{#each _items.items as card}
+			{#each _cards as card}
 				<button
 					class="cardInViewer"
 					class:imageView
@@ -205,36 +273,58 @@
 					<!-- Edit Options -->
 					<div class="editOptions">
 						<Button
-							icon="mdi:zoom-in"
 							title="Show card"
-							stopPropagation
-							click={() => viewCard(card.id)}
-						/>
+							size="icon"
+							onclick={(e) => {
+								e.stopPropagation();
+								viewCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:zoom-in" />
+						</Button>
 						<Button
-							icon="mdi:pencil"
+							size="icon"
 							title="Edit Card"
-							stopPropagation
-							click={() => editCard(card.id)}
-						/>
+							onclick={(e) => {
+								e.stopPropagation();
+								editCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:pencil" />
+						</Button>
 						<Button
-							icon="mdi:content-copy"
-							title="Duplicate Card"
-							stopPropagation
-							click={() => duplicateCard(card.id)}
-						/>
-						<Button
-							icon="mdi:download"
+							size="icon"
 							title="Download as JSON"
-							stopPropagation
-							click={() => items.download(card.id)}
-						/>
+							onclick={(e) => {
+								e.stopPropagation();
+								items.download(card.id);
+							}}
+						>
+							<Icon icon="mdi:download" />
+						</Button>
 						<Button
-							icon="mdi:trash-can"
+							variant="advanced"
+							size="icon"
+							title="Duplicate Card"
+							onclick={(e) => {
+								e.stopPropagation();
+								duplicateCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:content-copy" />
+						</Button>
+						<Button
+							size="icon"
+							variant="destructive"
 							title="Delete Card"
 							color="threat"
-							stopPropagation
-							click={() => deleteCard(card.id)}
-						/>
+							onclick={(e) => {
+								e.stopPropagation();
+								deleteCard(card.id);
+							}}
+						>
+							<Icon icon="mdi:trash" />
+						</Button>
 					</div>
 					<div class="frontSideCard">
 						<Gamecard item={card} />
@@ -278,8 +368,6 @@
 	}
 
 	.toolbarLabel {
-		font-weight: 600;
-		font-size: 9pt;
 		/* Placement */
 		position: absolute;
 		top: calc(100% + 2.5px);
@@ -411,22 +499,6 @@
 		left: 0;
 		top: 0;
 		z-index: 1;
-		/* Layout */
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 5px;
-		/* Styling */
-		padding: 5px;
-		font-weight: 500;
-		border-radius: 1em;
-		color: var(--color-blossom-2);
-		background: var(--color-blossom-3);
-	}
-
-	.templateLabel {
-		color: var(--color-text-2);
-		background: var(--color-surface-3);
 	}
 
 	.activeLabel {

@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { Item } from '$lib/types/Item';
+import { Item } from '$lib/types/Item.svelte';
 import { defaultTemplates } from '$lib/stores/defaultTemplates';
 import { startingItems } from '$lib/stores/defaultTemplates';
 import {
@@ -51,8 +51,8 @@ function generateShortID(length: number = 8, prefix: string = ''): string {
 
 class StoredItem extends Item {
 	id: string;
-	isActive: boolean = false;
-	isSelected: boolean = false;
+	isActive: boolean = $state(false);
+	isSelected: boolean = $state(false);
 	creator: string;
 	dateCreated: Date;
 
@@ -132,15 +132,15 @@ export type { StoredItem };
 
 // ItemStore
 class ItemStore {
-	items: StoredItem[] = [];
-	templates: Item[] = [];
-	idSet: Set<string> = new Set();
+	items: StoredItem[] = $state([]);
+	templates: Item[] = $state([]);
+	idSet: Set<string> = $state(new Set());
 	idSettings = {
 		idLength: 8,
 		setName: 'c'
 	};
-	activeItem?: StoredItem;
-	activeTemplate?: Partial<Item>;
+	activeItem?: StoredItem = $state();
+	activeTemplate?: Partial<Item> = $state();
 
 	constructor(
 		i: {
@@ -380,8 +380,10 @@ class ItemStore {
 
 	// Saving
 	save() {
-		const _items = JSON.stringify(this.items);
-		this.setLocalStorage(lsk.items, _items);
+		const _serialized: JSON = this.serialize();
+		const _stringifiedItems = JSON.stringify(_serialized);
+		console.error('Stringified items:', JSON.parse(_stringifiedItems));
+		this.setLocalStorage(lsk.items, _stringifiedItems);
 		this.setLocalStorage(lsk.activeItem, JSON.stringify(this.getActiveItem().id));
 	}
 
@@ -498,8 +500,15 @@ class ItemStore {
 
 	//
 
-	private serialize(): JSON {
-		const stringifiedItems = JSON.stringify(this.items);
+	serialize(): JSON {
+		const _items: Object = this.items.map((item) => {
+			const _item = new StoredItem(item);
+			const serializedItem = _item.serialize();
+			return serializedItem;
+		});
+		console.error('Serialized items:', _items);
+		console.error('Rehydrated object: ', JSON.parse(JSON.stringify(_items)));
+		const stringifiedItems = JSON.stringify(_items);
 		return JSON.parse(stringifiedItems);
 	}
 }

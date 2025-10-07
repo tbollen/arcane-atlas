@@ -18,6 +18,12 @@ const config = {
 		prerender: {
 			handleHttpError: 'warn'
 		}
+	},
+	vite: {
+		ssr: {
+			// Fix for stupid bits-ui error
+			noExternal: [/^@smui(?:-extra)?\//]
+		}
 	}
 };
 
