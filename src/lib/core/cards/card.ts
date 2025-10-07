@@ -11,11 +11,11 @@ import { type IsCardType } from '$lib/modules/cardTypes';
 import { type Prefixed_UUID } from '$lib/utils/uuid';
 
 // Import Mechanics
-import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/cards';
+import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards';
 
 type Mechanics = {
+	generic: {};
 	['arcaneRift']?: ArcaneRiftCard;
-	generic?: {};
 };
 type System = keyof Mechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
 
@@ -98,7 +98,7 @@ export class Card {
 		this.style = { ...defaultCardStyle, ...(_cardReference.style ?? {}) };
 		// Set mechanics based on system
 		this.systems = []; //TODO: make dynamic
-		this.mechanics = { ...(_cardReference.mechanics ?? {}) };
+		this.mechanics = { generic: {}, ...(_cardReference.mechanics ?? {}) }; //Always include generic as an empty object
 	}
 
 	// Style and Default settings func

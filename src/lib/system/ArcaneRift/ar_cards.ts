@@ -13,9 +13,9 @@ export type ArcaneRiftCard = {
 	// Arcane Rift specific mechanics here
 	aspects: Aspect[];
 	fields: Field[];
-	check?: {
-		characteristic: string;
-		skill: string;
+	check: {
+		characteristic?: string;
+		skill?: string;
 	};
 };
 
@@ -32,7 +32,7 @@ export class AR_Card extends StoredCard {
 		this.mechanics.arcaneRift = {
 			aspects: card?.mechanics?.aspects ?? [],
 			fields: card?.mechanics?.fields ?? [],
-			check: card?.mechanics?.check
+			check: card?.mechanics?.check ?? {}
 		};
 	}
 	///////////////////////////////
