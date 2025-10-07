@@ -18,7 +18,7 @@ export const availableGameSystems = [genericSystem.id, arcaneRiftSystemInfo.id];
 
 // Get Item Mechanics from each system
 // ADD MORE WHEN MORE SYSTEMS ARE ADDED
-import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards';
+import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards.svelte';
 
 export const gameCardSystems = {
 	[genericSystem.id]: {},
