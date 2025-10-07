@@ -86,8 +86,7 @@
 	}
 
 	function resetSkill() {
-		selectedChar = undefined;
-		selectedSkill = undefined;
+		item.skillCheck = undefined;
 	}
 
 	// Button to add new fields
@@ -100,7 +99,6 @@
 	// Get the Game System and Mechanics //
 	///////////////////////////////////////
 	import { gameCardSystems } from '$lib/system/gameSystems';
-	import { Root } from '$lib/components/ui/button';
 	const system: keyof typeof gameCardSystems = 'arcaneRift';
 	let availableSystems = Object.keys(gameCardSystems);
 
@@ -134,15 +132,6 @@
 	onMount(() => {
 		loadIconFromIconify(item.icon);
 		mounted = true;
-	});
-	run(() => {
-		selectedChar && updateSkill('char');
-	});
-	run(() => {
-		selectedSkill && updateSkill('skill');
-	});
-	run(() => {
-		console.debug('Logging the editItem', item);
 	});
 </script>
 
@@ -264,7 +253,12 @@
 				<div class="fieldItem">
 					<!-- Characteristic -->
 					<Label for="characteristic">Characteristic</Label>
-					<Select.Root type="single" name="characteristic" bind:value={selectedChar}>
+					<Select.Root
+						type="single"
+						name="characteristic"
+						bind:value={selectedChar}
+						onOpenChange={() => updateSkill('char')}
+					>
 						<Select.Trigger class="w-full">{selectedChar || 'None'}</Select.Trigger>
 						<Select.Content>
 							{#each characteristics as characteristic}
@@ -274,7 +268,12 @@
 					</Select.Root>
 					<!-- Skill -->
 					<Label for="skill">Skill</Label>
-					<Select.Root type="single" name="skill" bind:value={selectedSkill}>
+					<Select.Root
+						type="single"
+						name="skill"
+						bind:value={selectedSkill}
+						onOpenChange={() => updateSkill('skill')}
+					>
 						<Select.Trigger class="w-full">{selectedSkill || 'None'}</Select.Trigger>
 						<Select.Content>
 							{#each Object.entries(skillList) as [charName, skills]}

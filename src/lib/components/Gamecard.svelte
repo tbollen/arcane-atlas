@@ -29,6 +29,11 @@
 	let renderedItemDescription = $derived(renderMarkdown(item.description));
 	// Check for icon
 	let iconOverride = $derived(item?.icon && iconExists(item.icon) ? item.icon : undefined);
+
+	// Check if the item has a skillCheck
+	let hasSkillCheck = $derived(false);
+
+	$effect(() => console.log('hasSkillCheck', hasSkillCheck));
 </script>
 
 <div
@@ -108,8 +113,8 @@
 		{/each}
 	{/if}
 
-	<div id="fields" data-field-number={item?.fields?.length} class:hasSkillCheck={item?.skillCheck}>
-		{#if (item?.fields && item?.fields?.length > 0) || item?.skillCheck}
+	<div id="fields" data-field-number={item?.fields?.length} class:hasSkillCheck>
+		{#if (item?.fields && item?.fields?.length > 0) || hasSkillCheck}
 			<div class="fieldDivider"></div>
 		{/if}
 		{#if item?.fields}
@@ -121,7 +126,7 @@
 			{/each}
 		{/if}
 		<!-- Skill Check -->
-		{#if item?.skillCheck}
+		{#if hasSkillCheck}
 			<div id="skillcheck" class="field">
 				<div id="characteristic" style="font-size: {item.style.fontsize.check / 1.4}pt;">
 					{item.skillCheck.characteristic}
