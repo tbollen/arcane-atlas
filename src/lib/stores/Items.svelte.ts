@@ -51,8 +51,8 @@ function generateShortID(length: number = 8, prefix: string = ''): string {
 
 class StoredItem extends Item {
 	id: string;
-	isActive: boolean = false;
-	isSelected: boolean = false;
+	isActive: boolean = $state(false);
+	isSelected: boolean = $state(false);
 	creator: string;
 	dateCreated: Date;
 
@@ -380,8 +380,10 @@ class ItemStore {
 
 	// Saving
 	save() {
-		const _items = JSON.stringify(this.items);
-		this.setLocalStorage(lsk.items, _items);
+		const _serialized: JSON = this.serialize();
+		const _stringifiedItems = JSON.stringify(_serialized);
+		console.error('Stringified items:', JSON.parse(_stringifiedItems));
+		this.setLocalStorage(lsk.items, _stringifiedItems);
 		this.setLocalStorage(lsk.activeItem, JSON.stringify(this.getActiveItem().id));
 	}
 
@@ -498,8 +500,15 @@ class ItemStore {
 
 	//
 
-	private serialize(): JSON {
-		const stringifiedItems = JSON.stringify(this.items);
+	serialize(): JSON {
+		const _items: Object = this.items.map((item) => {
+			const _item = new StoredItem(item);
+			const serializedItem = _item.serialize();
+			return serializedItem;
+		});
+		console.error('Serialized items:', _items);
+		console.error('Rehydrated object: ', JSON.parse(JSON.stringify(_items)));
+		const stringifiedItems = JSON.stringify(_items);
 		return JSON.parse(stringifiedItems);
 	}
 }
