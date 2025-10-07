@@ -1,8 +1,12 @@
-// Basic Types
+// Utils
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
+import { clone } from '$lib/utils/serializing';
 
-import { Card } from '$lib/core/cards/card.svelte';
+import { Card, serializeCard } from '$lib/core/cards/card.svelte';
 // import type { Card as PrismaCard } from '@prisma/client';
+
+// Import defaults
+import { defaultTemplates } from '$lib/core/cards/defaultTemplates';
 
 // Shorthand for card id
 type CardID = Prefixed_UUID<'card'>;
@@ -21,9 +25,9 @@ export class StoredCard extends Card {
 // ItemStore Class //
 /////////////////////
 export class CardStore {
-	cards: StoredCard[] = [];
-	templates: Partial<Card>[] = [];
-	private idSet: Set<CardID> = new Set();
+	cards: StoredCard[] = $state([]);
+	templates: Partial<Card>[] = $state(defaultTemplates);
+	private idSet: Set<CardID> = $state(new Set());
 
 	constructor(
 		_: {
@@ -45,12 +49,30 @@ export class CardStore {
 			_.cards = _.store.cards;
 			_.templates = _.store.templates;
 		}
-		// Create items from given items (* instead of setting it, to support migrations)
-		this.cards = _.cards ? _.cards.map((card) => new StoredCard(card.id, card)) : [];
-		// Same for templates
-		this.templates = _.templates ? _.templates.map((item) => new Card(item)) : [];
+		// Create items from given items
+		const _cardsToOVerwrite = _.cards
+			? _.cards.map((card) => new StoredCard(card.id, card)) // If cards are given, create StoredCards from this data
+			: []; // If no cards are given, create a default card with a unique ID
+		_cardsToOVerwrite.forEach((card) => {
+			if (!this.idSet.has(card.id)) {
+				this.addNew(card); // If the card doesn't exist, add it
+			} else {
+				this.setCard(card.id, card); // If the card does exist, update it
+			}
+		});
+		if (this.cards.length === 0) {
+			// If no cards are given, add a default card
+			console.debug('No cards given in initialization of the card store; adding default card');
+			this.addNew();
+		}
 
-		// Make the idSet
+		// Same for templates
+		const _templatesToOverwrite = _.templates
+			? _.templates.map((template) => new Card(template))
+			: [];
+		_templatesToOverwrite.forEach((template) => [...this.templates, template]); //Add no matter what, duplicates are allowed!
+
+		// Make the idSet (overwrite whatever was there before)
 		this.idSet = new Set(this.cards.map((item) => item.id));
 	}
 
@@ -97,6 +119,27 @@ export class CardStore {
 	//////////////////
 	// DB Functions //
 	//////////////////
+
+	serialize(): JSON {
+		const _serializedCards: JSON = clone(
+			this.cards.map((card) => {
+				return serializeCard(card);
+			})
+		);
+		const _serializedTemplates: JSON = clone(
+			this.templates.map((template) => {
+				return serializeCard(template);
+			})
+		);
+
+		const _serializedStore = clone({
+			cards: _serializedCards,
+			templates: _serializedTemplates
+		});
+
+		console.error('Serialized store:', _serializedStore);
+		return _serializedStore;
+	}
 
 	private async addCardToDB(card: StoredCard) {
 		// Push the new card to the database

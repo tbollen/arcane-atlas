@@ -7,11 +7,14 @@ import {
 } from '$lib/core/cards/cardStylePresets';
 import { type IsCardType } from '$lib/modules/cardTypes';
 
+// Utils
+import { clone } from '$lib/utils/serializing';
+
 // Basic Types
 import { type Prefixed_UUID } from '$lib/utils/uuid';
 
 // Import Mechanics
-import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards';
+import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards.svelte';
 
 type Mechanics = {
 	generic: {};
@@ -24,6 +27,10 @@ export type CardFields = {
 	name?: string;
 	description?: string;
 };
+const mechanics: Mechanics = { generic: {} };
+export const test = Object.keys(mechanics);
+console.log(test);
+const system: System[] = ['generic'];
 
 export const fallbackCardInfo: Partial<Card> = {
 	name: 'New Card',
@@ -41,18 +48,18 @@ export const fallbackCardInfo: Partial<Card> = {
 
 export class Card {
 	// ID and db info
-	creatorId: Prefixed_UUID<'user'> | null = null;
-	createdAt: Date;
-	updatedAt: Date;
+	creatorId: Prefixed_UUID<'user'> | null;
+	createdAt: Date = new Date();
+	updatedAt: Date = $state(new Date());
 	userIds: Prefixed_UUID<'user'>[] = []; // Users that have access to this card (for multi-user support)
 	campaignIds: Prefixed_UUID<'campaign'>[] = []; // Campaigns that use this card (for filtering)
 	characterIds: Prefixed_UUID<'character'>[] = []; // Characters that use this card (for filtering)
-	// Main info
-	name: string;
-	type: IsCardType;
-	subtitle?: string;
-	icon?: string;
-	description: string;
+	// Main info, populate with default values
+	name: string = $state('New Card');
+	type: IsCardType = $state('Card');
+	subtitle?: string = $state(undefined);
+	icon?: string = $state(undefined);
+	description: string = $state('Card Description');
 	image: {
 		url?: string;
 		encodedImage?: string;
@@ -62,19 +69,19 @@ export class Card {
 		scale: number;
 		x_offset: number;
 		y_offset: number;
-	} = {
+	} = $state({
 		// Defaults for image
 		rotation: 0,
 		scale: 100,
 		x_offset: 0,
 		y_offset: 0
-	};
+	});
 	// Card styling
-	stylePreset: CardStylePreset = 'default';
-	style: CardStyleOptions = defaultCardStyle;
+	stylePreset: CardStylePreset = $state('default');
+	style: CardStyleOptions = $state(defaultCardStyle);
 	// Mechanics
-	systems: System[]; // Can have 0, 1 or more compatible systems
-	mechanics: Mechanics; // Object containing mechanics per available system
+	systems: System[] = $state([]); // Can have 0, 1 or more compatible systems
+	mechanics: Mechanics = $state({ generic: {} }); // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
 	constructor(_card?: Partial<Card>) {
@@ -86,8 +93,8 @@ export class Card {
 		this.creatorId = _cardReference.creatorId ?? null;
 		this.createdAt = _cardReference.createdAt ?? new Date();
 		this.updatedAt = _cardReference.updatedAt ?? new Date();
-		this.name = _cardReference.name ?? fallbackCardInfo.name!;
-		this.type = _cardReference.type ?? fallbackCardInfo.type!;
+		this.name = _cardReference.name ?? 'New Card';
+		this.type = _cardReference.type ?? 'Card';
 		this.subtitle = _cardReference.subtitle ?? undefined;
 		this.icon = _cardReference.icon ?? undefined;
 		this.description = _cardReference.description ?? fallbackCardInfo.description!;
@@ -98,8 +105,8 @@ export class Card {
 		this.stylePreset = _cardReference.stylePreset ?? fallbackCardInfo.stylePreset!;
 		this.style = { ...defaultCardStyle, ...(_cardReference.style ?? {}) };
 		// Set mechanics based on system
-		this.systems = []; //TODO: make dynamic
-		this.mechanics = { generic: {}, ...(_cardReference.mechanics ?? {}) }; //Always include generic as an empty object
+		this.mechanics = { ...this.mechanics, ..._cardReference.mechanics };
+		this.systems = Object.keys(this.mechanics) as System[];
 	}
 
 	// Style and Default settings func
@@ -129,4 +136,49 @@ export class Card {
 		// Set preset
 		this.stylePreset = preset;
 	}
+
+	// SERIALIZATION FOR SAVING AND PARSING
+
+	/**
+	 * Serializes the card to be saved in the database or parsed from JSON.
+	 * This function returns an object that contains all the information of the card.
+	 * @returns {Object} Object containing all the information of the card
+	 * The object will have the following properties:
+	 * - creatorId: UUID of the user that created the card
+	 * - createdAt: Date when the card was created
+	 * - updatedAt: Date when the card was last updated
+	 * - userIds: Array of UUIDs of users that have access to the card
+	 * - campaignIds: Array of UUIDs of campaigns that use this card
+	 * - characterIds: Array of UUIDs of characters that use this card
+	 * - name: Name of the card
+	 * - type: Type of the card
+	 * - subtitle: Subtitle of the card
+	 * - icon: Icon of the card
+	 * - description: Description of the card
+	 * - image: Object containing information about the image of the card
+	 * - stylePreset: Name of the style preset used for the card
+	 * - style: Object containing information about the style of the card
+	 * - mechanics: Object containing information about the mechanics of the card
+	 */
+}
+
+export function serializeCard(card: Card | Partial<Card>): JSON {
+	const json = clone({
+		creatorId: clone(card.creatorId),
+		createdAt: clone(card.createdAt),
+		updatedAt: clone(card.updatedAt),
+		userIds: clone(card.userIds),
+		campaignIds: clone(card.campaignIds),
+		characterIds: clone(card.characterIds),
+		name: clone(card.name),
+		type: clone(card.type),
+		subtitle: clone(card.subtitle),
+		icon: clone(card.icon),
+		description: clone(card.description),
+		image: clone(card.image),
+		stylePreset: clone(card.stylePreset),
+		style: clone(card.style),
+		mechanics: clone(card.mechanics)
+	});
+	return json;
 }
