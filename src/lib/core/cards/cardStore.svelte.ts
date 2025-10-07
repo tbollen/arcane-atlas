@@ -1,7 +1,7 @@
 // Basic Types
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 
-import { Card } from '$lib/core/cards/card';
+import { Card } from '$lib/core/cards/card.svelte';
 // import type { Card as PrismaCard } from '@prisma/client';
 
 // Shorthand for card id

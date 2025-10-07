@@ -80,8 +80,9 @@ export class Card {
 	constructor(_card?: Partial<Card>) {
 		let _cardReference: Partial<Card> = fallbackCardInfo;
 		if (_card) {
-			_cardReference = { ..._cardReference, ..._card };
+			_cardReference = { ..._cardReference, ..._card }; // Override default values where defined
 		}
+		// Set card info one by one
 		this.creatorId = _cardReference.creatorId ?? null;
 		this.createdAt = _cardReference.createdAt ?? new Date();
 		this.updatedAt = _cardReference.updatedAt ?? new Date();
