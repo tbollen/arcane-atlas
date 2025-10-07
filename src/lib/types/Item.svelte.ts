@@ -44,7 +44,7 @@ export class Item {
 	description: string = $state('Item Description');
 	aspects?: ItemFields[] = $state([]);
 	specials?: ItemFields[] = $state([]);
-	skillCheck?: SkillCheck | null = $state(null);
+	skillCheck: SkillCheck = $state({});
 	fields?: ItemFields[] = $state([]);
 	image: {
 		url?: string;
@@ -71,9 +71,30 @@ export class Item {
 			_itemReference = JSON.parse(JSON.stringify(_item)); // JSON methods for deep cloning
 		}
 		Object.assign(this, _itemReference);
-		if (_itemReference.skillCheck === null) this.skillCheck = null; // Null skillcheck
 	}
 	// Methods
+	public serialize(): Object {
+		type Objectified = Record<string, any>;
+		function c(value: any): JSON {
+			const _v = value || '';
+			return JSON.parse(JSON.stringify(_v));
+		}
+		const asObject: Objectified = {
+			name: c(this.name),
+			type: c(this.type),
+			subtitle: c(this.subtitle),
+			icon: c(this.icon),
+			description: c(this.description),
+			aspects: c(this.aspects),
+			specials: c(this.specials),
+			skillCheck: c(this.skillCheck),
+			fields: c(this.fields),
+			image: c(this.image),
+			stylePreset: c(this.stylePreset),
+			style: c(this.style)
+		};
+		return asObject;
+	}
 }
 
 export type ItemType = typeof Item;
