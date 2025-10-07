@@ -1,8 +1,9 @@
-// UUID Type (with prefix)
-export type Prefixed_UUID<TPrefix extends string = string> = `${TPrefix}:${string}`;
+// UUID Type
+export type UUID = `${string}-${string}-${string}-${string}-${string}`;
+export type Prefixed_UUID<TPrefix extends UUID = UUID> = `${TPrefix}:${UUID}`;
 
 // UUID Generation Functions
-export function generatePrefixedUUID<TPrefix extends string>(
+export function generatePrefixedUUID<TPrefix extends UUID>(
 	prefix: TPrefix
 ): Prefixed_UUID<TPrefix> {
 	const uuid = crypto.randomUUID();
