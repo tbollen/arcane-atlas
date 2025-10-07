@@ -101,6 +101,7 @@
 
 	let renderCards = $state(false);
 	onMount(() => {
+		console.error(items);
 		renderCards = true;
 	});
 
@@ -218,6 +219,13 @@
 			<div id="filterContainer" class="">
 				<SearchInput bind:searchTerm />
 			</div>
+			<Button
+				variant="advanced"
+				onclick={() => console.log('Serialized Items: ', items.serialize())}
+			>
+				<Icon icon="mdi:code-json" />
+				Serialize</Button
+			>
 		</section>
 	{/if}
 	{#if renderCards}

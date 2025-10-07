@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	// Svelte stuff
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
@@ -68,14 +66,10 @@
 		items.download(item.id);
 	}
 
-	// Check if card is saved
-	let cardIsSaved: boolean = $state(true);
-	let savedItem: {} = {}; // Store the last saved item to compare with current item
+	let savedItem: {} = $state({}); // Store the last saved item to compare with current item
 
 	function updateSaveState() {
-		console.error('Checking if saved...');
 		if (!item || !savedItem) return (cardIsSaved = false);
-		console.error('Current Item:', item, 'Saved Item:', savedItem);
 		cardIsSaved = JSON.stringify(item) === JSON.stringify(savedItem);
 	}
 
@@ -92,7 +86,7 @@
 		}
 		items.save();
 		savedItem = { ...item }; // Update saved item
-		updateSaveState(); // Update save state
+		// updateSaveState(); // Update save state
 		// setTimeout(() => (cardIsSaved = false), 2000);
 
 		// If it was a new item, redirect to the new item's page
@@ -106,12 +100,8 @@
 
 	// Initialize item on page load, use a dummy item for init only!!
 	let item: StoredItem = $state<StoredItem>(items.prepareItem());
-	let boundItem: StoredItem = $derived(item);
-	let flatItem: {} = $derived({ ...item });
-	$effect(() => {
-		const serializedItem = JSON.stringify(boundItem);
-		console.error('Serialized Item:', serializedItem);
-	});
+	// Check if card is saved
+	let cardIsSaved: boolean = $state(false);
 
 	onMount(() => {
 		// Retrieve Item
@@ -151,14 +141,6 @@
 		}
 	}
 	let isNewCard = $derived(slug_id === 'new');
-	$effect(() => {
-		const _item = items;
-		updateSaveState();
-	});
-
-	function test() {
-		alert('test');
-	}
 </script>
 
 <!-- Svelte Window -->
@@ -224,7 +206,7 @@
 					</div>
 				</header>
 				<div id="itemEditor">
-					<ItemEditor bind:item={boundItem} />
+					<ItemEditor bind:item />
 				</div>
 			</section>
 		{/if}
