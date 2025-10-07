@@ -1,6 +1,7 @@
 // Utils
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 import { clone } from '$lib/utils/serializing';
+import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 
 import { Card, serializeCard } from '$lib/core/cards/card.svelte';
 // import type { Card as PrismaCard } from '@prisma/client';
@@ -30,7 +31,8 @@ export class CardStore {
 	private idSet: Set<CardID> = $state(new Set());
 
 	constructor(
-		_: {
+		init: {
+			json?: JSON;
 			multiStore?: CardStore[];
 			store?: CardStore;
 			cards?: StoredCard[];
@@ -38,20 +40,22 @@ export class CardStore {
 		} = {}
 	) {
 		// If an exisiting store is given,
-		if (_.multiStore) {
+		if (init.json) {
+		}
+		if (init.multiStore) {
 			// Merge all stores together
-			_.multiStore.forEach((store) => {
+			init.multiStore.forEach((store) => {
 				this.cards = [...this.cards, ...store.cards];
 				this.templates = [...this.templates, ...store.templates];
 			});
-		} else if (_.store) {
+		} else if (init.store) {
 			// Override all other values
-			_.cards = _.store.cards;
-			_.templates = _.store.templates;
+			init.cards = init.store.cards;
+			init.templates = init.store.templates;
 		}
 		// Create items from given items
-		const _cardsToOVerwrite = _.cards
-			? _.cards.map((card) => new StoredCard(card.id, card)) // If cards are given, create StoredCards from this data
+		const _cardsToOVerwrite = init.cards
+			? init.cards.map((card) => new StoredCard(card.id, card)) // If cards are given, create StoredCards from this data
 			: []; // If no cards are given, create a default card with a unique ID
 		_cardsToOVerwrite.forEach((card) => {
 			if (!this.idSet.has(card.id)) {
@@ -67,8 +71,8 @@ export class CardStore {
 		}
 
 		// Same for templates
-		const _templatesToOverwrite = _.templates
-			? _.templates.map((template) => new Card(template))
+		const _templatesToOverwrite = init.templates
+			? init.templates.map((template) => new Card(template))
 			: [];
 		_templatesToOverwrite.forEach((template) => [...this.templates, template]); //Add no matter what, duplicates are allowed!
 
@@ -97,9 +101,17 @@ export class CardStore {
 	// SET Functions //
 	///////////////////
 
-	// Settintg / updating properties of a specific card
+	// Setting / updating properties of a specific card
 	setCard(_id: CardID, cardUpdate: Partial<StoredCard>): StoredCard {
-		// Ensure the card exists
+		// Run PUT
+		const updatedCard = this.PUT(_id, cardUpdate);
+		// Save changes
+		this.cache();
+		// Return the updated card (for optional further processing)
+		return updatedCard;
+	}
+
+	private PUT(_id: CardID, cardUpdate: Partial<Card>): StoredCard {
 		try {
 			this.getCard(_id); // Check if the card exists
 		} catch (error) {
@@ -110,9 +122,6 @@ export class CardStore {
 		const updatedCard = new StoredCard(_card.id, { ..._card, ...cardUpdate });
 		// Update the cards array
 		this.cards = this.cards.map((card) => (card.id === _id ? updatedCard : card));
-		// Save changes
-		this.save();
-		// Return the updated card (for optional further processing)
 		return updatedCard;
 	}
 
@@ -137,7 +146,6 @@ export class CardStore {
 			templates: _serializedTemplates
 		});
 
-		console.error('Serialized store:', _serializedStore);
 		return _serializedStore;
 	}
 
@@ -165,6 +173,15 @@ export class CardStore {
 
 	// Creating a new card
 	addNew(card?: Partial<Card>): StoredCard {
+		// Run POST
+		const newCard = this.POST(card);
+		// Save changes
+		this.cache();
+		// Return the new card (for optional further processing)
+		return newCard;
+	}
+
+	private POST(card?: Partial<Card>): StoredCard {
 		// Create a new ID
 		const newId = this.returnUniqueId();
 		// Instantiate a new card
@@ -173,17 +190,30 @@ export class CardStore {
 		this.cards = [...this.cards, newCard];
 		// Update the idSet
 		this.idSet.add(newId);
-		// Save changes
-		this.save();
 		// Return the new card (for optional further processing)
 		return newCard;
 	}
 
-	// Saving
-	save() {
-		const _items = JSON.stringify(this.cards);
-		// this.setLocalStorage(lsk.items, _items);
-		// this.setLocalStorage(lsk.activeItem, JSON.stringify(this.getActiveItem().id));
+	////////////
+	// Saving //
+	////////////
+
+	/**
+	 * Save the current state of the item store to session storage.
+	 * This function is asynchronous and will return a promise that resolves when the save is complete.
+	 */
+	async cache() {
+		const _stringifiedStore = JSON.stringify(this.serialize());
+		// Save to local storage, once it's ready
+		if (await checkWebStorage()) {
+			console.debug('Saving to session storage. Key:', lsk.cardStore);
+			localStorage.setItem(lsk.cardStore, _stringifiedStore);
+		}
+	}
+
+	async saveToDB() {
+		const _stringifiedStore = JSON.stringify(this.serialize());
+		// TODO
 	}
 
 	// Removing a card
@@ -195,7 +225,9 @@ export class CardStore {
 			// If multiple items are deleted, ask if really want to delete them all
 			if (!window.confirm(`Are you really sure? Multiple items will be deleted!`)) return;
 		}
-		_id.forEach((id) => this.sudoDestroy(id));
+		_id.forEach((id) => this.DELETE(id));
+		// Save Changes
+		this.cache();
 	}
 	///////////////////////
 	// Private Functions //
@@ -209,7 +241,7 @@ export class CardStore {
 		return newId;
 	}
 	// Private SUDO functions
-	private sudoDestroy(_id: CardID) {
+	private DELETE(_id: CardID) {
 		let _idSet = this.idSet;
 		let _items = this.cards;
 		if (this.cards.length < 2) {
@@ -226,9 +258,6 @@ export class CardStore {
 			// Update Items
 			this.cards = _items;
 			this.idSet = _idSet;
-			// Save Changes
-			this.save();
-			window.location.reload();
 		} catch (error) {
 			// If item not found, re-throw error
 			console.error(error);
