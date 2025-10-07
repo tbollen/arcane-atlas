@@ -55,12 +55,10 @@
 			(priority == 'char' && selectedChar == undefined) ||
 			(priority == 'skill' && selectedSkill == undefined)
 		) {
-			item.skillCheck = undefined;
 			return;
 		}
 		console.debug('Updating skill', selectedChar, selectedSkill);
 		if (selectedChar == undefined && selectedSkill == undefined) {
-			item.skillCheck = undefined;
 			return;
 		}
 		if (
@@ -86,7 +84,8 @@
 	}
 
 	function resetSkill() {
-		item.skillCheck = undefined;
+		item.skillCheck.characteristic = undefined;
+		item.skillCheck.skill = undefined;
 	}
 
 	// Button to add new fields
