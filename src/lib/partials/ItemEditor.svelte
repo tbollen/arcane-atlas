@@ -12,13 +12,9 @@
 	import * as Select from '$lib/components/ui/select';
 
 	// Ask for an StoredItem to edit
-	import { type StoredItem } from '$lib/stores/Items.svelte';
-
-	// Load selected item
-	import { items } from '$lib/stores/Items.svelte';
+	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
 
 	// Popup & Tooltips
-	import { tooltip } from '$lib/modules/tooltip';
 	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
 
 	// Import card types for editing options
@@ -51,6 +47,8 @@
 	let selectedChar: keyof typeof skillList | undefined = $state();
 
 	function updateSkill(priority?: 'char' | 'skill') {
+		if (!(card.systems.includes('arcaneRift') && card.mechanics?.arcaneRift?.check))
+			return console.debug('Arcane Rift not configured for this card');
 		if (
 			(priority == 'char' && selectedChar == undefined) ||
 			(priority == 'skill' && selectedSkill == undefined)
@@ -80,35 +78,38 @@
 				skillList[char as keyof typeof skillList].some((skill) => skill == selectedSkill)
 			) as keyof typeof skillList;
 		}
-		item.skillCheck = { characteristic: selectedChar, skill: selectedSkill };
+		card.mechanics.arcaneRift.check = { characteristic: selectedChar, skill: selectedSkill };
 	}
 
 	function resetSkill() {
-		item.skillCheck.characteristic = undefined;
-		item.skillCheck.skill = undefined;
+		if (!(card.systems.includes('arcaneRift') && card.mechanics?.arcaneRift?.check)) return;
+		card.mechanics.arcaneRift.check.characteristic = undefined;
+		card.mechanics.arcaneRift.check.skill = undefined;
 	}
 
 	// Button to add new fields
 	import { onMount } from 'svelte';
+
+	///////////////////
+	// Get Item here //
+	///////////////////
 	interface Props {
-		item: StoredItem;
+		card: StoredCard;
 	}
+	let { card = $bindable() }: Props = $props();
 
 	///////////////////////////////////////
 	// Get the Game System and Mechanics //
 	///////////////////////////////////////
 	import { gameCardSystems } from '$lib/system/gameSystems';
-	const system: keyof typeof gameCardSystems = 'arcaneRift';
-	let availableSystems = Object.keys(gameCardSystems);
+	// TODO: make dynamic and fix. Currently this is the only system so it works fine...
+	let activeSystem: keyof typeof gameCardSystems = $state(
+		card.systems.includes('arcaneRift') ? 'arcaneRift' : 'generic'
+	);
 
-	///////////////////
-	// Get Item here //
-	///////////////////
-	let { item = $bindable() }: Props = $props();
-	let _localItem = $derived(item);
-
+	//////////////////////////////
 	$effect(() => {
-		console.log('Item updated [ITEM EDITOR]', item);
+		console.log('Item updated [ITEM EDITOR]', card.mechanics, card.systems);
 	});
 
 	function updateItem() {
@@ -117,19 +118,19 @@
 
 	function presetToCustom() {
 		// item.stylePreset = 'custom';
-		item.useStylePreset('custom');
+		card.useStylePreset('custom');
 	}
 
 	// Style components for looping
-	const availableColorOptions = Object.keys(item.style.color) as (keyof typeof item.style.color)[];
-	const availableFontOptions = Object.keys(item.style.font) as (keyof typeof item.style.font)[];
+	const availableColorOptions = Object.keys(card.style.color) as (keyof typeof card.style.color)[];
+	const availableFontOptions = Object.keys(card.style.font) as (keyof typeof card.style.font)[];
 	const availableFontSizeOptions = Object.keys(
-		item.style.fontsize
-	) as (keyof typeof item.style.fontsize)[];
+		card.style.fontsize
+	) as (keyof typeof card.style.fontsize)[];
 
 	let mounted = false;
 	onMount(() => {
-		loadIconFromIconify(item.icon);
+		loadIconFromIconify(card.icon);
 		mounted = true;
 	});
 </script>
@@ -151,13 +152,13 @@
 					type="text"
 					id="name"
 					oninput={updateItem}
-					bind:value={item.name}
+					bind:value={card.name}
 					placeholder="Name"
 				/>
 				<hr />
 				<!-- Subtitle -->
 				<Label for="subtitle">Subtitle</Label>
-				<Input type="text" id="subtitle" bind:value={item.subtitle} placeholder="Subtitle" />
+				<Input type="text" id="subtitle" bind:value={card.subtitle} placeholder="Subtitle" />
 				<hr />
 				<!-- Description -->
 				<Label for="description">Description</Label>
@@ -166,17 +167,17 @@
 					id="description"
 					rows={3}
 					placeholder="Edit the description here"
-					bind:value={item.description}
+					bind:value={card.description}
 				></Textarea>
 				<p class="useTip col-span-full text-sm text-muted-foreground">
-					You can add dice icons like such '[pr]'' = {@html renderMarkdown('[pr]')}
+					You can add dice icons like such '[pr]' = {@html renderMarkdown('[pr]')}
 					<a href="{base}/about">click here</a> for more info
 				</p>
 				<hr />
 				<!-- Type -->
 				<Label for="type">Type</Label>
-				<Select.Root type="single" name="type" bind:value={_localItem.type}>
-					<Select.Trigger class="w-[180px]">{item.type}</Select.Trigger>
+				<Select.Root type="single" name="type" bind:value={card.type}>
+					<Select.Trigger class="w-[180px]">{card.type}</Select.Trigger>
 					<Select.Content>
 						{#each cardTypes as cardType}
 							<Select.Item value={cardType.name}>{cardType.name}</Select.Item>
@@ -193,10 +194,10 @@
 					<Input
 						type="text"
 						id="iconOverride"
-						class={!iconExists(item?.icon || '') ? 'warning' : ''}
-						bind:value={_localItem.icon}
-						oninput={() => loadIconFromIconify(item.icon)}
-						placeholder={cardTypes.find((type) => type.name == item.type)?.icon ||
+						class={!iconExists(card?.icon || '') ? 'warning' : ''}
+						bind:value={card.icon}
+						oninput={() => loadIconFromIconify(card.icon)}
+						placeholder={cardTypes.find((type) => type.name == card.type)?.icon ||
 							'Icon from Iconify'}
 					/>
 				{/if}
@@ -210,17 +211,17 @@
 		{#snippet head()}
 			<div>Mechanics</div>
 		{/snippet}
-		<!-- Description -->
 		{#snippet content()}
+			<!-- Arcane Rift -->
 			<div class="mainFields">
 				<!-- Aspects -->
-				<h1 class="category">Aspects</h1>
-				{#if item.aspects?.length}
+				{#if card.mechanics.arcaneRift?.aspects && card.mechanics.arcaneRift.aspects.length > 0}
+					<h1 class="category">Aspects</h1>
 					<div class="fieldList">
-						{#each item.aspects as aspect, i}
+						{#each card.mechanics.arcaneRift.aspects as aspect, i}
 							<div class="fieldItem">
 								<Label for="aspect-{i}-name">Name</Label>
-								<Input type="text" id="aspect-{i}-name" bind:value={aspect.name} />
+								<Input type="text" id="aspect-{i}-name" bind:value={aspect.short} />
 								<Label for="aspect-{i}-description">Description</Label>
 								<Textarea
 									name="description"
@@ -234,7 +235,7 @@
 										color="plain"
 										size="icon"
 										variant="destructive"
-										onclick={() => item.removeField('aspects', i)}
+										onclick={() => card.mechanics.arcaneRift?.aspects.splice(i, 1)}
 									>
 										<Icon icon="mdi:trash" />
 									</Button>
@@ -244,7 +245,10 @@
 					</div>
 				{/if}
 				<hr />
-				<Button onclick={() => item.addEmptyField('aspects')}>
+				<Button
+					onclick={() =>
+						card.mechanics.arcaneRift?.aspects.push({ short: 'aspect', description: 'edit me' })}
+				>
 					<Icon icon="mdi:plus" />
 					Add aspect
 				</Button>
@@ -293,28 +297,32 @@
 				<h1 class="category">Card Fields</h1>
 				<!-- Fields -->
 				<div class="fieldList">
-					{#if item.fields?.length}
-						{#each item.fields as field, i}
+					{#if card.mechanics.arcaneRift?.fields?.length}
+						{#each card.mechanics.arcaneRift.fields as field, i}
 							<div class="fieldItem">
 								<Label for="special-{i}-name">Name</Label>
-								<Input type="text" id="special-{i}-name" bind:value={field.name} />
+								<Input type="text" id="special-{i}-name" bind:value={field.label} />
 								<div class="fieldButtons">
 									<Button
 										variant="destructive"
 										size="icon"
-										onclick={() => item.removeField('fields', i)}
+										onclick={() => card.mechanics.arcaneRift?.aspects.splice(i, 1)}
 									>
 										<Icon icon="mdi:trash" />
 									</Button>
 								</div>
 								<Label for="special-{i}-description">Value</Label>
-								<Input type="text" id="special-{i}-description" bind:value={field.description} />
+								<Input type="text" id="special-{i}-description" bind:value={field.value} />
 							</div>
 						{/each}
 					{/if}
 				</div>
 				<div class="fullLine">
-					<Button size="sm" onclick={() => item.addEmptyField('fields')}>
+					<Button
+						size="sm"
+						onclick={() =>
+							card.mechanics.arcaneRift?.fields.push({ label: 'new', value: 'edit me' })}
+					>
 						<Icon icon="mdi:plus" />
 						Add Field</Button
 					>
@@ -322,6 +330,7 @@
 			</div>
 		{/snippet}
 	</Accordion>
+
 	<!-- Fields -->
 	<!-- Image -->
 	<hr class="divider" />
@@ -337,12 +346,7 @@
 						<Icon class="advancedIcon" icon="memory:anvil" />
 						Name
 					</Label>
-					<Input
-						type="text"
-						id="imgName"
-						bind:value={_localItem.image.name}
-						placeholder={item.name}
-					/>
+					<Input type="text" id="imgName" bind:value={card.image.name} placeholder={card.name} />
 				{/if}
 
 				<!-- URL -->
@@ -350,28 +354,28 @@
 				<Input
 					type="text"
 					id="url"
-					bind:value={_localItem.image.url}
+					bind:value={card.image.url}
 					placeholder="Paste image URL here"
 				/>
 
 				<!-- Position X -->
-				<Label for="xPosition">X Offset: {Math.round(item.image.x_offset || 0)}</Label>
+				<Label for="xPosition">X Offset: {Math.round(card.image.x_offset || 0)}</Label>
 				<Input
 					type="range"
 					name="xPosition"
 					id="xPosition"
-					bind:value={_localItem.image.x_offset}
+					bind:value={card.image.x_offset}
 					min="-50"
 					max="50"
 					list="positions"
 				/>
 				<!-- Position Y -->
-				<Label for="yPosition">Y Offset: {Math.round(item.image.y_offset || 0)}</Label>
+				<Label for="yPosition">Y Offset: {Math.round(card.image.y_offset || 0)}</Label>
 				<Input
 					type="range"
 					name="yPosition"
 					id="yPosition"
-					bind:value={_localItem.image.y_offset}
+					bind:value={card.image.y_offset}
 					min="-50"
 					max="50"
 					list="positions"
@@ -382,24 +386,24 @@
 					<option value="10"></option>
 				</datalist>
 				<!-- Rotation -->
-				<Label for="rotation">Rotation: {Math.round(item.image.rotation || 0)}°</Label>
+				<Label for="rotation">Rotation: {Math.round(card.image.rotation || 0)}°</Label>
 				<Input
 					type="range"
 					name="rotation"
 					id="rotation"
-					bind:value={_localItem.image.rotation}
+					bind:value={card.image.rotation}
 					min="-180"
 					max="180"
 					list="rotations"
 				/>
 				<!-- Scale -->
-				<Label for="scale">Scale: {item.image.scale}%</Label>
+				<Label for="scale">Scale: {card.image.scale}%</Label>
 				<Input
 					type="range"
 					name="scale"
 					id="scale"
 					list="scales"
-					bind:value={_localItem.image.scale}
+					bind:value={card.image.scale}
 					min="25"
 					max="300"
 				/>
@@ -416,7 +420,7 @@
 					<option value="-90"></option>
 				</datalist>
 				<div class="fullLine mt-4 columns-2">
-					<Button color="plain" class="w-full" onclick={() => item.resetImagePosition()}>
+					<Button color="plain" class="w-full" onclick={() => card.resetImagePosition()}>
 						<Icon icon="mdi:refresh" />
 						Reset Position</Button
 					>
@@ -442,25 +446,25 @@
 					<Select.Root
 						type="single"
 						name="preset"
-						bind:value={_localItem.stylePreset}
-						onOpenChange={(e) => item.useStylePreset(item.stylePreset || 'custom')}
+						bind:value={card.stylePreset}
+						onOpenChange={(e) => card.useStylePreset(card.stylePreset || 'custom')}
 					>
-						<Select.Trigger class="w-full">{_localItem.stylePreset || 'Custom'}</Select.Trigger>
+						<Select.Trigger class="w-full">{card.stylePreset || 'Custom'}</Select.Trigger>
 						<Select.Content>
 							{#each Object.keys(cardStylePresets) as preset}
 								<Select.Item value={preset}>{preset}</Select.Item>
 							{/each}
 						</Select.Content>
 					</Select.Root>
-					{#if item.stylePreset !== 'default'}
-						<Button variant="destructive" size="icon" onclick={() => item.useStylePreset('default')}
+					{#if card.stylePreset !== 'default'}
+						<Button variant="destructive" size="icon" onclick={() => card.useStylePreset('default')}
 							><Icon icon="mdi:backup-restore" /></Button
 						>
 					{:else}
 						<Button
 							size="sm"
 							onclick={() => {
-								item.useStylePreset('random');
+								card.useStylePreset('random');
 							}}><Icon icon="mdi:dice" /></Button
 						>
 					{/if}
@@ -479,18 +483,18 @@
 								<Input
 									type="color"
 									id="color-{colorType}"
-									bind:value={_localItem.style.color[colorType]}
+									bind:value={card.style.color[colorType]}
 									onchange={presetToCustom}
 									list="colorSuggestions"
 								/>
-								<span>{item.style.color[colorType]}</span>
+								<span>{card.style.color[colorType]}</span>
 							</div>
-							{#if item.stylePreset === 'custom'}
+							{#if card.stylePreset === 'custom'}
 								<Button
 									color="plain"
 									size="sm"
 									onclick={() => {
-										item.style.color[colorType] = defaultCardStyle.color[colorType];
+										card.style.color[colorType] = defaultCardStyle.color[colorType];
 										presetToCustom();
 									}}
 								>
@@ -503,7 +507,7 @@
 								onclick={() => {
 									presetToCustom();
 									const randomHex = Math.floor(Math.random() * 16777215).toString(16);
-									item.style.color[colorType] = `#${randomHex}`;
+									card.style.color[colorType] = `#${randomHex}`;
 								}}><Icon icon="mdi:dice" /></Button
 							>
 						</div>
@@ -530,14 +534,14 @@
 							<Input
 								type="number"
 								id="fontSize-{fontSizeOption}"
-								bind:value={_localItem.style.fontsize[fontSizeOption]}
+								bind:value={card.style.fontsize[fontSizeOption]}
 								onchange={presetToCustom}
 							/>
 							<Button
 								color="plain"
 								size="sm"
 								onclick={() => {
-									item.style.fontsize[fontSizeOption] = defaultCardStyle.fontsize[fontSizeOption];
+									card.style.fontsize[fontSizeOption] = defaultCardStyle.fontsize[fontSizeOption];
 								}}><Icon icon="mdi:restore" /></Button
 							>
 						</div>
@@ -554,9 +558,9 @@
 							<Select.Root
 								type="single"
 								name="font-{fontOption}"
-								bind:value={_localItem.style.font[fontOption]}
+								bind:value={card.style.font[fontOption]}
 							>
-								<Select.Trigger class="w-full">{_localItem.style.font[fontOption]}</Select.Trigger>
+								<Select.Trigger class="w-full">{card.style.font[fontOption]}</Select.Trigger>
 								<Select.Content>
 									{#each availableFonts as font}
 										<Select.Item value={font}>{font}</Select.Item>
@@ -567,7 +571,7 @@
 								color="plain"
 								size="sm"
 								onclick={() => {
-									item.style.font[fontOption] = defaultCardStyle.font[fontOption];
+									card.style.font[fontOption] = defaultCardStyle.font[fontOption];
 								}}><Icon icon="mdi:restore" /></Button
 							>
 						</div>

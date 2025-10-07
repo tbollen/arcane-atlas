@@ -8,9 +8,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 
-	import { items } from '$lib/stores/Items.svelte';
-	let _items = $state(items);
-	let _cards = $state(items.items);
+	import { items as jomy } from '$lib/stores/Items.svelte';
+	import { cardStore } from '$lib/stores/CardStore';
+	let cards = $state(cardStore.cards);
 
 	// Svelte stuff
 	import { onMount } from 'svelte';
@@ -37,7 +37,7 @@
 			$selectedItems.add(id);
 		}
 		// Set last clicked card to be active
-		items.setActiveItem(id);
+		// cardStore.setActiveItem(id);
 		updateItems();
 		// Force svelte to recognise changes
 		$selectedItems = $selectedItems;
@@ -45,20 +45,11 @@
 
 	function deleteCard(id: string) {
 		// Confirmation
-		items.destroy(id);
+		// cardStore.destroy(id);
 		// Remove from selected cards
 		$selectedItems.delete(id);
 		$selectedItems = $selectedItems;
 		updateItems();
-	}
-
-	function removeUnavailableCardsFromSelection() {
-		// if the ID's in the set are not in items anymore, remove them
-		for (const id of $selectedItems as Set<string>) {
-			if (!items.idSet.has(id)) {
-				$selectedItems.delete(id);
-			}
-		}
 	}
 
 	function viewCard(id: string) {
@@ -72,7 +63,8 @@
 	}
 
 	function duplicateCard(id: string) {
-		items.duplicateItem(id);
+		const baseCard = cardStore.getCard(id);
+		cardStore.addNew(baseCard);
 		updateItems();
 	}
 
@@ -80,7 +72,7 @@
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Item) {
-		items.setActiveTemplate(base);
+		// cardStore.setActiveTemplate(base);
 		addNew();
 	}
 
@@ -89,7 +81,7 @@
 	}
 
 	function updateItems() {
-		_items = items;
+		// cardStore = cardStore;
 	}
 
 	// UI
@@ -101,7 +93,7 @@
 
 	let renderCards = $state(false);
 	onMount(() => {
-		console.error(items);
+		console.error(cardStore);
 		renderCards = true;
 	});
 
@@ -109,7 +101,7 @@
 		if (typeof window === 'undefined') throw new Error('Window is undefined');
 		// Create an array of id's from the set
 		const ids = Array.from($selectedItems);
-		items.destroy(ids);
+		// cardStore.destroy(ids);
 	}
 
 	async function printDialog() {
@@ -127,15 +119,15 @@
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
 	let filteredItems: string[] = [];
-	console.error(items);
+	console.error(cardStore);
 	$effect(() => {
 		if (enableFiltering) {
 			// Filter which match name or description includes the search term
-			filteredItems = _items.items
-				.filter((item) => {
+			filteredItems = cardStore.cards
+				.filter((card) => {
 					return (
-						item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-						item.description.toLowerCase().includes(searchTerm.toLowerCase())
+						card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+						card.description.toLowerCase().includes(searchTerm.toLowerCase())
 					);
 				})
 				// Return their ID's
@@ -143,9 +135,9 @@
 		}
 		// Set _items.items to only include the items that match the search term
 		if (filteredItems.length === 0) {
-			_cards = _items.items;
+			cards = cardStore.cards;
 		} else {
-			_cards = items.items.filter((item) => filteredItems.includes(item.id));
+			cards = cardStore.cards.filter((card) => filteredItems.includes(card.id));
 		}
 	});
 </script>
@@ -170,7 +162,7 @@
 				Change View</Button
 			>
 			<!-- Upload with JSON -->
-			<Button onclick={() => items.upload()}>
+			<Button onclick={() => {}}>
 				<Icon icon="mdi:upload" />
 				Upload</Button
 			>
@@ -181,7 +173,7 @@
 			>
 			<!-- Download -->
 			{#if $selectedItems.size > 0}{:else}
-				<Button onclick={() => items.download()}>
+				<Button onclick={() => {}}>
 					<Icon icon="mdi:download" />
 					Download All</Button
 				>
@@ -200,7 +192,7 @@
 					<Icon icon="mdi:printer" />
 					Print</Button
 				>
-				<Button onclick={() => items.download(Array.from($selectedItems))}>
+				<Button onclick={() => {}}>
 					<Icon icon="mdi:download" />
 					Download
 				</Button>
@@ -221,7 +213,7 @@
 			</div>
 			<Button
 				variant="advanced"
-				onclick={() => console.log('Serialized Items: ', items.serialize())}
+				onclick={() => console.log('Serialized Items: ', cardStore.serialize())}
 			>
 				<Icon icon="mdi:code-json" />
 				Serialize</Button
@@ -235,7 +227,7 @@
 		>
 			<!-- TEMPLATES -->
 			{#if showTemplates}
-				{#each _items.templates as card}
+				{#each cardStore.templates as card}
 					<button class="cardInViewer cardTemplate" class:imageView>
 						<!-- Edit Options -->
 						<Badge variant="advanced">
@@ -253,7 +245,7 @@
 							>
 						</div>
 						<div class="frontSideCard">
-							<Gamecard item={card} />
+							<Gamecard {card} />
 						</div>
 						<div class="backSideCard">
 							<GamecardBack item={card} />
@@ -261,7 +253,7 @@
 					</button>
 				{/each}
 			{/if}
-			{#each _cards as card}
+			{#each cards as card}
 				<button
 					class="cardInViewer"
 					class:imageView
@@ -297,7 +289,7 @@
 							title="Download as JSON"
 							onclick={(e) => {
 								e.stopPropagation();
-								items.download(card.id);
+								// cardStore.download(card.id);
 							}}
 						>
 							<Icon icon="mdi:download" />
@@ -327,10 +319,10 @@
 						</Button>
 					</div>
 					<div class="frontSideCard">
-						<Gamecard item={card} />
+						<Gamecard {card} />
 					</div>
 					<div class="backSideCard">
-						<GamecardBack item={card} />
+						<GamecardBack {card} />
 					</div>
 				</button>
 			{/each}

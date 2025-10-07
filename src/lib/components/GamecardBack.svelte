@@ -1,38 +1,39 @@
 <script lang="ts">
-
 	import '$lib/styles/cardStyle.css';
+	import { StoredCard } from '$lib/core/cards/cardStore.svelte';
 	interface Props {
-		item: any;
+		card: StoredCard;
 		nameOnBack?: boolean;
 	}
 
-	let { item, nameOnBack = false }: Props = $props();
+	let { card, nameOnBack = false }: Props = $props();
 
-	let src =
-		$derived(item.image?.url ||
-		'https://64.media.tumblr.com/6d54812f7cd2e4ef1edce4b0f4c2ea2f/d234e2e2d3d0be5b-3d/s1280x1920/7db18f6c90f00e81f45f79ba20a30c464528b85e.jpg');
+	let src = $derived(
+		card.image?.url ||
+			'https://64.media.tumblr.com/6d54812f7cd2e4ef1edce4b0f4c2ea2f/d234e2e2d3d0be5b-3d/s1280x1920/7db18f6c90f00e81f45f79ba20a30c464528b85e.jpg'
+	);
 </script>
 
 <div
 	class="card"
-	style="border-color: {item.style.color.cardBorder}; background-color: {item.style.color
+	style="border-color: {card.style.color.cardBorder}; background-color: {card.style.color
 		.background};"
 >
 	<div
 		class="imgWrapper"
-		style="border-color: {item.style.color.cardBorder}; background-color: {item.style.color
+		style="border-color: {card.style.color.cardBorder}; background-color: {card.style.color
 			.imageBackground}; "
 	>
 		{#if nameOnBack}
-			<div class="cardName">{item.name}</div>
+			<div class="cardName">{card.name}</div>
 		{/if}
 		<div
 			class="imgEditBox"
-			style="height: {item.image?.scale}%; width: {item.image?.scale}%; top: calc(50% + {item.image
-				?.y_offset}%); left: calc(50% + {item.image
-				?.x_offset}%);  transform: translate(-50%, -50%) rotate({item.image.rotation}deg);"
+			style="height: {card.image?.scale}%; width: {card.image?.scale}%; top: calc(50% + {card.image
+				?.y_offset}%); left: calc(50% + {card.image
+				?.x_offset}%);  transform: translate(-50%, -50%) rotate({card.image.rotation}deg);"
 		>
-			<img {src} alt={item.name} />
+			<img {src} alt={card.name} />
 		</div>
 	</div>
 </div>

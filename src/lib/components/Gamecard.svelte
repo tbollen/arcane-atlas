@@ -1,148 +1,146 @@
 <script lang="ts">
-	// Import Item Store
-	import { type Item } from '$lib/types/Item.svelte';
+	// Import Stored Card type
+	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
 	//
 
 	// Card Components
-	import Skill from './Skill.svelte';
 
 	import '$lib/styles/cardStyle.css';
 
 	import Icon, { iconExists } from '@iconify/svelte';
-	import { updated } from '$app/state';
 
 	// import card type options and icons
 	import { cardTypes } from '$lib/modules/cardTypes';
 
 	// Update the item description for renderering
 	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
-	import { skillList } from '$lib/modules/skillCheckList';
 	interface Props {
-		item: Item;
+		card: StoredCard;
 		print?: boolean;
 	}
 
-	let { item, print = true }: Props = $props();
+	let { card: card, print = true }: Props = $props();
 
 	// Get card type, if not found use default [0]
-	let cardType = $derived(cardTypes.find((type) => type.name === item.type) || cardTypes[0]);
-	let renderedItemDescription = $derived(renderMarkdown(item.description));
+	let cardType = $derived(cardTypes.find((type) => type.name === card.type) || cardTypes[0]);
+	let renderedItemDescription = $derived(renderMarkdown(card.description));
 	// Check for icon
-	let iconOverride = $derived(item?.icon && iconExists(item.icon) ? item.icon : undefined);
+	let iconOverride = $derived(card?.icon && iconExists(card.icon) ? card.icon : undefined);
 
+	// Arcane Rift specific functions
+	let hasArcaneRift: boolean = card.systems.includes('arcaneRift');
+	let ar_mechanics = $derived(card.mechanics.arcaneRift);
 	// Check if the item has a skillCheck
-	let hasSkillCheck = $derived(false);
-
-	$effect(() => console.log('hasSkillCheck', hasSkillCheck));
+	let hasSkillCheck: boolean = $derived(
+		hasArcaneRift &&
+			card.mechanics?.arcaneRift?.check?.characteristic !== undefined &&
+			card.mechanics?.arcaneRift?.check?.skill !== undefined
+	);
 </script>
 
 <div
 	class="card"
-	style="border-color: {item.style.color.cardBorder};color: {item.style.color
-		.text}; background-color: {item.style.color.background};"
+	style="border-color: {card.style.color.cardBorder};color: {card.style.color
+		.text}; background-color: {card.style.color.background};"
 	class:print
 >
 	<div id="topbanner">
 		<div
 			class="typeIcon left-{cardType.iconOrientation}"
-			style="color: {item.style.color.icon}; font-size: {item.style.fontsize.icon}pt;"
+			style="color: {card.style.color.icon}; font-size: {card.style.fontsize.icon}pt;"
 		>
 			<Icon icon={iconOverride || cardType.icon} />
 		</div>
 		<h1
 			class="name"
-			style={`font-size: ${item.style.fontsize.name}pt; font-family: '${item.style.font.name}', 'Gotham', sans-serif;`}
+			style={`font-size: ${card.style.fontsize.name}pt; font-family: '${card.style.font.name}', 'Gotham', sans-serif;`}
 		>
-			{item.name}
+			{card.name}
 		</h1>
 		<div
 			class="typeIcon right-{cardType.iconOrientation}"
-			style="color: {item.style.color.icon}; font-size: {item.style.fontsize.icon}pt;"
+			style="color: {card.style.color.icon}; font-size: {card.style.fontsize.icon}pt;"
 		>
 			<Icon icon={iconOverride || cardType.icon} />
 		</div>
-		{#if item?.subtitle}
+		{#if card?.subtitle}
 			<h3
 				class="subtitle"
-				style="color: {item.style.color.text};font-size: {item.style.fontsize
-					.subtitle}pt; font-family: '{item.style.font.subtitle}', 'Gotham', sans-serif;"
+				style="color: {card.style.color.text};font-size: {card.style.fontsize
+					.subtitle}pt; font-family: '{card.style.font.subtitle}', 'Gotham', sans-serif;"
 			>
-				{item.subtitle}
+				{card.subtitle}
 			</h3>
 		{/if}
 	</div>
 	<p
 		class="description"
-		style="font-size: {item.style.fontsize.text}pt; font-family: '{item.style.font
+		style="font-size: {card.style.fontsize.text}pt; font-family: '{card.style.font
 			.text}', 'Gotham', sans-serif;"
 	>
 		{@html renderedItemDescription}
+
+		ID: {card.id}
 	</p>
 
-	{#if item?.aspects}
-		{#each item?.aspects as aspect}
-			<div
-				class="aspect"
-				style="font-size: {item.style.fontsize.text}pt; font-family: '{item.style.font
-					.text}', 'Gotham', sans-serif;"
-			>
-				<div class="aspectDescription description">
-					{#if aspect?.name && aspect?.description}
-						<span class="aspectName inTextName">{aspect.name}</span>
-						{@html renderMarkdown(aspect.description)}
-					{/if}
-				</div>
-			</div>
-		{/each}
-	{/if}
-
-	{#if item?.specials}
-		{#each item?.specials as special}
-			<div
-				class="aspect"
-				style="font-size: {item.style.fontsize.text}pt; font-family: '{item.style.font
-					.text}', 'Gotham', sans-serif;"
-			>
-				<div class="aspectDescription description">
-					{#if special?.name && special?.description}
-						<span class="aspectName inTextName">{special.name}</span>
-						{@html renderMarkdown(special.description)}
-					{/if}
-				</div>
-			</div>
-		{/each}
-	{/if}
-
-	<div id="fields" data-field-number={item?.fields?.length} class:hasSkillCheck>
-		{#if (item?.fields && item?.fields?.length > 0) || hasSkillCheck}
-			<div class="fieldDivider"></div>
-		{/if}
-		{#if item?.fields}
-			{#each item.fields as field, i}
-				<div class="field" id="field-{i}">
-					<div class="fieldName">{field.name}</div>
-					<div class="fieldValue">{@html renderMarkdown(field.description)}</div>
+	<!-- ARCANE RIFT MECHANICS -->
+	{#if hasArcaneRift}
+		<!-- Aspects (in description) -->
+		{#if ar_mechanics && ar_mechanics?.aspects}
+			{#each ar_mechanics.aspects as aspect}
+				<div
+					class="aspect"
+					style="font-size: {card.style.fontsize.text}pt; font-family: '{card.style.font
+						.text}', 'Gotham', sans-serif;"
+				>
+					<div class="aspectDescription description">
+						{#if aspect?.short && aspect?.description}
+							<span class="aspectName inTextName">{aspect.short}</span>
+							{@html renderMarkdown(aspect.description)}
+						{/if}
+					</div>
 				</div>
 			{/each}
 		{/if}
-		<!-- Skill Check -->
-		{#if hasSkillCheck}
-			<div id="skillcheck" class="field">
-				<div id="characteristic" style="font-size: {item.style.fontsize.check / 1.4}pt;">
-					{item.skillCheck.characteristic}
-				</div>
-				<div
-					id="skill"
-					style="
-						background: {item.style.color.accent};
-						font-size: {item.style.fontsize.check}pt;
-						font-family: '{item.style.font.accents}', 'Gotham', sans-serif;"
-				>
-					{item.skillCheck.skill}
-				</div>
+
+		<!-- Fields -->
+		{#if ar_mechanics?.fields || hasSkillCheck}
+			<div
+				id="fields"
+				data-field-number={card?.mechanics?.arcaneRift?.fields.length}
+				class:hasSkillCheck
+			>
+				{#if (ar_mechanics?.fields && ar_mechanics?.fields.length > 0) || hasSkillCheck}
+					<div class="fieldDivider"></div>
+				{/if}
+				{#if ar_mechanics?.fields && ar_mechanics?.fields.length > 0}
+					{#each ar_mechanics.fields as field, i}
+						<div class="field" id="field-{i}">
+							<div class="fieldName">{field.label}</div>
+							<div class="fieldValue">{@html renderMarkdown(field.value)}</div>
+						</div>
+					{/each}
+				{/if}
+				<!-- Skill Check -->
+				{#if hasSkillCheck}
+					<div id="skillcheck" class="field">
+						<div id="characteristic" style="font-size: {card.style.fontsize.check / 1.4}pt;">
+							{ar_mechanics?.check.characteristic}
+						</div>
+						<div
+							id="skill"
+							style="
+						background: {card.style.color.accent};
+						font-size: {card.style.fontsize.check}pt;
+						font-family: '{card.style.font.accents}', 'Gotham', sans-serif;"
+						>
+							{ar_mechanics?.check.skill}
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
-	</div>
+	{/if}
 </div>
 
 <style>

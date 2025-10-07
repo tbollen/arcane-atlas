@@ -79,7 +79,7 @@
 				width: {cardWidth + cardGap}mm;
 				padding: {cardGap / 2}mm;"
 		>
-			<Gamecard item={card} />
+			<Gamecard {card} />
 		</div>
 		<div
 			class="singleCardPrint"
@@ -99,7 +99,7 @@
 		>
 			<div class="pageMarker">{i + 1}/{cardSetSplit.length}</div>
 			{#each _cardSet as card, i}
-				<Gamecard item={card} />
+				<Gamecard {card} />
 				<GamecardBack item={card} />
 			{/each}
 		</div>

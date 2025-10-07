@@ -8,8 +8,11 @@
 	// Page params
 	const slug_id = page.params.slug;
 
+	console.log('slug_id:', slug_id);
+
 	// Item stores, types and modules
-	import { items, type StoredItem } from '$lib/stores/Items.svelte';
+	import { cardStore } from '$lib/stores/CardStore';
+	import { StoredCard } from '$lib/core/cards/cardStore.svelte';
 
 	// Components and Partials
 	import MainLoader from '$lib/partials/MainLoader.svelte';
@@ -23,10 +26,10 @@
 	function newEmptyItem() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
 		if (saveFirst) {
-			items.save();
+			// TODO: add save method and push to DB
+			cardStore.cache();
 		}
-		items.addNewItem();
-		item = items.getActiveItem();
+		cardStore.addNew();
 	}
 
 	// Edit Mode stuff
@@ -55,51 +58,54 @@
 	// Printing the card (redirect to print page with only this card selected)
 	import { selectedItems } from '$lib/stores/selectedItems';
 	async function printCards() {
-		const itemId = item.id;
-		saveItem();
-		selectedItems.set(new Set([itemId]));
+		const _cardId = card.id;
+		saveHandler();
+		selectedItems.set(new Set([_cardId]));
 		goto(`${base}/print`);
 	}
 
 	// Download the current item as JSON
 	function downloadItem() {
-		items.download(item.id);
+		// TODO: add download method
 	}
 
-	let savedItem: {} = $state({}); // Store the last saved item to compare with current item
+	let savedCard: {} = $state({}); // Store the last saved item to compare with current item
 
 	function updateSaveState() {
-		if (!item || !savedItem) return (cardIsSaved = false);
-		cardIsSaved = JSON.stringify(item) === JSON.stringify(savedItem);
+		// TODO: fix
 	}
 
 	// Save item function
-	function saveItem(preventRedirect = false) {
+	function saveHandler(preventRedirect = false) {
+		console.log(
+			'CardStore:',
+			cardStore,
+			cardStore.cards.map((card) => card.id)
+		);
+		const idsInCardStore = cardStore.cards.map((card) => card.id);
+		console.error('ID Match Check:', idsInCardStore.includes(card.id), card.id, idsInCardStore);
 		// Create new item if new
 		if (isNewCard) {
 			console.debug('Saving new item...');
-			items.addNewItem(item); // Add new item to store
-			items.setActiveItem(item); // Set active item to the new item
+			card = cardStore.addNew(card); // Add new item to store
 		} else {
 			console.debug('Saving existing item...');
-			items.setItem(item.id, item); // Update item in store, create new if not found
+			cardStore.setCard(card.id, card);
 		}
-		items.save();
-		savedItem = { ...item }; // Update saved item
+		cardStore.save();
+		savedCard = { ...card }; // Update saved item
 		// updateSaveState(); // Update save state
 		// setTimeout(() => (cardIsSaved = false), 2000);
 
 		// If it was a new item, redirect to the new item's page
 		if (slug_id === 'new') {
-			goto(`${base}/item/${item.id}?edit=1`);
+			goto(`${base}/item/${card.id}?edit=1`);
 		}
 	}
 
-	// Edit Date
-	let localDate: string = $state('');
-
 	// Initialize item on page load, use a dummy item for init only!!
-	let item: StoredItem = $state<StoredItem>(items.prepareItem());
+	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
+	console.error('Card:', card);
 	// Check if card is saved
 	let cardIsSaved: boolean = $state(false);
 
@@ -109,23 +115,21 @@
 			if (!slug_id) throw new Error('No slug id found');
 			// If the slug_id is 'new', get the active item or redirect to collection page if none found
 			if (slug_id === 'new') {
-				console.debug('Creating new item...');
-				item = items.prepareItem();
+				console.debug('Creating new card...');
+				// TODO: create "new card" method
 			} else {
+				const retrievedCard = cardStore.getCard(slug_id);
+				if (!retrievedCard) throw new Error(`No card found with id: ${slug_id}`);
+				console.log('Retrieving card...', retrievedCard);
 				// Get item from store
-				item = items.getItem(slug_id);
-				savedItem = { ...item };
+				card = retrievedCard;
+				// savedCard = { ...card };
 			}
-			// Store a copy of the item to compare later
-			console.debug('Item retrieved:', item);
 		} catch {
 			// Redirect to collection page when item not found
-			alert(`No item found with id: ${slug_id}, redirecting to collection page...`);
+			alert(`No card found with id: ${slug_id}, redirecting to collection page...`);
 			goto('/collection');
 		}
-
-		// Set local date
-		localDate = new Date(item.dateCreated).toLocaleDateString();
 
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
@@ -145,7 +149,7 @@
 
 <!-- Svelte Window -->
 <svelte:window onbeforeunload={beforeUnload} />
-{#if !item}
+{#if !card}
 	<MainLoader />
 {:else}
 	<main id="main" class:viewMode={!editMode}>
@@ -157,18 +161,25 @@
 					<div id="cardInfo" class="editorRow">
 						<div class="cardInfoBlock">
 							<div id="cardName" class="infoBlockMajor">
-								{item?.name}
+								{card.name}
 							</div>
 							<div id="cardId" class="infoBlockMinor">
-								id: {item?.id}
+								id: {card.id}
 							</div>
 						</div>
 
 						<div class="cardInfoBlock">
 							<div id="cardCreator" class="infoBlockMajor">
-								<span class="mr-1 text-sm text-muted-foreground">by</span>{item?.creator}
+								<span class="mr-1 text-sm text-muted-foreground">by</span>{card?.creatorId ||
+									'Unknown'}
 							</div>
-							<div id="cardDate" class="infoBlockMinor">{localDate}</div>
+							<div
+								id="cardDate"
+								title={new Date(card.createdAt).toLocaleTimeString()}
+								class="infoBlockMinor"
+							>
+								{new Date(card.createdAt).toLocaleDateString()}
+							</div>
 						</div>
 					</div>
 					<!-- Buttons and Toolbar -->
@@ -193,7 +204,7 @@
 
 						<!-- Save -->
 						<Button
-							onclick={() => saveItem()}
+							onclick={() => saveHandler()}
 							disabled={cardIsSaved}
 							color={cardIsSaved ? 'success' : 'blossom'}
 							variant="success"
@@ -206,7 +217,7 @@
 					</div>
 				</header>
 				<div id="itemEditor">
-					<ItemEditor bind:item />
+					<ItemEditor bind:card />
 				</div>
 			</section>
 		{/if}
@@ -236,8 +247,8 @@
 				<a class="mobileOnly" href="#editor">Go to editor</a>
 			</div>
 			<div id="cardArea">
-				<Gamecard {item} />
-				<GamecardBack {item} />
+				<Gamecard {card} />
+				<GamecardBack {card} />
 			</div>
 		</section>
 	</main>
