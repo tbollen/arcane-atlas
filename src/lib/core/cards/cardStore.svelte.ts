@@ -41,6 +41,11 @@ export class CardStore {
 	) {
 		// If an exisiting store is given,
 		if (init.json) {
+			const _obj = Object(init.json);
+			const _cards = Object.hasOwn(_obj, 'cards') ? _obj.cards : [];
+			const _templates = Object.hasOwn(_obj, 'templates') ? _obj.templates : [];
+			this.cards = _cards.map((card: StoredCard) => new StoredCard(card.id, card));
+			this.templates = _templates;
 		}
 		if (init.multiStore) {
 			// Merge all stores together
@@ -59,15 +64,15 @@ export class CardStore {
 			: []; // If no cards are given, create a default card with a unique ID
 		_cardsToOVerwrite.forEach((card) => {
 			if (!this.idSet.has(card.id)) {
-				this.addNew(card); // If the card doesn't exist, add it
+				this.POST(card); // If the card doesn't exist, add it
 			} else {
-				this.setCard(card.id, card); // If the card does exist, update it
+				this.PUT(card.id, card); // If the card does exist, update it
 			}
 		});
 		if (this.cards.length === 0) {
 			// If no cards are given, add a default card
 			console.debug('No cards given in initialization of the card store; adding default card');
-			this.addNew();
+			this.POST();
 		}
 
 		// Same for templates
@@ -78,6 +83,8 @@ export class CardStore {
 
 		// Make the idSet (overwrite whatever was there before)
 		this.idSet = new Set(this.cards.map((item) => item.id));
+		// After init, cache the store
+		this.cache();
 	}
 
 	///////////////////
