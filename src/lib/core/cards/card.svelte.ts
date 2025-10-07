@@ -161,24 +161,3 @@ export class Card {
 	 * - mechanics: Object containing information about the mechanics of the card
 	 */
 }
-
-export function serializeCard(card: Card | Partial<Card>): JSON {
-	const json = clone({
-		creatorId: clone(card.creatorId),
-		createdAt: clone(card.createdAt),
-		updatedAt: clone(card.updatedAt),
-		userIds: clone(card.userIds),
-		campaignIds: clone(card.campaignIds),
-		characterIds: clone(card.characterIds),
-		name: clone(card.name),
-		type: clone(card.type),
-		subtitle: clone(card.subtitle),
-		icon: clone(card.icon),
-		description: clone(card.description),
-		image: clone(card.image),
-		stylePreset: clone(card.stylePreset),
-		style: clone(card.style),
-		mechanics: clone(card.mechanics)
-	});
-	return json;
-}

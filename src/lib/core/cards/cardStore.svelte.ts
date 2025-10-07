@@ -3,7 +3,7 @@ import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 import { clone } from '$lib/utils/serializing';
 import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 
-import { Card, serializeCard } from '$lib/core/cards/card.svelte';
+import { Card } from '$lib/core/cards/card.svelte';
 // import type { Card as PrismaCard } from '@prisma/client';
 
 // Import defaults
@@ -16,8 +16,9 @@ type CardID = Prefixed_UUID<'card'>;
 export class StoredCard extends Card {
 	id: CardID;
 
-	constructor(id: CardID, card?: Partial<Card>) {
+	constructor(id: CardID | 'new', card?: Partial<Card>) {
 		super(card);
+		if (id === 'new') id = generatePrefixedUUID('card');
 		this.id = id;
 	}
 }
@@ -44,7 +45,9 @@ export class CardStore {
 			const _obj = Object(init.json);
 			const _cards = Object.hasOwn(_obj, 'cards') ? _obj.cards : [];
 			const _templates = Object.hasOwn(_obj, 'templates') ? _obj.templates : [];
-			this.cards = _cards.map((card: StoredCard) => new StoredCard(card.id, card));
+			this.cards = _cards.map(
+				(card: StoredCard) => new StoredCard(card.id ? card.id : this.returnUniqueId(), card) // If the card has an ID, use it, otherwise generate a new one
+			);
 			this.templates = _templates;
 		}
 		if (init.multiStore) {
@@ -92,7 +95,7 @@ export class CardStore {
 	///////////////////
 
 	// Get Card from local Store
-	getCard(_target: CardID | StoredCard): StoredCard {
+	getCard(_target: CardID | string | StoredCard): StoredCard {
 		if (_target instanceof StoredCard) return _target; // If it's already a StoredCard, return it
 		const _card = this.cards.find((card) => card.id.toString() === _target.toString());
 		if (!_card) throw new Error(`Card with ID ${_target} not found in store!`);
@@ -213,9 +216,15 @@ export class CardStore {
 		const _stringifiedStore = JSON.stringify(this.serialize());
 		// Save to local storage, once it's ready
 		if (await checkWebStorage()) {
-			console.debug('Saving to session storage. Key:', lsk.cardStore);
 			localStorage.setItem(lsk.cardStore, _stringifiedStore);
 		}
+	}
+
+	async save() {
+		await this.cache();
+		console.debug('Saving to session storage. Key:', lsk.cardStore);
+		await this.saveToDB();
+		console.debug('Saved to database.');
 	}
 
 	async saveToDB() {
@@ -270,4 +279,27 @@ export class CardStore {
 			console.error(error);
 		}
 	}
+}
+
+// SERIALIZING FOR CARDS
+export function serializeCard(card: StoredCard | Partial<StoredCard>): JSON {
+	const json = clone({
+		id: clone(card?.id),
+		creatorId: clone(card.creatorId),
+		createdAt: clone(card.createdAt),
+		updatedAt: clone(card.updatedAt),
+		userIds: clone(card.userIds),
+		campaignIds: clone(card.campaignIds),
+		characterIds: clone(card.characterIds),
+		name: clone(card.name),
+		type: clone(card.type),
+		subtitle: clone(card.subtitle),
+		icon: clone(card.icon),
+		description: clone(card.description),
+		image: clone(card.image),
+		stylePreset: clone(card.stylePreset),
+		style: clone(card.style),
+		mechanics: clone(card.mechanics)
+	});
+	return json;
 }
