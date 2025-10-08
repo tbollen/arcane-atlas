@@ -16,10 +16,8 @@ import { type Prefixed_UUID } from '$lib/utils/uuid';
 // Import Mechanics
 import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards.svelte';
 
-type Mechanics = {
-	generic: {};
-	['arcaneRift']?: ArcaneRiftCard;
-};
+import { type Mechanics } from '$lib/system/gameSystems';
+
 type System = keyof Mechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
 
 // Basic Card fields
@@ -28,7 +26,6 @@ export type CardFields = {
 	description?: string;
 };
 const mechanics: Mechanics = { generic: {} };
-export const test = Object.keys(mechanics);
 console.log(test);
 const system: System[] = ['generic'];
 

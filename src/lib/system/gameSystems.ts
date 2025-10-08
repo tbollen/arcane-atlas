@@ -30,5 +30,6 @@ export const gameSystems = {
 };
 
 export type Mechanics = {
+	[genericSystem.id]?: {};
 	[arcaneRiftSystemInfo.id]?: ArcaneRiftCard;
 };
