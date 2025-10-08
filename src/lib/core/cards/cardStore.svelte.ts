@@ -122,16 +122,17 @@ export class CardStore {
 	}
 
 	private PUT(_id: CardID, cardUpdate: Partial<Card>): StoredCard {
+		let _card: StoredCard;
 		try {
-			this.getCard(_id); // Check if the card exists
+			_card = this.getCard(_id); // Check if the card exists
 		} catch (error) {
 			throw error;
 		}
 		// Create an updated card
-		const _card = this.getCard(_id);
-		const updatedCard = new StoredCard(_card.id, { ..._card, ...cardUpdate });
+		const updatedCard = new StoredCard(_card.id, { ..._card, ...serializeCard(cardUpdate) });
 		// Update the cards array
-		this.cards = this.cards.map((card) => (card.id === _id ? updatedCard : card));
+		const newCards = this.cards.map((card) => (card.id == _id ? updatedCard : card));
+		this.cards = newCards;
 		return updatedCard;
 	}
 
