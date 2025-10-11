@@ -1,35 +1,59 @@
+///////////////
+// MECHANICS //
+///////////////
+// Add and import system information HERE!!
+
+// Import mechanics from each system
+import {
+	arcaneRiftMechanics,
+	type ArcaneRiftMechanics
+} from '$lib/system/ArcaneRift/ar_cards.svelte';
+// ADD MORE WHEN MORE SYSTEMS ARE ADDED
+
+// TYPE AND CONST DEFINITIONS
+// ORIGIN SOURCE OF TRUTH
+// System keys
+export const GENERIC_KEY = 'generic' as const;
+export const AR_KEY = 'arcaneRift' as const;
+
+export const cardMechanics: {
+	[GENERIC_KEY]: {};
+	[AR_KEY]: ArcaneRiftMechanics;
+} = {
+	[GENERIC_KEY]: {},
+	[AR_KEY]: arcaneRiftMechanics
+};
+
+// Populated and generated
+export type Mechanics = typeof cardMechanics;
+
+// List of all system keys from Mechanics
+export type SystemKey = keyof Mechanics;
+export const systemKeys: SystemKey[] = Object.keys({} as Mechanics) as SystemKey[];
+
+// System-specific keys, make sure to match from Mechanics Type!!
+
 export type SystemInfo = {
 	name: string;
-	id: string;
+	id: SystemKey;
+	locked?: boolean;
 	version?: string;
+	cardMechanics: Object;
 };
+
+/////////////////
+// SYSTEM INFO //
+/////////////////
+
+// Import system info from each system
+import { arcaneRiftSystemInfo } from '$lib/system/ArcaneRift/ar_systemInfo';
 
 // Create a "generic" system without mechanics or specific functions
 const genericSystem: SystemInfo = {
 	name: 'Generic',
-	id: 'generic'
-};
-// Import system info from each system
-import { arcaneRiftSystemInfo } from '$lib/system/ArcaneRift/ar_systemInfo';
-
-// Import mechanics from each system
-import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards.svelte';
-// ADD MORE WHEN MORE SYSTEMS ARE ADDED
-
-// List of available game systems, update when more systems are added
-export const availableGameSystems = [genericSystem.id, arcaneRiftSystemInfo.id];
-
-export const defaultGameSystems = [genericSystem.id];
-export const additionalGameSystems = {
-	[arcaneRiftSystemInfo.id]: arcaneRiftSystemInfo
+	id: 'generic',
+	locked: true,
+	cardMechanics: {}
 };
 
-export const gameSystems = {
-	...{ [genericSystem.id]: genericSystem },
-	...additionalGameSystems
-};
-
-export type Mechanics = {
-	[genericSystem.id]?: {};
-	[arcaneRiftSystemInfo.id]?: ArcaneRiftCard;
-};
+export const gameSystems: SystemInfo[] = [genericSystem, arcaneRiftSystemInfo];
