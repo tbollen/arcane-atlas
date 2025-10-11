@@ -21,62 +21,64 @@
 
 	let { card: card, print = true }: Props = $props();
 
+	let _card = $derived(card);
+
 	// Get card type, if not found use default [0]
-	let cardType = $derived(cardTypes.find((type) => type.name === card.type) || cardTypes[0]);
-	let renderedItemDescription = $derived(renderMarkdown(card.description));
+	let cardType = $derived(cardTypes.find((type) => type.name === _card.type) || cardTypes[0]);
+	let renderedItemDescription = $derived(renderMarkdown(_card.description));
 	// Check for icon
-	let iconOverride = $derived(card?.icon && iconExists(card.icon) ? card.icon : undefined);
+	let iconOverride = $derived(_card?.icon && iconExists(_card.icon) ? _card.icon : undefined);
 
 	// Arcane Rift specific functions
 	import { AR_KEY } from '$lib/system/gameSystems';
-	let hasArcaneRift: boolean = card.systems.includes(AR_KEY);
-	let ar_mechanics = $derived(card.mechanics[AR_KEY]);
+	let hasArcaneRift: boolean = $derived(_card.systems.includes(AR_KEY));
 	// Check if the item has a skillCheck
 	let hasSkillCheck: boolean = $derived(
 		hasArcaneRift &&
-			card.mechanics[AR_KEY]?.check?.characteristic !== undefined &&
-			card.mechanics?.arcaneRift?.check?.skill !== undefined
+			_card.mechanics[AR_KEY]?.check?.characteristic !== undefined &&
+			_card.mechanics?.arcaneRift?.check?.skill !== undefined
 	);
+	let ar_mechanics = $derived(_card.mechanics[AR_KEY]);
 </script>
 
 <div
 	class="card"
-	style="border-color: {card.style.color.cardBorder};color: {card.style.color
-		.text}; background-color: {card.style.color.background};"
+	style="border-color: {_card.style.color.cardBorder};color: {_card.style.color
+		.text}; background-color: {_card.style.color.background};"
 	class:print
 >
 	<div id="topbanner">
 		<div
 			class="typeIcon left-{cardType.iconOrientation}"
-			style="color: {card.style.color.icon}; font-size: {card.style.fontsize.icon}pt;"
+			style="color: {_card.style.color.icon}; font-size: {_card.style.fontsize.icon}pt;"
 		>
 			<Icon icon={iconOverride || cardType.icon} />
 		</div>
 		<h1
 			class="name"
-			style={`font-size: ${card.style.fontsize.name}pt; font-family: '${card.style.font.name}', 'Gotham', sans-serif;`}
+			style={`font-size: ${_card.style.fontsize.name}pt; font-family: '${_card.style.font.name}', 'Gotham', sans-serif;`}
 		>
-			{card.name}
+			{_card.name}
 		</h1>
 		<div
 			class="typeIcon right-{cardType.iconOrientation}"
-			style="color: {card.style.color.icon}; font-size: {card.style.fontsize.icon}pt;"
+			style="color: {_card.style.color.icon}; font-size: {_card.style.fontsize.icon}pt;"
 		>
 			<Icon icon={iconOverride || cardType.icon} />
 		</div>
-		{#if card?.subtitle}
+		{#if _card?.subtitle}
 			<h3
 				class="subtitle"
-				style="color: {card.style.color.text};font-size: {card.style.fontsize
-					.subtitle}pt; font-family: '{card.style.font.subtitle}', 'Gotham', sans-serif;"
+				style="color: {_card.style.color.text};font-size: {_card.style.fontsize
+					.subtitle}pt; font-family: '{_card.style.font.subtitle}', 'Gotham', sans-serif;"
 			>
-				{card.subtitle}
+				{_card.subtitle}
 			</h3>
 		{/if}
 	</div>
 	<p
 		class="description"
-		style="font-size: {card.style.fontsize.text}pt; font-family: '{card.style.font
+		style="font-size: {_card.style.fontsize.text}pt; font-family: '{_card.style.font
 			.text}', 'Gotham', sans-serif;"
 	>
 		{@html renderedItemDescription}
@@ -85,11 +87,11 @@
 	<!-- ARCANE RIFT MECHANICS -->
 	{#if hasArcaneRift}
 		<!-- Aspects (in description) -->
-		{#if ar_mechanics && ar_mechanics?.aspects}
+		{#if ar_mechanics !== undefined && ar_mechanics.aspects}
 			{#each ar_mechanics.aspects as aspect}
 				<div
 					class="aspect"
-					style="font-size: {card.style.fontsize.text}pt; font-family: '{card.style.font
+					style="font-size: {_card.style.fontsize.text}pt; font-family: '{_card.style.font
 						.text}', 'Gotham', sans-serif;"
 				>
 					<div class="aspectDescription description">
@@ -106,7 +108,7 @@
 		{#if ar_mechanics?.fields || hasSkillCheck}
 			<div
 				id="fields"
-				data-field-number={card?.mechanics?.arcaneRift?.fields.length}
+				data-field-number={_card?.mechanics?.arcaneRift?.fields.length}
 				class:hasSkillCheck
 			>
 				{#if (ar_mechanics?.fields && ar_mechanics?.fields.length > 0) || hasSkillCheck}
@@ -123,15 +125,15 @@
 				<!-- Skill Check -->
 				{#if hasSkillCheck}
 					<div id="skillcheck" class="field">
-						<div id="characteristic" style="font-size: {card.style.fontsize.check / 1.4}pt;">
+						<div id="characteristic" style="font-size: {_card.style.fontsize.check / 1.4}pt;">
 							{ar_mechanics?.check.characteristic}
 						</div>
 						<div
 							id="skill"
 							style="
-						background: {card.style.color.accent};
-						font-size: {card.style.fontsize.check}pt;
-						font-family: '{card.style.font.accents}', 'Gotham', sans-serif;"
+						background: {_card.style.color.accent};
+						font-size: {_card.style.fontsize.check}pt;
+						font-family: '{_card.style.font.accents}', 'Gotham', sans-serif;"
 						>
 							{ar_mechanics?.check.skill}
 						</div>
