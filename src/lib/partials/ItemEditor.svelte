@@ -2,7 +2,7 @@
 	import { run } from 'svelte/legacy';
 
 	// Core Components
-	import Button from '$lib/components/ui/button/button.svelte';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import Accordion from '$lib/components/coreComponents/Accordion.svelte';
 
 	// ShadCN UI
@@ -10,6 +10,7 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import * as Select from '$lib/components/ui/select';
+	import * as Dialog from '$lib/components/ui/dialog';
 
 	// Ask for an StoredItem to edit
 	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
@@ -43,50 +44,6 @@
 
 	//
 
-	let selectedSkill: (typeof characteristics)[number] | undefined = $state();
-	let selectedChar: keyof typeof skillList | undefined = $state();
-
-	function updateSkill(priority?: 'char' | 'skill') {
-		if (!(card.systems.includes('arcaneRift') && card.mechanics?.arcaneRift?.check))
-			return console.debug('Arcane Rift not configured for this card');
-		if (
-			(priority == 'char' && selectedChar == undefined) ||
-			(priority == 'skill' && selectedSkill == undefined)
-		) {
-			return;
-		}
-		console.debug('Updating skill', selectedChar, selectedSkill);
-		if (selectedChar == undefined && selectedSkill == undefined) {
-			return;
-		}
-		if (
-			priority == 'char' &&
-			selectedChar != undefined &&
-			//the selected skill is not part of the selected characteristic
-			skillList[selectedChar].some((skill) => skill != selectedSkill)
-		) {
-			selectedSkill = skillList[selectedChar][0];
-		} else if (
-			priority == 'skill' &&
-			selectedSkill != undefined &&
-			//the selected characteristic matches the selected skill
-			Object.values(skillList).some((charSkills) =>
-				charSkills.some((skill) => skill == selectedSkill)
-			)
-		) {
-			selectedChar = Object.keys(skillList).find((char) =>
-				skillList[char as keyof typeof skillList].some((skill) => skill == selectedSkill)
-			) as keyof typeof skillList;
-		}
-		card.mechanics.arcaneRift.check = { characteristic: selectedChar, skill: selectedSkill };
-	}
-
-	function resetSkill() {
-		if (!(card.systems.includes('arcaneRift') && card.mechanics?.arcaneRift?.check)) return;
-		card.mechanics.arcaneRift.check.characteristic = undefined;
-		card.mechanics.arcaneRift.check.skill = undefined;
-	}
-
 	// Button to add new fields
 	import { onMount } from 'svelte';
 
@@ -101,16 +58,31 @@
 	///////////////////////////////////////
 	// Get the Game System and Mechanics //
 	///////////////////////////////////////
-	import { gameCardSystems } from '$lib/system/gameSystems';
+	import { gameSystems, type SystemKey } from '$lib/system/gameSystems';
+	import { arcaneRiftMechanics } from '$lib/system/ArcaneRift/ar_cards.svelte';
+	import { AR_KEY } from '$lib/system/gameSystems';
 	// TODO: make dynamic and fix. Currently this is the only system so it works fine...
-	let activeSystem: keyof typeof gameCardSystems = $state(
-		card.systems.includes('arcaneRift') ? 'arcaneRift' : 'generic'
-	);
-
+	let activeSystem: SystemKey = $state(card.systems.includes(AR_KEY) ? AR_KEY : 'generic'); //TODO: make dynamic based on a global value (store or session)
+	let activeSystemInfo = $derived(gameSystems.find((system) => system.id === activeSystem));
+	let _cardSystemsMessenger: SystemKey[] = $state(card.systems); // Used for selector and UI components
 	//////////////////////////////
-	$effect(() => {
-		console.log('Item updated [ITEM EDITOR]', card.mechanics, card.systems);
-	});
+
+	function updateCardSystems() {
+		// check if all values of the messenger are valid System Keys
+		if (
+			!_cardSystemsMessenger.every((system: SystemKey) => gameSystems.find((s) => s.id === system))
+		)
+			throw new Error('Invalid System Key');
+
+		// Update the card systems identifiers
+		card.systems = _cardSystemsMessenger;
+		// Add necessary (empty) mechanics
+		card.mechanics[AR_KEY] = arcaneRiftMechanics;
+		// Set Active System to generic if current system is removed
+		if (!card.systems.includes(activeSystem)) {
+			activeSystem = card.systems[0];
+		}
+	}
 
 	function updateItem() {
 		// Tell parent to update item
@@ -119,6 +91,64 @@
 	function presetToCustom() {
 		// item.stylePreset = 'custom';
 		card.useStylePreset('custom');
+	}
+
+	////////////////////////////////////
+	// Arcane Rift specific functions //
+	////////////////////////////////////
+
+	let selectedSkill: (typeof characteristics)[number] | undefined = $state();
+	let selectedChar: keyof typeof skillList | undefined = $state();
+	let hasCheck: boolean = $derived(card.mechanics[AR_KEY] !== undefined);
+
+	function updateSkill(priority?: 'char' | 'skill') {
+		if (card.mechanics[AR_KEY] !== undefined) {
+			if (
+				(priority == 'char' && selectedChar == undefined) ||
+				(priority == 'skill' && selectedSkill == undefined)
+			) {
+				return;
+			}
+			console.debug('Updating skill', selectedChar, selectedSkill);
+			if (selectedChar == undefined && selectedSkill == undefined) {
+				return;
+			}
+			if (
+				priority == 'char' &&
+				selectedChar != undefined &&
+				//the selected skill is not part of the selected characteristic
+				skillList[selectedChar].some((skill) => skill != selectedSkill)
+			) {
+				selectedSkill = skillList[selectedChar][0];
+			} else if (
+				priority == 'skill' &&
+				selectedSkill != undefined &&
+				//the selected characteristic matches the selected skill
+				Object.values(skillList).some((charSkills) =>
+					charSkills.some((skill) => skill == selectedSkill)
+				)
+			) {
+				selectedChar = Object.keys(skillList).find((char) =>
+					skillList[char as keyof typeof skillList].some((skill) => skill == selectedSkill)
+				) as keyof typeof skillList;
+			}
+			Object.assign(card.mechanics, {
+				[AR_KEY]: {
+					check: { characteristic: selectedChar, skill: selectedSkill }
+				}
+			});
+		} else {
+			throw new Error('Arcane Rift not configured for this card');
+		}
+	}
+
+	function resetSkill() {
+		if (!hasCheck) return;
+		Object.assign(card.mechanics, {
+			[AR_KEY]: {
+				check: { characteristic: undefined, skill: undefined }
+			}
+		});
 	}
 
 	// Style components for looping
@@ -212,121 +242,158 @@
 			<div>Mechanics</div>
 		{/snippet}
 		{#snippet content()}
-			<!-- Arcane Rift -->
 			<div class="mainFields">
-				<!-- Aspects -->
-				{#if card.mechanics.arcaneRift?.aspects && card.mechanics.arcaneRift.aspects.length > 0}
-					<h1 class="category">Aspects</h1>
-					<div class="fieldList">
-						{#each card.mechanics.arcaneRift.aspects as aspect, i}
-							<div class="fieldItem">
-								<Label for="aspect-{i}-name">Name</Label>
-								<Input type="text" id="aspect-{i}-name" bind:value={aspect.short} />
-								<Label for="aspect-{i}-description">Description</Label>
-								<Textarea
-									name="description"
-									id="aspect-{i}-description"
-									rows={2}
-									placeholder="Edit the description here"
-									bind:value={aspect.description}
-								></Textarea>
-								<div class="fieldButtons">
-									<Button
-										color="plain"
-										size="icon"
-										variant="destructive"
-										onclick={() => card.mechanics.arcaneRift?.aspects.splice(i, 1)}
-									>
-										<Icon icon="mdi:trash" />
-									</Button>
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
-				<hr />
-				<Button
-					onclick={() =>
-						card.mechanics.arcaneRift?.aspects.push({ short: 'aspect', description: 'edit me' })}
+				<!-- System picker -->
+				<Select.Root
+					type="multiple"
+					bind:value={_cardSystemsMessenger}
+					name="systems"
+					onOpenChange={updateCardSystems}
 				>
-					<Icon icon="mdi:plus" />
-					Add aspect
-				</Button>
-				<h1 class="category">Skill Check</h1>
-				<div class="fieldItem">
-					<!-- Characteristic -->
-					<Label for="characteristic">Characteristic</Label>
-					<Select.Root
-						type="single"
-						name="characteristic"
-						bind:value={selectedChar}
-						onOpenChange={() => updateSkill('char')}
-					>
-						<Select.Trigger class="w-full">{selectedChar || 'None'}</Select.Trigger>
-						<Select.Content>
-							{#each characteristics as characteristic}
-								<Select.Item value={characteristic}>{characteristic}</Select.Item>
+					<Select.Trigger class="w-full">Enable game systems</Select.Trigger>
+					<Select.Content>
+						<Select.Group>
+							{#each Object.values(gameSystems) as sys}
+								<Select.Item disabled={sys.locked} value={sys.id}
+									>{sys.name}{sys.locked ? ' (Always Enabled)' : ''}</Select.Item
+								>
 							{/each}
-						</Select.Content>
-					</Select.Root>
-					<!-- Skill -->
-					<Label for="skill">Skill</Label>
-					<Select.Root
-						type="single"
-						name="skill"
-						bind:value={selectedSkill}
-						onOpenChange={() => updateSkill('skill')}
-					>
-						<Select.Trigger class="w-full">{selectedSkill || 'None'}</Select.Trigger>
-						<Select.Content>
-							{#each Object.entries(skillList) as [charName, skills]}
-								{#each skills as skill}
-									<Select.Item value={skill}>[{charName}]: {skill}</Select.Item>
-								{/each}
-							{/each}
-						</Select.Content>
-					</Select.Root>
-					<div class="fieldButtons">
-						<Button
-							disabled={!selectedChar || !selectedSkill}
-							variant="destructive"
-							onclick={resetSkill}><Icon icon="mdi:reload" /></Button
-						>
-					</div>
-				</div>
-				<h1 class="category">Card Fields</h1>
-				<!-- Fields -->
-				<div class="fieldList">
-					{#if card.mechanics.arcaneRift?.fields?.length}
-						{#each card.mechanics.arcaneRift.fields as field, i}
-							<div class="fieldItem">
-								<Label for="special-{i}-name">Name</Label>
-								<Input type="text" id="special-{i}-name" bind:value={field.label} />
-								<div class="fieldButtons">
-									<Button
-										variant="destructive"
-										size="icon"
-										onclick={() => card.mechanics.arcaneRift?.aspects.splice(i, 1)}
-									>
-										<Icon icon="mdi:trash" />
-									</Button>
-								</div>
-								<Label for="special-{i}-description">Value</Label>
-								<Input type="text" id="special-{i}-description" bind:value={field.value} />
-							</div>
+						</Select.Group>
+					</Select.Content>
+				</Select.Root>
+				<Select.Root type="single" bind:value={activeSystem} name="systems">
+					<Select.Trigger class="w-full justify-between"
+						><span
+							><small>System:</small>
+							{gameSystems.find((s) => s.id == activeSystem)?.name || { activeSystem }}
+						</span>
+					</Select.Trigger>
+					<Select.Content>
+						{#each Object.values(gameSystems) as sys}
+							<Select.Item disabled={!card.systems.includes(sys.id)} value={sys.id}
+								>{sys.name}{!card.systems.includes(sys.id) ? ' (disabled)' : ''}</Select.Item
+							>
 						{/each}
+					</Select.Content>
+				</Select.Root>
+				<!-- Arcane Rift -->
+				{#if card.systems.includes(AR_KEY) && activeSystem == AR_KEY}
+					<!-- If the active system is Arcane Rift -->
+					<h1 class="category">Arcane Rift</h1>
+					<!-- Aspects -->
+					{#if card.mechanics[activeSystem].hasOwnProperty('aspects') && card.mechanics[activeSystem]?.aspects.length > 0}
+						<h1 class="category">Aspects</h1>
+						<div class="fieldList">
+							{#each card.mechanics[AR_KEY].aspects as aspect, i}
+								<div class="fieldItem">
+									<Label for="aspect-{i}-name">Name</Label>
+									<Input type="text" id="aspect-{i}-name" bind:value={aspect.short} />
+									<Label for="aspect-{i}-description">Description</Label>
+									<Textarea
+										name="description"
+										id="aspect-{i}-description"
+										rows={2}
+										placeholder="Edit the description here"
+										bind:value={aspect.description}
+									></Textarea>
+									<div class="fieldButtons">
+										<Button
+											color="plain"
+											size="icon"
+											variant="destructive"
+											onclick={() => card.mechanics[AR_KEY]?.aspects.splice(i, 1)}
+										>
+											<Icon icon="mdi:trash" />
+										</Button>
+									</div>
+								</div>
+							{/each}
+						</div>
 					{/if}
-				</div>
-				<div class="fullLine">
+					<hr />
 					<Button
-						size="sm"
 						onclick={() =>
-							card.mechanics.arcaneRift?.fields.push({ label: 'new', value: 'edit me' })}
+							card.mechanics[AR_KEY]?.aspects.push({ short: 'aspect', description: 'edit me' })}
 					>
 						<Icon icon="mdi:plus" />
-						Add Field</Button
-					>
-				</div>
+						Add aspect
+					</Button>
+					<h1 class="category">Skill Check</h1>
+					<div class="fieldItem">
+						<!-- Characteristic -->
+						<Label for="characteristic">Characteristic</Label>
+						<Select.Root
+							type="single"
+							name="characteristic"
+							bind:value={selectedChar}
+							onOpenChange={() => updateSkill('char')}
+						>
+							<Select.Trigger class="w-full">{selectedChar || 'None'}</Select.Trigger>
+							<Select.Content>
+								{#each characteristics as characteristic}
+									<Select.Item value={characteristic}>{characteristic}</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+						<!-- Skill -->
+						<Label for="skill">Skill</Label>
+						<Select.Root
+							type="single"
+							name="skill"
+							bind:value={selectedSkill}
+							onOpenChange={() => updateSkill('skill')}
+						>
+							<Select.Trigger class="w-full">{selectedSkill || 'None'}</Select.Trigger>
+							<Select.Content>
+								{#each Object.entries(skillList) as [charName, skills]}
+									{#each skills as skill}
+										<Select.Item value={skill}>[{charName}]: {skill}</Select.Item>
+									{/each}
+								{/each}
+							</Select.Content>
+						</Select.Root>
+						<div class="fieldButtons">
+							<Button
+								disabled={!selectedChar || !selectedSkill}
+								variant="destructive"
+								onclick={resetSkill}><Icon icon="mdi:reload" /></Button
+							>
+						</div>
+					</div>
+					<h1 class="category">Card Fields</h1>
+					<!-- Fields -->
+					<div class="fieldList">
+						{#if card.mechanics[AR_KEY]?.fields?.length}
+							{#each card.mechanics[AR_KEY].fields as field, i}
+								<div class="fieldItem">
+									<Label for="special-{i}-name">Name</Label>
+									<Input type="text" id="special-{i}-name" bind:value={field.label} />
+									<div class="fieldButtons">
+										<Button
+											variant="destructive"
+											size="icon"
+											onclick={() => card.mechanics[AR_KEY]?.aspects.splice(i, 1)}
+										>
+											<Icon icon="mdi:trash" />
+										</Button>
+									</div>
+									<Label for="special-{i}-description">Value</Label>
+									<Input type="text" id="special-{i}-description" bind:value={field.value} />
+								</div>
+							{/each}
+						{/if}
+					</div>
+					<div class="fullLine">
+						<Button
+							size="sm"
+							onclick={() =>
+								card.mechanics[AR_KEY]?.fields.push({ label: 'new', value: 'edit me' })}
+						>
+							<Icon icon="mdi:plus" />
+							Add Field</Button
+						>
+					</div>
+				{/if}
 			</div>
 		{/snippet}
 	</Accordion>

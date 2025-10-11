@@ -28,12 +28,13 @@
 	let iconOverride = $derived(card?.icon && iconExists(card.icon) ? card.icon : undefined);
 
 	// Arcane Rift specific functions
-	let hasArcaneRift: boolean = card.systems.includes('arcaneRift');
-	let ar_mechanics = $derived(card.mechanics.arcaneRift);
+	import { AR_KEY } from '$lib/system/gameSystems';
+	let hasArcaneRift: boolean = card.systems.includes(AR_KEY);
+	let ar_mechanics = $derived(card.mechanics[AR_KEY]);
 	// Check if the item has a skillCheck
 	let hasSkillCheck: boolean = $derived(
 		hasArcaneRift &&
-			card.mechanics?.arcaneRift?.check?.characteristic !== undefined &&
+			card.mechanics[AR_KEY]?.check?.characteristic !== undefined &&
 			card.mechanics?.arcaneRift?.check?.skill !== undefined
 	);
 </script>
@@ -79,8 +80,6 @@
 			.text}', 'Gotham', sans-serif;"
 	>
 		{@html renderedItemDescription}
-
-		ID: {card.id}
 	</p>
 
 	<!-- ARCANE RIFT MECHANICS -->
