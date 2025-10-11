@@ -63,14 +63,16 @@
 	import { AR_KEY } from '$lib/system/gameSystems';
 	// TODO: make dynamic and fix. Currently this is the only system so it works fine...
 	let activeSystem: SystemKey = $state(card.systems.includes(AR_KEY) ? AR_KEY : 'generic'); //TODO: make dynamic based on a global value (store or session)
-	let activeSystemInfo = $derived(gameSystems.find((system) => system.id === activeSystem));
+	let activeSystemInfo = $derived(Object.keys(gameSystems).find((sysId) => sysId === activeSystem));
 	let _cardSystemsMessenger: SystemKey[] = $state(card.systems); // Used for selector and UI components
 	//////////////////////////////
 
 	function updateCardSystems() {
 		// check if all values of the messenger are valid System Keys
 		if (
-			!_cardSystemsMessenger.every((system: SystemKey) => gameSystems.find((s) => s.id === system))
+			!_cardSystemsMessenger.every((system: SystemKey) =>
+				Object.keys(gameSystems).find((sysId) => sysId === activeSystem)
+			)
 		)
 			throw new Error('Invalid System Key');
 
@@ -253,8 +255,8 @@
 					<Select.Trigger class="w-full">Enable game systems</Select.Trigger>
 					<Select.Content>
 						<Select.Group>
-							{#each Object.values(gameSystems) as sys}
-								<Select.Item disabled={sys.locked} value={sys.id}
+							{#each Object.entries(gameSystems) as [id, sys]}
+								<Select.Item disabled={sys.locked} value={id}
 									>{sys.name}{sys.locked ? ' (Always Enabled)' : ''}</Select.Item
 								>
 							{/each}
@@ -265,23 +267,26 @@
 					<Select.Trigger class="w-full justify-between"
 						><span
 							><small>System:</small>
-							{gameSystems.find((s) => s.id == activeSystem)?.name || { activeSystem }}
+							{gameSystems[activeSystem].name}
 						</span>
 					</Select.Trigger>
 					<Select.Content>
-						{#each Object.values(gameSystems) as sys}
-							<Select.Item disabled={!card.systems.includes(sys.id)} value={sys.id}
-								>{sys.name}{!card.systems.includes(sys.id) ? ' (disabled)' : ''}</Select.Item
+						{#each Object.entries(gameSystems) as [id, sys]}
+							<Select.Item disabled={!card.systems.includes(id as SystemKey)} value={id}
+								>{sys.name}{!card.systems.includes(id as SystemKey)
+									? ' (disabled)'
+									: ''}</Select.Item
 							>
 						{/each}
 					</Select.Content>
 				</Select.Root>
 				<!-- Arcane Rift -->
-				{#if card.systems.includes(AR_KEY) && activeSystem == AR_KEY}
+				<!-- The card has AR as system, it is the active system and it is not undefined in the card mechanics -->
+				{#if card.systems.includes(AR_KEY) && activeSystem == AR_KEY && typeof card.mechanics[AR_KEY] !== 'undefined'}
 					<!-- If the active system is Arcane Rift -->
 					<h1 class="category">Arcane Rift</h1>
 					<!-- Aspects -->
-					{#if card.mechanics[activeSystem].hasOwnProperty('aspects') && card.mechanics[activeSystem]?.aspects.length > 0}
+					{#if card.mechanics[AR_KEY]?.aspects.length > 0}
 						<h1 class="category">Aspects</h1>
 						<div class="fieldList">
 							{#each card.mechanics[AR_KEY].aspects as aspect, i}
