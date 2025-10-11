@@ -14,8 +14,6 @@ import { clone } from '$lib/utils/serializing';
 import { type Prefixed_UUID } from '$lib/utils/uuid';
 
 // Import Mechanics
-import { type ArcaneRiftCard } from '$lib/system/ArcaneRift/ar_cards.svelte';
-
 import { type Mechanics } from '$lib/system/gameSystems';
 
 type System = keyof Mechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
@@ -26,7 +24,6 @@ export type CardFields = {
 	description?: string;
 };
 const mechanics: Mechanics = { generic: {} };
-console.log(test);
 const system: System[] = ['generic'];
 
 export const fallbackCardInfo: Partial<Card> = {
