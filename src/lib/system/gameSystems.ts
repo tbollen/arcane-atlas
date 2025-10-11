@@ -18,7 +18,7 @@ export const AR_KEY = 'arcaneRift' as const;
 
 export const cardMechanics: {
 	[GENERIC_KEY]: {};
-	[AR_KEY]: ArcaneRiftMechanics;
+	[AR_KEY]?: ArcaneRiftMechanics;
 } = {
 	[GENERIC_KEY]: {},
 	[AR_KEY]: arcaneRiftMechanics
@@ -35,7 +35,6 @@ export const systemKeys: SystemKey[] = Object.keys({} as Mechanics) as SystemKey
 
 export type SystemInfo = {
 	name: string;
-	id: SystemKey;
 	locked?: boolean;
 	version?: string;
 	cardMechanics: Object;
@@ -51,9 +50,11 @@ import { arcaneRiftSystemInfo } from '$lib/system/ArcaneRift/ar_systemInfo';
 // Create a "generic" system without mechanics or specific functions
 const genericSystem: SystemInfo = {
 	name: 'Generic',
-	id: 'generic',
 	locked: true,
 	cardMechanics: {}
 };
 
-export const gameSystems: SystemInfo[] = [genericSystem, arcaneRiftSystemInfo];
+export const gameSystems: Record<SystemKey, SystemInfo> = {
+	[GENERIC_KEY]: genericSystem,
+	[AR_KEY]: arcaneRiftSystemInfo
+};
