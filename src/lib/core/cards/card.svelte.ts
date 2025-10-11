@@ -6,6 +6,7 @@ import {
 	defaultCardStyle
 } from '$lib/core/cards/cardStylePresets';
 import { type IsCardType } from '$lib/modules/cardTypes';
+import { AR_KEY, GENERIC_KEY } from '$lib/system/gameSystems';
 
 // Utils
 import { clone } from '$lib/utils/serializing';
@@ -75,7 +76,7 @@ export class Card {
 	style: CardStyleOptions = $state(defaultCardStyle);
 	// Mechanics
 	systems: System[] = $state([]); // Can have 0, 1 or more compatible systems
-	mechanics: Mechanics = $state({ generic: {} }); // Object containing mechanics per available system
+	mechanics: Mechanics = $state({ [GENERIC_KEY]: {} }); // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
 	constructor(_card?: Partial<Card>) {
