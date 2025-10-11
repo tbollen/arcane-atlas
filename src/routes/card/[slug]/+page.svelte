@@ -60,7 +60,7 @@
 
 	// Printing the card (redirect to print page with only this card selected)
 	import { selectedItems } from '$lib/stores/selectedItems';
-	import { cardMechanics, gameSystems } from '$lib/system/gameSystems';
+	import { cardMechanics, gameSystems, type SystemKey } from '$lib/system/gameSystems';
 	async function printCards() {
 		const _cardId = card.id;
 		saveHandler();
@@ -104,7 +104,7 @@
 
 	// Initialize item on page load, use a dummy item for init only!!
 	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
-	console.error('Card:', card);
+	console.error('Card:', serializeCard(card));
 	// Check if card is saved
 	let cardIsSaved: boolean = $state(false);
 
@@ -214,11 +214,6 @@
 								? 'Saved'
 								: 'Save'}</Button
 						>
-					</div>
-					<div id="toolbar" class="editorRow">
-						{#each Object.keys(cardMechanics) as sysId}
-							{gameSystems.find((sys) => sys.id === sysId)?.name}
-						{/each}
 					</div>
 				</header>
 				<div id="itemEditor">
