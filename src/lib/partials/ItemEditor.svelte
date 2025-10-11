@@ -99,48 +99,41 @@
 	// Arcane Rift specific functions //
 	////////////////////////////////////
 
-	let selectedSkill: (typeof characteristics)[number] | undefined = $state();
-	let selectedChar: keyof typeof skillList | undefined = $state();
 	let hasCheck: boolean = $derived(card.mechanics[AR_KEY] !== undefined);
 
-	function updateSkill(priority?: 'char' | 'skill') {
-		if (card.mechanics[AR_KEY] !== undefined) {
-			if (
-				(priority == 'char' && selectedChar == undefined) ||
-				(priority == 'skill' && selectedSkill == undefined)
-			) {
-				return;
-			}
-			console.debug('Updating skill', selectedChar, selectedSkill);
-			if (selectedChar == undefined && selectedSkill == undefined) {
-				return;
-			}
-			if (
-				priority == 'char' &&
-				selectedChar != undefined &&
-				//the selected skill is not part of the selected characteristic
-				skillList[selectedChar].some((skill) => skill != selectedSkill)
-			) {
-				selectedSkill = skillList[selectedChar][0];
-			} else if (
-				priority == 'skill' &&
-				selectedSkill != undefined &&
-				//the selected characteristic matches the selected skill
-				Object.values(skillList).some((charSkills) =>
-					charSkills.some((skill) => skill == selectedSkill)
-				)
-			) {
-				selectedChar = Object.keys(skillList).find((char) =>
-					skillList[char as keyof typeof skillList].some((skill) => skill == selectedSkill)
-				) as keyof typeof skillList;
-			}
-			Object.assign(card.mechanics, {
-				[AR_KEY]: {
-					check: { characteristic: selectedChar, skill: selectedSkill }
-				}
+	let selectedSkill: (typeof characteristics)[number] | undefined = $state();
+	let selectedChar: keyof typeof skillList | undefined = $state();
+
+	function AR_updateSkill(priority?: 'char' | 'skill') {
+		if (card.mechanics[AR_KEY] == undefined) throw new Error('Arcane Rift Mechanics not found');
+
+		if (selectedChar == undefined && selectedSkill == undefined) {
+			// Set to undefined (empty / none)
+			return (card.mechanics[AR_KEY].check = { characteristic: undefined, skill: undefined });
+		}
+		if (priority == 'skill' && selectedSkill != undefined) {
+			// Find the characteristic where one of the skills matches the selectedSkill
+			selectedChar = Object.keys(skillList).find((char) =>
+				skillList[char as keyof typeof skillList].some((skill) => skill == selectedSkill)
+			) as keyof typeof skillList;
+			// Set the characteristic
+			return (card.mechanics[AR_KEY].check = {
+				characteristic: selectedChar,
+				skill: selectedSkill
 			});
-		} else {
-			throw new Error('Arcane Rift not configured for this card');
+		}
+		if (priority == 'char' && selectedChar != undefined) {
+			// Check if the matched skill is already in the selected characteristic
+			const skillMatches: boolean = skillList[selectedChar as keyof typeof skillList].includes(
+				selectedSkill ?? ''
+			);
+			selectedSkill = skillMatches
+				? selectedSkill
+				: skillList[selectedChar as keyof typeof skillList][0];
+			return (card.mechanics[AR_KEY].check = {
+				characteristic: selectedChar,
+				skill: selectedSkill
+			});
 		}
 	}
 
@@ -245,48 +238,51 @@
 		{/snippet}
 		{#snippet content()}
 			<div class="mainFields">
-				<!-- System picker -->
-				<Select.Root
-					type="multiple"
-					bind:value={_cardSystemsMessenger}
-					name="systems"
-					onOpenChange={updateCardSystems}
-				>
-					<Select.Trigger class="w-full">Enable game systems</Select.Trigger>
-					<Select.Content>
-						<Select.Group>
+				<div class="columns-3xs gap-y-3">
+					<!-- Active System Setter -->
+					<Select.Root type="single" bind:value={activeSystem} name="systems">
+						<Select.Trigger class="w-full justify-between"
+							><span
+								><small>System:</small>
+								{gameSystems[activeSystem].name}
+							</span>
+						</Select.Trigger>
+						<Select.Content>
 							{#each Object.entries(gameSystems) as [id, sys]}
-								<Select.Item disabled={sys.locked} value={id}
-									>{sys.name}{sys.locked ? ' (Always Enabled)' : ''}</Select.Item
+								<Select.Item disabled={!card.systems.includes(id as SystemKey)} value={id}
+									>{sys.name}{!card.systems.includes(id as SystemKey)
+										? ' (disabled)'
+										: ''}</Select.Item
 								>
 							{/each}
-						</Select.Group>
-					</Select.Content>
-				</Select.Root>
-				<Select.Root type="single" bind:value={activeSystem} name="systems">
-					<Select.Trigger class="w-full justify-between"
-						><span
-							><small>System:</small>
-							{gameSystems[activeSystem].name}
-						</span>
-					</Select.Trigger>
-					<Select.Content>
-						{#each Object.entries(gameSystems) as [id, sys]}
-							<Select.Item disabled={!card.systems.includes(id as SystemKey)} value={id}
-								>{sys.name}{!card.systems.includes(id as SystemKey)
-									? ' (disabled)'
-									: ''}</Select.Item
-							>
-						{/each}
-					</Select.Content>
-				</Select.Root>
+						</Select.Content>
+					</Select.Root>
+					<!-- System enabler -->
+					<Select.Root
+						type="multiple"
+						bind:value={_cardSystemsMessenger}
+						name="systems"
+						onOpenChange={updateCardSystems}
+					>
+						<Select.Trigger class="w-full">Enable game systems</Select.Trigger>
+						<Select.Content>
+							<Select.Group>
+								{#each Object.entries(gameSystems) as [id, sys]}
+									<Select.Item disabled={sys.locked} value={id}
+										>{sys.name}{sys.locked ? ' (Always Enabled)' : ''}</Select.Item
+									>
+								{/each}
+							</Select.Group>
+						</Select.Content>
+					</Select.Root>
+				</div>
 				<!-- Arcane Rift -->
 				<!-- The card has AR as system, it is the active system and it is not undefined in the card mechanics -->
 				{#if card.systems.includes(AR_KEY) && activeSystem == AR_KEY && typeof card.mechanics[AR_KEY] !== 'undefined'}
 					<!-- If the active system is Arcane Rift -->
 					<h1 class="category">Arcane Rift</h1>
 					<!-- Aspects -->
-					{#if card.mechanics[AR_KEY]?.aspects.length > 0}
+					{#if card.mechanics[AR_KEY].aspects?.length > 0}
 						<h1 class="category">Aspects</h1>
 						<div class="fieldList">
 							{#each card.mechanics[AR_KEY].aspects as aspect, i}
@@ -331,7 +327,7 @@
 							type="single"
 							name="characteristic"
 							bind:value={selectedChar}
-							onOpenChange={() => updateSkill('char')}
+							onOpenChange={() => AR_updateSkill('char')}
 						>
 							<Select.Trigger class="w-full">{selectedChar || 'None'}</Select.Trigger>
 							<Select.Content>
@@ -346,7 +342,7 @@
 							type="single"
 							name="skill"
 							bind:value={selectedSkill}
-							onOpenChange={() => updateSkill('skill')}
+							onOpenChange={() => AR_updateSkill('skill')}
 						>
 							<Select.Trigger class="w-full">{selectedSkill || 'None'}</Select.Trigger>
 							<Select.Content>
