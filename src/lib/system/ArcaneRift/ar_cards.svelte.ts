@@ -9,7 +9,7 @@ type Aspect = {
 	description: string;
 };
 
-export type ArcaneRiftCard = {
+export type ArcaneRiftMechanics = {
 	// Arcane Rift specific mechanics here
 	aspects: Aspect[];
 	fields: Field[];
@@ -17,6 +17,12 @@ export type ArcaneRiftCard = {
 		characteristic?: string;
 		skill?: string;
 	};
+};
+
+export const arcaneRiftMechanics: ArcaneRiftMechanics = {
+	aspects: [],
+	fields: [],
+	check: {}
 };
 
 // Functions to manipulate the cards for the Arcane Rift system
