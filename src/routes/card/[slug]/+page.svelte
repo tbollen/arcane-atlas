@@ -5,6 +5,9 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 
+	// Utils
+	import { serializeCard } from '$lib/core/cards/cardStore.svelte';
+
 	// Page params
 	const slug_id = page.params.slug;
 
@@ -57,6 +60,7 @@
 
 	// Printing the card (redirect to print page with only this card selected)
 	import { selectedItems } from '$lib/stores/selectedItems';
+	import { cardMechanics, gameSystems } from '$lib/system/gameSystems';
 	async function printCards() {
 		const _cardId = card.id;
 		saveHandler();
@@ -77,13 +81,7 @@
 
 	// Save item function
 	function saveHandler(preventRedirect = false) {
-		console.log(
-			'CardStore:',
-			cardStore,
-			cardStore.cards.map((card) => card.id)
-		);
 		const idsInCardStore = cardStore.cards.map((card) => card.id);
-		console.error('ID Match Check:', idsInCardStore.includes(card.id), card.id, idsInCardStore);
 		// Create new item if new
 		if (isNewCard) {
 			console.debug('Saving new item...');
@@ -92,6 +90,7 @@
 			console.debug('Saving existing item...');
 			cardStore.setCard(card.id, card);
 		}
+		console.error('Serialized Card:', serializeCard(card));
 		cardStore.save();
 		savedCard = { ...card }; // Update saved item
 		// updateSaveState(); // Update save state
@@ -138,6 +137,7 @@
 
 	function beforeUnload(event: BeforeUnloadEvent) {
 		// Prevent closing if card is not saved (with dialog)
+		return; // TODO: remove after fixing save method
 		if (!cardIsSaved) {
 			event.preventDefault();
 			// Old Chrome browsers requires returnValue to be set
@@ -214,6 +214,11 @@
 								? 'Saved'
 								: 'Save'}</Button
 						>
+					</div>
+					<div id="toolbar" class="editorRow">
+						{#each Object.keys(cardMechanics) as sysId}
+							{gameSystems.find((sys) => sys.id === sysId)?.name}
+						{/each}
 					</div>
 				</header>
 				<div id="itemEditor">
