@@ -3,6 +3,9 @@ import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 import { clone } from '$lib/utils/serializing';
 import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 
+// Prisma Schema Types
+import { type card as PrismaCard } from '@prisma/client';
+
 import { Card } from '$lib/core/cards/card.svelte';
 // import type { Card as PrismaCard } from '@prisma/client';
 
@@ -16,7 +19,7 @@ type CardID = Prefixed_UUID<'card'>;
 export class StoredCard extends Card {
 	id: CardID;
 
-	constructor(id: CardID | 'new', card?: Partial<Card>) {
+	constructor(id: CardID | 'new', card?: Partial<Card> | PrismaCard) {
 		super(card);
 		if (id === 'new') id = generatePrefixedUUID('card');
 		this.id = id;
@@ -34,12 +37,17 @@ export class CardStore {
 	constructor(
 		init: {
 			json?: JSON;
+			prisma?: PrismaCard[];
 			multiStore?: CardStore[];
 			store?: CardStore;
 			cards?: StoredCard[];
 			templates?: Partial<Card>[];
 		} = {}
 	) {
+		// If The cards from the Prisma DB are given, use that
+		if (init.prisma) {
+			this.cards = init.prisma.map((card) => new StoredCard(card.id as CardID, card));
+		}
 		// If an exisiting store is given,
 		if (init.json) {
 			const _obj = Object(init.json);
@@ -61,6 +69,7 @@ export class CardStore {
 			init.cards = init.store.cards;
 			init.templates = init.store.templates;
 		}
+
 		// Create items from given items
 		const _cardsToOVerwrite = init.cards
 			? init.cards.map((card) => new StoredCard(card.id, card)) // If cards are given, create StoredCards from this data

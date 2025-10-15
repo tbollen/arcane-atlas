@@ -8,6 +8,9 @@ import {
 import { type IsCardType } from '$lib/modules/cardTypes';
 import { AR_KEY, GENERIC_KEY } from '$lib/system/gameSystems';
 
+// Prisma type for hydrating
+import { type card as PrismaCard } from '@prisma/client';
+
 // Utils
 import { clone } from '$lib/utils/serializing';
 
@@ -79,10 +82,10 @@ export class Card {
 	mechanics: Mechanics = $state({ [GENERIC_KEY]: {} }); // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
-	constructor(_card?: Partial<Card>) {
+	constructor(_card?: Partial<Card> | PrismaCard) {
 		let _cardReference: Partial<Card> = fallbackCardInfo;
 		if (_card) {
-			_cardReference = { ..._cardReference, ..._card }; // Override default values where defined
+			Object.assign(_cardReference, _card); // Override default values where defined
 		}
 		// Set card info one by one
 		this.creatorId = _cardReference.creatorId ?? null;
