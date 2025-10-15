@@ -8,11 +8,6 @@
 	// Utils
 	import { serializeCard } from '$lib/core/cards/cardStore.svelte';
 
-	// Page params
-	const slug_id = page.params.slug;
-
-	console.log('slug_id:', slug_id);
-
 	// Item stores, types and modules
 	import { cardStore } from '$lib/stores/CardStore';
 	import { StoredCard } from '$lib/core/cards/cardStore.svelte';
@@ -25,6 +20,24 @@
 	// import Button from '$lib/components/coreComponents/Button.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';
+
+	// Page params
+	const slug_id = page.params.slug;
+	let isNewCard = $derived(slug_id === 'new');
+
+	const { data } = $props();
+
+	// Data getting (card and cardstore)
+	// Initialize item on page load, use a dummy item for init only!!
+	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
+	console.error('Card:', serializeCard(card));
+	// Check if card is saved
+	let cardIsSaved: boolean = $state(false);
+	let savedCard: {} = $state({}); // Store the last saved item to compare with current item
+
+	////////////////////////////////////////////
+	// FUNCTIONS FOR EDITING AND PAGE ACTIONS //
+	////////////////////////////////////////////
 
 	function newEmptyItem() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
@@ -60,7 +73,6 @@
 
 	// Printing the card (redirect to print page with only this card selected)
 	import { selectedItems } from '$lib/stores/selectedItems';
-	import { cardMechanics, gameSystems, type SystemKey } from '$lib/system/gameSystems';
 	async function printCards() {
 		const _cardId = card.id;
 		saveHandler();
@@ -72,8 +84,6 @@
 	function downloadItem() {
 		// TODO: add download method
 	}
-
-	let savedCard: {} = $state({}); // Store the last saved item to compare with current item
 
 	function updateSaveState() {
 		// TODO: fix
@@ -101,12 +111,6 @@
 			goto(`${base}/item/${card.id}?edit=1`);
 		}
 	}
-
-	// Initialize item on page load, use a dummy item for init only!!
-	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
-	console.error('Card:', serializeCard(card));
-	// Check if card is saved
-	let cardIsSaved: boolean = $state(false);
 
 	onMount(() => {
 		// Retrieve Item
@@ -144,14 +148,15 @@
 			event.returnValue = '';
 		}
 	}
-	let isNewCard = $derived(slug_id === 'new');
+
+	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 </script>
 
 <!-- Svelte Window -->
 <svelte:window onbeforeunload={beforeUnload} />
-{#if !card}
+{#await card}
 	<MainLoader />
-{:else}
+{:then}
 	<main id="main" class:viewMode={!editMode}>
 		<!-- Editor Pane -->
 		{#if editMode}
@@ -252,7 +257,7 @@
 			</div>
 		</section>
 	</main>
-{/if}
+{/await}
 
 <!-- Styles -->
 <style lang="postcss">

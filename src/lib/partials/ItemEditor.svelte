@@ -280,7 +280,6 @@
 				<!-- The card has AR as system, it is the active system and it is not undefined in the card mechanics -->
 				{#if card.systems.includes(AR_KEY) && activeSystem == AR_KEY && typeof card.mechanics[AR_KEY] !== 'undefined'}
 					<!-- If the active system is Arcane Rift -->
-					<h1 class="category">Arcane Rift</h1>
 					<!-- Aspects -->
 					{#if card.mechanics[AR_KEY].aspects?.length > 0}
 						<h1 class="category">Aspects</h1>
@@ -373,7 +372,7 @@
 										<Button
 											variant="destructive"
 											size="icon"
-											onclick={() => card.mechanics[AR_KEY]?.aspects.splice(i, 1)}
+											onclick={() => card.mechanics[AR_KEY]?.fields.splice(i, 1)}
 										>
 											<Icon icon="mdi:trash" />
 										</Button>
@@ -388,7 +387,7 @@
 						<Button
 							size="sm"
 							onclick={() =>
-								card.mechanics[AR_KEY]?.fields.push({ label: 'new', value: 'edit me' })}
+								card.mechanics[AR_KEY]?.fields.push({ label: 'new field', value: 'edit me' })}
 						>
 							<Icon icon="mdi:plus" />
 							Add Field</Button
