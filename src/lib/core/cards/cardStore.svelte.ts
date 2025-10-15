@@ -169,22 +169,28 @@ export class CardStore {
 		return _serializedStore;
 	}
 
-	private async addCardToDB(card: StoredCard) {
-		// Push the new card to the database
-		const response = fetch(`/api/cards`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(card)
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				console.log(data);
-			})
-			.catch((error) => {
-				console.error(error);
-			});
+	// Prepare for Prisma (MAPPING!!)
+	cardToPrisma(id: CardID): PrismaCard {
+		const _card = this.getCard(id);
+		return {
+			id: _card.id,
+			creatorId: _card.creatorId ?? '',
+			createdAt: _card.createdAt,
+			updatedAt: _card.updatedAt,
+			userIds: _card.userIds,
+			campaignIds: _card.campaignIds,
+			characterIds: _card.characterIds,
+			name: _card.name,
+			type: _card.type,
+			subtitle: _card.subtitle ?? '',
+			icon: _card.icon ?? '',
+			description: _card.description,
+			image: _card.image,
+			stylePreset: _card.stylePreset,
+			style: _card.style,
+			systems: _card.systems,
+			mechanics: _card.mechanics
+		};
 	}
 
 	/////////////////////
