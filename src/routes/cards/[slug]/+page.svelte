@@ -23,7 +23,7 @@
 
 	// Page params
 	const slug_id = page.params.slug;
-	let isNewCard = $derived(slug_id === 'new');../../card/[slug]/$types.js
+	let isNewCard = $derived(slug_id === 'new');
 
 	const { data } = $props();
 
