@@ -53,12 +53,12 @@
 
 	function viewCard(id: string) {
 		// Navigate to viewer
-		goto(`${base}/card/${id}`);
+		goto(`${base}/cards/${id}`);
 	}
 
 	function editCard(id: string) {
 		// Navigate to editor
-		goto(`${base}/card/${id}?edit=1`);
+		goto(`${base}/cards/${id}?edit=1`);
 	}
 
 	function duplicateCard(id: string) {
@@ -76,7 +76,7 @@
 	}
 
 	function addNew() {
-		goto(`${base}/card/new?edit=1`);
+		goto(`${base}/cards/new?edit=1`);
 	}
 
 	function updateItems() {
