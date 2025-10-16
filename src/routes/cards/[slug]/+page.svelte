@@ -8,8 +8,12 @@
 	// Utils
 	import { serializeCard } from '$lib/core/cards/cardStore.svelte';
 
+	// API
+	import CARD_API from '$lib/utils/api/cards_api.js';
+
 	// Item stores, types and modules
-	import { cardStore } from '$lib/stores/CardStore';
+	// import { cardStore } from '$lib/stores/CardStore';
+	import { CardStore } from '$lib/core/cards/cardStore.svelte';
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
 
 	// Components and Partials
@@ -31,14 +35,43 @@
 	// DATA INITIALIZATION //
 	/////////////////////////
 	import { getContext } from 'svelte';
+	const cardStore = getContext<CardStore>(CARD_CONTEXT_KEY);
 
 	// Data getting (card and cardstore)
 	// Initialize item on page load, use a dummy item for init only!!
 	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
-	console.error('Card:', serializeCard(card));
 	// Check if card is saved
 	let cardIsSaved: boolean = $state(false);
 	let savedCard: {} = $state({}); // Store the last saved item to compare with current item
+
+	// Retrieve and overwrite the dummy item with the real item on page load
+	onMount(() => {
+		// Retrieve Item
+		try {
+			if (!slug_id) throw new Error('No slug id found');
+			// If the slug_id is 'new', get the active item or redirect to collection page if none found
+			if (slug_id === 'new') {
+				console.debug('Creating new card...');
+				// TODO: create "new card" method
+			} else {
+				const retrievedCard = cardStore.getCard(slug_id); // Get card, may throw error
+				if (!retrievedCard) throw new Error(`No card found with id: ${slug_id}`);
+				console.debug('Retrieving card...', retrievedCard);
+				// Get item from store
+				card = retrievedCard;
+				// cardIsSaved = true; // Set saved state to true
+				// savedCard = { ...card };
+			}
+		} catch (err) {
+			// Redirect to collection page when item not found
+			alert(`${err} > Redirecting to collection page...`);
+			goto('/cards');
+		}
+
+		// Retrieve URL params for edit mode
+		const urlParams = new URLSearchParams(window.location.search);
+		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
+	});
 
 	////////////////////////////////////////////
 	// FUNCTIONS FOR EDITING AND PAGE ACTIONS //
@@ -95,54 +128,33 @@
 	}
 
 	// Save item function
-	function saveHandler(preventRedirect = false) {
+	async function saveHandler(preventRedirect = false) {
 		const idsInCardStore = cardStore.cards.map((card) => card.id);
+		let response;
 		// Create new item if new
 		if (isNewCard) {
 			console.debug('Saving new item...');
 			card = cardStore.addNew(card); // Add new item to store
+			// API CALL
+			response = await CARD_API.create(card.cardToPrisma());
 		} else {
 			console.debug('Saving existing item...');
 			cardStore.setCard(card.id, card);
+			// API CALL
+			response = await CARD_API.update(card.cardToPrisma());
 		}
-		console.error('Serialized Card:', serializeCard(card));
 		cardStore.save();
-		savedCard = { ...card }; // Update saved item
+		// LOG API RESPONSE
+		console.log(response);
+		savedCard = serializeCard(card); // Update saved item
 		// updateSaveState(); // Update save state
 		// setTimeout(() => (cardIsSaved = false), 2000);
 
 		// If it was a new item, redirect to the new item's page
 		if (slug_id === 'new') {
-			goto(`${base}/item/${card.id}?edit=1`);
+			goto(`/cards/${card.id}?edit=1`);
 		}
 	}
-
-	onMount(() => {
-		// Retrieve Item
-		try {
-			if (!slug_id) throw new Error('No slug id found');
-			// If the slug_id is 'new', get the active item or redirect to collection page if none found
-			if (slug_id === 'new') {
-				console.debug('Creating new card...');
-				// TODO: create "new card" method
-			} else {
-				const retrievedCard = cardStore.getCard(slug_id);
-				if (!retrievedCard) throw new Error(`No card found with id: ${slug_id}`);
-				console.log('Retrieving card...', retrievedCard);
-				// Get item from store
-				card = retrievedCard;
-				// savedCard = { ...card };
-			}
-		} catch {
-			// Redirect to collection page when item not found
-			alert(`No card found with id: ${slug_id}, redirecting to collection page...`);
-			goto('/collection');
-		}
-
-		// Retrieve URL params for edit mode
-		const urlParams = new URLSearchParams(window.location.search);
-		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
-	});
 
 	function beforeUnload(event: BeforeUnloadEvent) {
 		// Prevent closing if card is not saved (with dialog)
