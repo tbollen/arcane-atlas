@@ -86,6 +86,7 @@ export class Card {
 		let _cardReference: Partial<Card> = fallbackCardInfo;
 		// Ensure deep cloning works on input
 		function cloneToObj(obj: any): Record<string, any> | undefined {
+			if (!obj) return undefined;
 			const clone = JSON.parse(JSON.stringify(obj));
 			return Object.keys(clone).length > 0 ? clone : undefined; //returns undefined if obj is empty
 		}
