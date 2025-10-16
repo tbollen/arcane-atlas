@@ -84,26 +84,36 @@ export class Card {
 	// Constructor to initialize the card with default values
 	constructor(_card?: Partial<Card> | PrismaCard) {
 		let _cardReference: Partial<Card> = fallbackCardInfo;
-		if (_card) {
-			Object.assign(_cardReference, _card); // Override default values where defined
+		// Ensure deep cloning works on input
+		function cloneToObj(obj: any): Record<string, any> | undefined {
+			const clone = JSON.parse(JSON.stringify(obj));
+			return Object.keys(clone).length > 0 ? clone : undefined; //returns undefined if obj is empty
 		}
 		// Set card info one by one
-		this.creatorId = _cardReference.creatorId ?? null;
-		this.createdAt = _cardReference.createdAt ?? new Date();
-		this.updatedAt = _cardReference.updatedAt ?? new Date();
-		this.name = _cardReference.name ?? 'New Card';
-		this.type = _cardReference.type ?? 'Card';
-		this.subtitle = _cardReference.subtitle ?? undefined;
-		this.icon = _cardReference.icon ?? undefined;
-		this.description = _cardReference.description ?? fallbackCardInfo.description!;
+		this.creatorId =
+			(_card?.creatorId as Prefixed_UUID<'user'>) ?? _cardReference.creatorId ?? null;
+		this.createdAt = _card?.createdAt ?? _cardReference.createdAt ?? new Date();
+		this.updatedAt = _card?.updatedAt ?? _cardReference.updatedAt ?? new Date();
+		this.name = _card?.name ?? _cardReference.name ?? 'New Card';
+		this.type = _card?.type ?? _cardReference.type ?? 'Card';
+		this.subtitle = _card?.subtitle ?? _cardReference.subtitle ?? undefined;
+		this.icon = _card?.icon ?? _cardReference.icon ?? undefined;
+		this.description =
+			_card?.description ?? _cardReference.description ?? fallbackCardInfo.description!;
 		this.image = {
 			...this.image,
-			...(_cardReference.image ?? {})
+			...(cloneToObj(_card?.image) ?? _cardReference.image ?? {})
 		};
 		this.stylePreset = _cardReference.stylePreset ?? fallbackCardInfo.stylePreset!;
-		this.style = { ...defaultCardStyle, ...(_cardReference.style ?? {}) };
+		this.style = {
+			...defaultCardStyle,
+			...(cloneToObj(_card?.style) ?? _cardReference.style ?? {})
+		};
 		// Set mechanics based on system
-		this.mechanics = { ...this.mechanics, ..._cardReference.mechanics };
+		this.mechanics = {
+			...this.mechanics,
+			...(cloneToObj(_card?.mechanics) ?? _cardReference.mechanics)
+		};
 		this.systems = Object.keys(this.mechanics) as System[];
 	}
 
