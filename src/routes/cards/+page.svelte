@@ -154,6 +154,7 @@
 	///////////////////////////
 	import SearchInput from '$lib/partials/SearchInput.svelte';
 	import { render } from 'svelte/server';
+	import { downloadCards } from '$lib/utils/cards/download';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
 	let filteredItems: string[] = [];
@@ -212,7 +213,11 @@
 			>
 			<!-- Download -->
 			{#if $selectedItems.size > 0}{:else}
-				<Button onclick={() => {}}>
+				<Button
+					onclick={() => {
+						downloadCards(renderedCards_sorted);
+					}}
+				>
 					<Icon icon="mdi:download" />
 					Download All</Button
 				>
@@ -231,7 +236,14 @@
 					<Icon icon="mdi:printer" />
 					Print</Button
 				>
-				<Button onclick={() => {}}>
+				<Button
+					onclick={() => {
+						const cards = Array.from($selectedItems).map((id) => {
+							return cardStore.getCard(id);
+						});
+						downloadCards(cards);
+					}}
+				>
 					<Icon icon="mdi:download" />
 					Download
 				</Button>
@@ -333,7 +345,7 @@
 							title="Download as JSON"
 							onclick={(e) => {
 								e.stopPropagation();
-								// cardStore.download(card.id);
+								downloadCards([card]);
 							}}
 						>
 							<Icon icon="mdi:download" />

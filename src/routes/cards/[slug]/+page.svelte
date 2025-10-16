@@ -154,8 +154,9 @@
 	}
 
 	// Download the current item as JSON
+	import { downloadCards } from '$lib/utils/cards/download.js';
 	function downloadItem() {
-		// TODO: add download method
+		downloadCards([card]);
 	}
 
 	// Save item function
@@ -283,8 +284,7 @@
 				<!-- Back to Collection -->
 				<Button
 					variant="link"
-					disabled={!cardIsSaved}
-					onclick={() => goto(`${base}/collection`)}
+					onclick={() => goto(`${base}/cards`)}
 					title={!cardIsSaved ? 'Please save the card before leaving' : 'Back to Collection'}
 					><Icon icon="mdi:arrow-left" />Back</Button
 				>
