@@ -15,6 +15,7 @@ import { defaultTemplates } from '$lib/core/cards/defaultTemplates';
 // Shorthand for card id
 export type CardID = Prefixed_UUID<'card'>;
 
+// Context Key
 export const CARD_CONTEXT_KEY: string = 'db_cardStore' as const;
 
 // StoredCard Class (Card with ID)

@@ -1,10 +1,11 @@
 import { Card } from './card.svelte';
 
-const templatesBase = [
+const templatesBase: Partial<Card>[] = [
 	{
-		name: 'New Card',
-		type: 'Card',
-		description: 'Card Description'
+		name: 'Sword',
+		type: 'Melee',
+		description: 'Cool Sword',
+		subtitle: 'Light Melee Weapon'
 	}
 ];
 

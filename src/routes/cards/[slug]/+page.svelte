@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Svelte stuff
 	import { page } from '$app/state';
-	import { onMount } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 
@@ -14,7 +14,9 @@
 
 	// Item stores, types and modules
 	// import { cardStore } from '$lib/stores/CardStore';
+	import cachedTemplate from '$lib/stores/cachedTemplate.js';
 	import { CardStore } from '$lib/core/cards/cardStore.svelte';
+	import { Card } from '$lib/core/cards/card.svelte.js';
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
 
 	// Components and Partials
@@ -67,7 +69,10 @@
 			// If the slug_id is 'new', get the active item or redirect to collection page if none found
 			if (slug_id === 'new') {
 				console.debug('Creating new card...');
-				// TODO: create "new card" method
+				if (cachedTemplate.template) {
+					card = new StoredCard('new', cachedTemplate.template); // Create new card using the cached template
+					cachedTemplate.template = undefined; //Reset to undefined
+				}
 			} else {
 				const retrievedCard = cardStore.getCard(slug_id); // Get card, may throw error
 				if (!retrievedCard) throw new Error(`No card found with id: ${slug_id}`);

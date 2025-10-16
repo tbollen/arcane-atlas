@@ -13,6 +13,8 @@
 
 	// INIT CARDSTORE
 	import { getContext, setContext } from 'svelte';
+	import cachedTemplate from '$lib/stores/cachedTemplate';
+	import { Card } from '$lib/core/cards/card.svelte';
 	import {
 		CARD_CONTEXT_KEY,
 		CardStore,
@@ -114,11 +116,10 @@
 		CARD_API.create(newCardAsPrisma);
 	}
 
-	import { type Item } from '$lib/types/Item.svelte';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/dialog/dialogs';
-	function createFromTemplate(base: Item) {
-		// cardStore.setActiveTemplate(base);
+	function createFromTemplate(base: Card) {
+		cachedTemplate.set(base);
 		addNew();
 	}
 
@@ -234,7 +235,12 @@
 					<Icon icon="mdi:download" />
 					Download
 				</Button>
-				<Button onclick={deleteSelected} variant="destructive">
+				<Button
+					onclick={() => {
+						deleteSelected();
+					}}
+					variant="destructive"
+				>
 					<Icon icon="mdi:trash" />
 					Delete</Button
 				>
