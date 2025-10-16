@@ -180,7 +180,16 @@
 		}
 	}
 
-	function beforeUnload(event: BeforeUnloadEvent) {
+	// Preventing navigating away when the card is not saved
+	import { beforeNavigate } from '$app/navigation';
+	beforeNavigate((nav) => {
+		if (!cardIsSaved) {
+			const confirmLeave = confirm('Are you sure you want to leave? You have unsaved changes.');
+			if (!confirmLeave) nav.cancel();
+		}
+	});
+
+	function preventNavigationWhenUnsaved(event: BeforeUnloadEvent) {
 		// Prevent closing if card is not saved (with dialog)
 		if (!cardIsSaved) {
 			event.preventDefault();
@@ -191,7 +200,7 @@
 </script>
 
 <!-- Svelte Window -->
-<svelte:window onbeforeunload={beforeUnload} />
+<svelte:window onbeforeunload={preventNavigationWhenUnsaved} />
 {#await card}
 	<MainLoader />
 {:then}
