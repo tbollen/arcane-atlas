@@ -41,11 +41,23 @@
 	// Data getting (card and cardstore)
 	// Initialize item on page load, use a dummy item for init only!!
 	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
-	// Check if card is saved
-	let cardIsSaved: boolean = $state(false);
-	let savedCard: {} = $state({}); // Store the last saved item to compare with current item
 
 	let creatorName = $state('Unknown');
+
+	/////////////////////////
+	// SAVE STATE TRACKING //
+	/////////////////////////
+
+	// Check if card is saved
+	let cardIsSaved: boolean = $state(false);
+	let isMounted: boolean = false;
+	// });
+
+	$effect(() => {
+		serializeCard(card);
+		if (!isMounted) return; // Wait for mount
+		cardIsSaved = false;
+	});
 
 	// Retrieve and overwrite the dummy item with the real item on page load
 	onMount(() => {
@@ -62,8 +74,7 @@
 				console.debug('Retrieving card...', retrievedCard);
 				// Get item from store
 				card = retrievedCard;
-				// cardIsSaved = true; // Set saved state to true
-				// savedCard = { ...card };
+				cardIsSaved = true;
 			}
 		} catch (err) {
 			// Redirect to collection page when item not found
@@ -84,6 +95,12 @@
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
 		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
+
+		// Set mounted to true (timeout to avoid race condition)
+		setTimeout(() => {
+			cardIsSaved = slug_id !== 'new';
+			isMounted = true;
+		}, 50);
 	});
 
 	////////////////////////////////////////////
@@ -136,10 +153,6 @@
 		// TODO: add download method
 	}
 
-	function updateSaveState() {
-		// TODO: fix
-	}
-
 	// Save item function
 	async function saveHandler(preventRedirect = false) {
 		const idsInCardStore = cardStore.cards.map((card) => card.id);
@@ -159,9 +172,7 @@
 		cardStore.save();
 		// LOG API RESPONSE
 		console.log(response);
-		savedCard = serializeCard(card); // Update saved item
-		// updateSaveState(); // Update save state
-		// setTimeout(() => (cardIsSaved = false), 2000);
+		cardIsSaved = true;
 
 		// If it was a new item, redirect to the new item's page
 		if (slug_id === 'new') {
@@ -171,15 +182,12 @@
 
 	function beforeUnload(event: BeforeUnloadEvent) {
 		// Prevent closing if card is not saved (with dialog)
-		return; // TODO: remove after fixing save method
 		if (!cardIsSaved) {
 			event.preventDefault();
 			// Old Chrome browsers requires returnValue to be set
 			event.returnValue = '';
 		}
 	}
-
-	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 </script>
 
 <!-- Svelte Window -->
