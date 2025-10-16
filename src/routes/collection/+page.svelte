@@ -8,7 +8,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 
-	import { items as jomy } from '$lib/stores/Items.svelte';
 	import { cardStore } from '$lib/stores/CardStore';
 	let cards = $state(cardStore.cards);
 
@@ -248,7 +247,7 @@
 							<Gamecard {card} />
 						</div>
 						<div class="backSideCard">
-							<GamecardBack item={card} />
+							<GamecardBack {card} />
 						</div>
 					</button>
 				{/each}
