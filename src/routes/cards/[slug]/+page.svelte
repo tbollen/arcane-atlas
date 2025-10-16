@@ -10,6 +10,7 @@
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api.js';
+	import USER_API from '$lib/utils/api/users_api.js';
 
 	// Item stores, types and modules
 	// import { cardStore } from '$lib/stores/CardStore';
@@ -44,6 +45,8 @@
 	let cardIsSaved: boolean = $state(false);
 	let savedCard: {} = $state({}); // Store the last saved item to compare with current item
 
+	let creatorName = $state('Unknown');
+
 	// Retrieve and overwrite the dummy item with the real item on page load
 	onMount(() => {
 		// Retrieve Item
@@ -67,6 +70,12 @@
 			alert(`${err} > Redirecting to collection page...`);
 			goto('/cards');
 		}
+
+		// Update username
+		const response = USER_API.getByID(card.creatorId as string);
+		response.then((res) => {
+			creatorName = res.user.name;
+		});
 
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
@@ -192,8 +201,7 @@
 
 						<div class="cardInfoBlock">
 							<div id="cardCreator" class="infoBlockMajor">
-								<span class="mr-1 text-sm text-muted-foreground">by</span>{card?.creatorId ||
-									'Unknown'}
+								<span class="mr-1 text-sm text-muted-foreground">by</span>{creatorName}
 							</div>
 							<div
 								id="cardDate"
