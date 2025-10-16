@@ -75,6 +75,9 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 	// if (user.canEdit !== true) return new Response('Unauthorized', { status: 401 });
 
 	let prismaCard: PrismaCard = await request.json();
+	if (user.id !== prismaCard.creatorId)
+		return new Response('Unauthorized, card belongs to another user', { status: 401 });
+
 	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
 
 	// Check if the card already exists
