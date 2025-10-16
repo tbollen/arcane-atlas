@@ -81,9 +81,10 @@
 
 	function duplicateCard(card: StoredCard) {
 		// Add to store
-		cardStore.addNew(card);
+		const newCard = cardStore.addNew(card);
+		const newCardAsPrisma = newCard.cardToPrisma();
 		// Make API call
-		CARD_API.create(card.cardToPrisma());
+		CARD_API.create(newCardAsPrisma);
 	}
 
 	import { type Item } from '$lib/types/Item.svelte';
