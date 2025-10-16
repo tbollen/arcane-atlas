@@ -101,8 +101,12 @@
 
 	let hasCheck: boolean = $derived(card.mechanics[AR_KEY] !== undefined);
 
-	let selectedSkill: (typeof characteristics)[number] | undefined = $state();
-	let selectedChar: keyof typeof skillList | undefined = $state();
+	let selectedSkill: (typeof characteristics)[number] | undefined = $state(
+		card.mechanics[AR_KEY]?.check?.skill
+	);
+	let selectedChar: keyof typeof skillList | undefined = $state(
+		card.mechanics[AR_KEY]?.check?.characteristic
+	);
 
 	function AR_updateSkill(priority?: 'char' | 'skill') {
 		if (card.mechanics[AR_KEY] == undefined) throw new Error('Arcane Rift Mechanics not found');
