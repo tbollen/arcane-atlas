@@ -155,21 +155,6 @@ export class CardStore {
 		return updatedCard;
 	}
 
-	private PUT(_id: CardID, cardUpdate: Partial<Card>): StoredCard {
-		let _card: StoredCard;
-		try {
-			_card = this.getCard(_id); // Check if the card exists
-		} catch (error) {
-			throw error;
-		}
-		// Create an updated card
-		const updatedCard = new StoredCard(_card.id, { ..._card, ...serializeCard(cardUpdate) });
-		// Update the cards array
-		const newCards = this.cards.map((card) => (card.id == _id ? updatedCard : card));
-		this.cards = newCards;
-		return updatedCard;
-	}
-
 	//////////////////
 	// DB Functions //
 	//////////////////
@@ -210,19 +195,6 @@ export class CardStore {
 		const newCard = this.POST(card);
 		// Save changes
 		this.cache();
-		// Return the new card (for optional further processing)
-		return newCard;
-	}
-
-	private POST(card?: Partial<Card>): StoredCard {
-		// Create a new ID
-		const newId = this.returnUniqueId();
-		// Instantiate a new card
-		const newCard = new StoredCard(newId, card);
-		// Add the new card to the store
-		this.cards = [...this.cards, newCard];
-		// Update the idSet
-		this.idSet.add(newId);
 		// Return the new card (for optional further processing)
 		return newCard;
 	}
@@ -279,28 +251,63 @@ export class CardStore {
 		} while (this.idSet.has(newId));
 		return newId;
 	}
+
 	// Private SUDO functions
+	// Includes API calls for DB manipulation
+
+	// DELETE A CARD (reference by ID)
 	private DELETE(_id: CardID) {
 		let _idSet = this.idSet;
-		let _items = this.cards;
+		let _cards = this.cards;
 		if (this.cards.length < 2) {
 			alert('Cannot destroy last item');
 			throw new Error('Cannot destroy last item');
 		}
 		try {
-			// Remove item from Items
-			const _targetItem = this.getCard(_id);
-			_items = _items.filter((item) => item.id !== _targetItem.id);
+			// Remove card from Cards
+			const _targetCard = this.getCard(_id);
+			_cards = _cards.filter((item) => item.id !== _targetCard.id); //Filter out the deleted card
 			// Update idSet
 			if (!_idSet.has(_id)) return console.error(`ID (${_id}) not found in idSet`);
 			_idSet.delete(_id);
 			// Update Items
-			this.cards = _items;
+			this.cards = _cards;
 			this.idSet = _idSet;
 		} catch (error) {
 			// If item not found, re-throw error
 			console.error(error);
 		}
+	}
+
+	// CREATE A NEW CARD
+	private POST(card?: Partial<Card>): StoredCard {
+		// Create a new ID
+		const newId = this.returnUniqueId();
+		// Instantiate a new card
+		const newCard = new StoredCard(newId, card);
+		// Add the new card to the store
+		this.cards = [...this.cards, newCard];
+		// Update the idSet
+		this.idSet.add(newId);
+		// Return the new card (for optional further processing)
+		return newCard;
+	}
+
+	// UPDATE A CARD (reference by ID)
+	private PUT(_id: CardID, cardUpdate: Partial<Card>): StoredCard {
+		let _card: StoredCard;
+		try {
+			_card = this.getCard(_id); // Check if the card exists
+		} catch (error) {
+			throw error;
+		}
+		// Create an updated card
+		const updatedCard = new StoredCard(_card.id, { ..._card, ...serializeCard(cardUpdate) });
+		// Update the cards array
+		const newCards = this.cards.map((card) => (card.id == _id ? updatedCard : card));
+		this.cards = newCards;
+		// Return the updated card (for optional further processing)
+		return updatedCard;
 	}
 }
 
