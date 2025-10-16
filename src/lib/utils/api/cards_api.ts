@@ -14,9 +14,9 @@ const CARD_API = {
 		const res = await fetch(API_BASE, { method: 'PUT', body: JSON.stringify(card) });
 		return await res.json();
 	},
-	async delete(card: PrismaCard): Promise<{ success: boolean }> {
+	async delete(cards: PrismaCard[]): Promise<{ success: boolean }> {
 		logTrace('delete');
-		const res = await fetch(API_BASE, { method: 'DELETE', body: JSON.stringify(card) });
+		const res = await fetch(API_BASE, { method: 'DELETE', body: JSON.stringify(cards) });
 		return await res.json();
 	},
 	async get(): Promise<{ success: boolean }> {

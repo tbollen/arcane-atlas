@@ -97,7 +97,7 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 /**
  * DELETE /api/cards
  *
- * Deletes a card for the current user
+ * Deletes a card for the current user. Can delete multiple cards!
  * @returns {Promise<Response>} - Promise of Response object
  */
 export const DELETE: RequestHandler = async ({ locals, request }) => {
@@ -107,17 +107,25 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 	// TODO: add to schema and uncomment
 	// if (user.canDelete !== true) return new Response('Unauthorized', { status: 401 });
 
-	let prismaCard: PrismaCard = await request.json();
+	let prismaCards: PrismaCard[] = await request.json();
 	// Check if the user is allowed to delete this card
 	// TODO: add to schema and uncomment
 	// if (user.isAdmin !== true && prismaCard.creatorId !== user.id) return new Response('Unauthorized', { status: 401 });
 
-	// Check if the card already exists
-	const exists = await db.card.findUnique({ where: { id: prismaCard.id } });
-	if (!exists) return new Response('Card does not exist', { status: 400 });
+	const uniqueIds = prismaCards.map((card) => card.id);
+	const cardsToDelete = await db.card.findMany({
+		where: { id: { in: uniqueIds }, creatorId: user.id }
+	}); //Find all instances of the cards to be deleted
+
+	// Check if allowed
+	if (cardsToDelete.length !== uniqueIds.length)
+		return new Response(
+			'Unauthorized, some cards does not belong to user or do not exist in database',
+			{ status: 401 }
+		);
 
 	// Delete in DB
-	await db.card.delete({ where: { id: prismaCard.id } });
+	await db.card.deleteMany({ where: { id: { in: uniqueIds }, creatorId: user.id } });
 
 	return new Response(JSON.stringify({ success: true }), { status: 200 });
 };

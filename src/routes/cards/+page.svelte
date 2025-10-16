@@ -13,7 +13,12 @@
 
 	// INIT CARDSTORE
 	import { getContext, setContext } from 'svelte';
-	import { CARD_CONTEXT_KEY, CardStore, StoredCard } from '$lib/core/cards/cardStore.svelte';
+	import {
+		CARD_CONTEXT_KEY,
+		CardStore,
+		StoredCard,
+		type CardID
+	} from '$lib/core/cards/cardStore.svelte';
 
 	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
 	let cardStore: CardStore = cardStoreContext;
@@ -33,7 +38,7 @@
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { expoOut } from 'svelte/easing';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { base } from '$app/paths';
 
 	// Selected Items
@@ -41,7 +46,13 @@
 
 	let imageView: boolean = $state(false);
 
-	// Functions
+	///////////////
+	// FUNCTIONS //
+	///////////////
+
+	function forceUIUpdate() {
+		invalidateAll(); //Trick to reload context (which gets data from API and context model)
+	}
 
 	function toggleCardSelection(id: string) {
 		console.debug(
@@ -66,7 +77,23 @@
 		$selectedItems.delete(card.id); // Remove ID from the selectedItems set
 		$selectedItems = $selectedItems; // Force update
 		// Make API call
-		CARD_API.delete(card.cardToPrisma());
+		CARD_API.delete([card.cardToPrisma()]);
+	}
+
+	function deleteSelected(ids: Set<string> = $selectedItems) {
+		// Confirmation and Store Instance
+		cardStore.destroy(Array.from(ids) as CardID[]);
+		// Get cards to delete in PrismaCard format
+		const cardsToDelete = Array.from($selectedItems).map((id) =>
+			cardStore.getCard(id).cardToPrisma()
+		);
+		// Make API call
+		CARD_API.delete(cardsToDelete);
+		// Remove from selected cards
+		$selectedItems = new Set(); // Remove ID from the selectedItems set
+		$selectedItems = $selectedItems; // Force update
+		// Force UI update
+		forceUIUpdate();
 	}
 
 	function viewCard(id: string) {
@@ -113,13 +140,6 @@
 		renderCards = true;
 	});
 
-	function deleteSelected() {
-		if (typeof window === 'undefined') throw new Error('Window is undefined');
-		// Create an array of id's from the set
-		const ids = Array.from($selectedItems);
-		// cardStore.destroy(ids);
-	}
-
 	async function printDialog() {
 		const printType = await Dialog.choose([
 			{ name: 'Single Cards', response: 'single', icon: 'mdi:cards' },
@@ -132,6 +152,7 @@
 	// SEARCHING & FILTERING //
 	///////////////////////////
 	import SearchInput from '$lib/partials/SearchInput.svelte';
+	import { render } from 'svelte/server';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
 	let filteredItems: string[] = [];
