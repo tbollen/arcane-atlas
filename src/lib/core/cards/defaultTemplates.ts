@@ -1,9 +1,11 @@
-import type { Card } from './card.svelte';
+import { Card } from './card.svelte';
 
-export const defaultTemplates: Partial<Card>[] = [
+const templatesBase = [
 	{
 		name: 'New Card',
 		type: 'Card',
 		description: 'Card Description'
 	}
 ];
+
+export const defaultTemplates: Card[] = templatesBase.map((card) => new Card(card));

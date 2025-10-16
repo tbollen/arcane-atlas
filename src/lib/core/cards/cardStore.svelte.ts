@@ -56,7 +56,7 @@ export class StoredCard extends Card {
 /////////////////////
 export class CardStore {
 	cards: StoredCard[] = $state([]);
-	templates: Partial<Card>[] = $state(defaultTemplates);
+	templates: Card[] = $state(defaultTemplates);
 	private idSet: Set<CardID> = $state(new Set());
 
 	constructor(
@@ -66,7 +66,7 @@ export class CardStore {
 			multiStore?: CardStore[];
 			store?: CardStore;
 			cards?: StoredCard[];
-			templates?: Partial<Card>[];
+			templates?: Card[];
 		} = {}
 	) {
 		// If The cards from the Prisma DB are given, use that
