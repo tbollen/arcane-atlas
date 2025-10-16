@@ -187,6 +187,8 @@
 		align-items: center;
 		justify-items: center;
 		font-size: var(--icon-size);
+		row-gap: 0.1em;
+		column-gap: 0.3em;
 	}
 
 	.name {
@@ -194,10 +196,17 @@
 		text-align: center;
 		font-weight: 500;
 		font-size: var(--name-size);
+		line-height: 1em;
+		overflow: hidden;
 		/* Position */
 		grid-column: 2;
 		/* Clear margins */
 		margin: 0;
+		/* Overflow */
+		width: 100%;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.inTextName {
@@ -217,6 +226,9 @@
 		font-weight: 400;
 		font-size: var(--subname-size);
 		color: var(--obsidian);
+		/* Spacing */
+		line-height: 1em;
+		padding-bottom: 0.4em;
 		/* Position */
 		grid-column: 2;
 		/* Clear margins */
