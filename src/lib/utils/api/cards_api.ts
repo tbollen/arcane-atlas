@@ -1,11 +1,7 @@
 // API Calls for the cards
 const API_BASE = '/api/cards';
 import type { card as PrismaCard } from '@prisma/client';
-
-function logTrace(msg: string) {
-	console.debug(`CARD_API call: ${msg}`);
-	console.trace();
-}
+import { logTrace } from '../debug/logtrace';
 
 const CARD_API = {
 	async create(card: PrismaCard): Promise<{ success: boolean }> {
