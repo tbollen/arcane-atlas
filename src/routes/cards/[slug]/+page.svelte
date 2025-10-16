@@ -72,10 +72,14 @@
 		}
 
 		// Update username
-		const response = USER_API.getByID(card.creatorId as string);
-		response.then((res) => {
-			creatorName = res.user.name;
-		});
+		if (card?.creatorId) {
+			const response = USER_API.getByID(card.creatorId as string);
+			response.then((res) => {
+				creatorName = res.user.name;
+			});
+		} else {
+			creatorName = data.user?.name || 'ERROR';
+		}
 
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
