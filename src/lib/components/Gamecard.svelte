@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Import Stored Card type
 	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
+	import type { Card } from '$lib/core/cards/card.svelte';
 	//
 
 	// Card Components
@@ -15,7 +16,7 @@
 	// Update the item description for renderering
 	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
 	interface Props {
-		card: StoredCard;
+		card: StoredCard | Card;
 		print?: boolean;
 	}
 
@@ -31,6 +32,7 @@
 
 	// Arcane Rift specific functions
 	import { AR_KEY } from '$lib/system/gameSystems';
+	import type { C } from 'vitest/dist/reporters-w_64AS5f.js';
 	let hasArcaneRift: boolean = $derived(_card.systems.includes(AR_KEY));
 	// Check if the item has a skillCheck
 	let hasSkillCheck: boolean = $derived(

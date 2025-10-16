@@ -1,8 +1,9 @@
 <script lang="ts">
 	import '$lib/styles/cardStyle.css';
+	import { Card } from '$lib/core/cards/card.svelte';
 	import { StoredCard } from '$lib/core/cards/cardStore.svelte';
 	interface Props {
-		card: StoredCard;
+		card: StoredCard | Card;
 		nameOnBack?: boolean;
 	}
 
