@@ -47,7 +47,7 @@
 
 		{
 			name: 'Cards',
-			path: 'collection',
+			path: 'cards',
 			icon: 'mdi:cards'
 			// dropdown: [
 			// 	{
