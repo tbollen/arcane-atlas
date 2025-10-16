@@ -32,7 +32,6 @@
 
 	// Arcane Rift specific functions
 	import { AR_KEY } from '$lib/system/gameSystems';
-	import type { C } from 'vitest/dist/reporters-w_64AS5f.js';
 	let hasArcaneRift: boolean = $derived(_card.systems.includes(AR_KEY));
 	// Check if the item has a skillCheck
 	let hasSkillCheck: boolean = $derived(
