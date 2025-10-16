@@ -8,8 +8,26 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 
-	import { cardStore } from '$lib/stores/CardStore';
-	let cards = $state(cardStore.cards);
+	// API
+	import CARD_API from '$lib/utils/api/cards_api';
+
+	// INIT CARDSTORE
+	import { getContext, setContext } from 'svelte';
+	import { CARD_CONTEXT_KEY, CardStore, StoredCard } from '$lib/core/cards/cardStore.svelte';
+
+	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
+	let cardStore: CardStore = cardStoreContext;
+	let renderedCards = $state(cardStore.cards); // Cards to render
+	let renderedCards_sorted = $derived(
+		renderedCards.slice().sort((a, b) => {
+			// newest, else based on name
+			try {
+				return b.createdAt.getTime() - a.createdAt.getTime();
+			} catch (error) {
+				return a.name.localeCompare(b.name);
+			}
+		})
+	);
 
 	// Svelte stuff
 	import { onMount } from 'svelte';
@@ -37,18 +55,18 @@
 		}
 		// Set last clicked card to be active
 		// cardStore.setActiveItem(id);
-		updateItems();
 		// Force svelte to recognise changes
 		$selectedItems = $selectedItems;
 	}
 
-	function deleteCard(id: string) {
+	function deleteCard(card: StoredCard) {
 		// Confirmation
-		// cardStore.destroy(id);
+		cardStore.destroy(card.id);
 		// Remove from selected cards
-		$selectedItems.delete(id);
-		$selectedItems = $selectedItems;
-		updateItems();
+		$selectedItems.delete(card.id); // Remove ID from the selectedItems set
+		$selectedItems = $selectedItems; // Force update
+		// Make API call
+		CARD_API.delete(card.cardToPrisma());
 	}
 
 	function viewCard(id: string) {
@@ -61,10 +79,11 @@
 		goto(`${base}/cards/${id}?edit=1`);
 	}
 
-	function duplicateCard(id: string) {
-		const baseCard = cardStore.getCard(id);
-		cardStore.addNew(baseCard);
-		updateItems();
+	function duplicateCard(card: StoredCard) {
+		// Add to store
+		cardStore.addNew(card);
+		// Make API call
+		CARD_API.create(card.cardToPrisma());
 	}
 
 	import { type Item } from '$lib/types/Item.svelte';
@@ -76,11 +95,8 @@
 	}
 
 	function addNew() {
+		// does not "create" the card in the data, just navigates to the editor
 		goto(`${base}/cards/new?edit=1`);
-	}
-
-	function updateItems() {
-		// cardStore = cardStore;
 	}
 
 	// UI
@@ -111,9 +127,9 @@
 		if (printType === null) return;
 		goto(`${base}/print?printMode=${printType}`);
 	}
-
-	// SEARCHING
-
+	///////////////////////////
+	// SEARCHING & FILTERING //
+	///////////////////////////
 	import SearchInput from '$lib/partials/SearchInput.svelte';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
@@ -134,11 +150,12 @@
 		}
 		// Set _items.items to only include the items that match the search term
 		if (filteredItems.length === 0) {
-			cards = cardStore.cards;
+			renderedCards = cardStore.cards;
 		} else {
-			cards = cardStore.cards.filter((card) => filteredItems.includes(card.id));
+			renderedCards = cardStore.cards.filter((card) => filteredItems.includes(card.id));
 		}
 	});
+	/////////////////////////
 </script>
 
 <main>
@@ -252,7 +269,7 @@
 					</button>
 				{/each}
 			{/if}
-			{#each cards as card}
+			{#each renderedCards_sorted as card}
 				<button
 					class="cardInViewer"
 					class:imageView
@@ -299,7 +316,7 @@
 							title="Duplicate Card"
 							onclick={(e) => {
 								e.stopPropagation();
-								duplicateCard(card.id);
+								duplicateCard(card);
 							}}
 						>
 							<Icon icon="mdi:content-copy" />
@@ -311,7 +328,7 @@
 							color="threat"
 							onclick={(e) => {
 								e.stopPropagation();
-								deleteCard(card.id);
+								deleteCard(card);
 							}}
 						>
 							<Icon icon="mdi:trash" />
