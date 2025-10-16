@@ -4,67 +4,117 @@ import { StoredCard, type CardID } from '$lib/core/cards/cardStore.svelte';
 import type { card as PrismaCard } from '@prisma/client';
 import { db } from '$lib/server/db';
 
-type CardPayload = {
+export type CardPayload = {
 	action: 'create' | 'update' | 'delete';
 	card: PrismaCard;
 };
 
+/////////////////
+// API Methods //
+/////////////////
+
+/**
+ * GET /api/cards
+ *
+ * Retrieves all cards for the current user
+ * @returns {Promise<Response>} - Promise of Response object
+ */
+
+export const GET: RequestHandler = async ({ locals }) => {
+	const user = locals.user;
+	if (!user) return new Response('Unauthorized', { status: 401 });
+	// TODO: add to schema and uncomment
+	// if (user.canView !== true) return new Response('Unauthorized', { status: 401 });
+
+	const cards = await db.card.findMany(); // TODO: add filter for user
+	return new Response(JSON.stringify({ success: true, cards }), { status: 200 });
+};
+
+/**
+ * POST /api/cards
+ *
+ * Creates a new card for the current user
+ * @returns {Promise<Response>} - Promise of Response object
+ */
 export const POST: RequestHandler = async ({ locals, request }) => {
 	// ✅ ensure user is logged in
 	const user = locals.user;
 	if (!user) return new Response('Unauthorized', { status: 401 });
+	// TODO: add to schema and uncomment
+	// if (user.canCreate !== true) return new Response('Unauthorized', { status: 401 });
 
-	// Parse JSON
-	const payload: unknown = await request.json();
-	if (
-		typeof payload !== 'object' ||
-		payload === null ||
-		!('action' in payload) ||
-		!('card' in payload)
-	)
-		return new Response('Invalid payload', { status: 400 });
+	// Get and prepare request
+	let prismaCard: PrismaCard = await request.json();
+	prismaCard.creatorId = user.id; // Override creator with logged in user
+	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
+	prismaCard.createdAt = new Date(); // Override createdAt (fallback)
 
-	// Destructuring
-	const { action, card } = payload as CardPayload;
-	// Rehydrate to use functions
-	const _card = new StoredCard(card.id as CardID, card);
+	// Check if the card already exists
+	const exists = await db.card.findUnique({ where: { id: prismaCard.id } });
+	if (exists) return new Response('Card already exists', { status: 400 });
 
-	// Ensure the logged-in user owns the card (for update/delete)
-	if (_card.creatorId !== user.id && _card.creatorId !== null) {
-		return new Response('Forbidden', { status: 403 });
-	}
-
-	try {
-		const match = await db.card.findUnique({ where: { id: _card.id } });
-		// Perform Action
-		if (action === 'create') {
-			// Check if the card already exists
-			if (match !== null) return new Response('Card already exists', { status: 400 });
-			// @ts-expect-error // TODO: check and change if necessary!!
-			await db.card.create({ data: _card.cardToPrisma() });
-			// END
-		} else if (action === 'update') {
-			if (match === null) return new Response('Card not found', { status: 404 });
-			await db.card.update({
-				where: { id: _card.id },
-				// @ts-expect-error // TODO: check and change if necessary!!
-				data: { ..._card.cardToPrisma(), updatedAt: new Date() }
-			});
-		} else if (action === 'delete') {
-			if (match === null) return new Response('Card not found', { status: 404 });
-			await db.card.delete({ where: { id: _card.id } });
-		} else {
-			return new Response('Invalid action', { status: 400 });
-		}
-
-		return new Response(JSON.stringify({ success: true }), { status: 200 });
-	} catch (err) {
-		console.error(err);
-		return new Response('Database error', { status: 500 });
-	}
+	// Create in DB
+	await db.card.create({
+		//@ts-expect-error => MAKE SURE PRISMA CARD IS VALID
+		data: prismaCard
+	});
+	return new Response(JSON.stringify({ success: true, prismaCard }), { status: 201 });
 };
 
-export const GET: RequestHandler = async () => {
-	const cards = await db.card.findMany();
-	return new Response(JSON.stringify(cards), { status: 200 });
+/**
+ * PUT /api/cards
+ *
+ * Updates a card for the current user
+ * @returns {Promise<Response>} - Promise of Response object
+ */
+export const PUT: RequestHandler = async ({ locals, request }) => {
+	// ✅ ensure user is logged in
+	const user = locals.user;
+	if (!user) return new Response('Unauthorized', { status: 401 });
+	// TODO: add to schema and uncomment
+	// if (user.canEdit !== true) return new Response('Unauthorized', { status: 401 });
+
+	let prismaCard: PrismaCard = await request.json();
+	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
+
+	// Check if the card already exists
+	const exists = await db.card.findUnique({ where: { id: prismaCard.id } });
+	if (!exists) return new Response('Card does not exist', { status: 400 });
+
+	// Update in DB
+	await db.card.update({
+		where: { id: prismaCard.id },
+		//@ts-expect-error => MAKE SURE PRISMA CARD IS VALID
+		data: prismaCard
+	});
+
+	return new Response(JSON.stringify({ success: true, prismaCard }), { status: 200 });
+};
+
+/**
+ * DELETE /api/cards
+ *
+ * Deletes a card for the current user
+ * @returns {Promise<Response>} - Promise of Response object
+ */
+export const DELETE: RequestHandler = async ({ locals, request }) => {
+	// ✅ ensure user is logged in
+	const user = locals.user;
+	if (!user) return new Response('Unauthorized', { status: 401 });
+	// TODO: add to schema and uncomment
+	// if (user.canDelete !== true) return new Response('Unauthorized', { status: 401 });
+
+	let prismaCard: PrismaCard = await request.json();
+	// Check if the user is allowed to delete this card
+	// TODO: add to schema and uncomment
+	// if (user.isAdmin !== true && prismaCard.creatorId !== user.id) return new Response('Unauthorized', { status: 401 });
+
+	// Check if the card already exists
+	const exists = await db.card.findUnique({ where: { id: prismaCard.id } });
+	if (!exists) return new Response('Card does not exist', { status: 400 });
+
+	// Delete in DB
+	await db.card.delete({ where: { id: prismaCard.id } });
+
+	return new Response(JSON.stringify({ success: true }), { status: 200 });
 };
