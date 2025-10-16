@@ -18,8 +18,8 @@
 
 	// Init cardStore and set context
 	const dbCards = data.dbCards as PrismaCard[];
-	const db_cardStore = new CardStore({ prisma: dbCards });
-	setContext(CARD_CONTEXT_KEY, db_cardStore);
+	const db_cardStore = new CardStore({ prisma: dbCards }); //TODO: add localstorage fallback
+	setContext<CardStore>(CARD_CONTEXT_KEY, db_cardStore);
 </script>
 
 {@render children?.()}
