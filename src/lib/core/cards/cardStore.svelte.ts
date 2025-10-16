@@ -13,7 +13,7 @@ import { Card } from '$lib/core/cards/card.svelte';
 import { defaultTemplates } from '$lib/core/cards/defaultTemplates';
 
 // Shorthand for card id
-type CardID = Prefixed_UUID<'card'>;
+export type CardID = Prefixed_UUID<'card'>;
 
 // StoredCard Class (Card with ID)
 export class StoredCard extends Card {
@@ -23,6 +23,29 @@ export class StoredCard extends Card {
 		super(card);
 		if (id === 'new') id = generatePrefixedUUID('card');
 		this.id = id;
+	}
+
+	public cardToPrisma(): PrismaCard {
+		const _card = this;
+		return {
+			id: _card.id,
+			creatorId: _card.creatorId ?? '',
+			createdAt: _card.createdAt,
+			updatedAt: _card.updatedAt,
+			userIds: _card.userIds,
+			campaignIds: _card.campaignIds,
+			characterIds: _card.characterIds,
+			name: _card.name,
+			type: _card.type,
+			subtitle: _card.subtitle ?? '',
+			icon: _card.icon ?? '',
+			description: _card.description,
+			image: _card.image,
+			stylePreset: _card.stylePreset,
+			style: _card.style,
+			systems: _card.systems,
+			mechanics: _card.mechanics
+		};
 	}
 }
 
@@ -172,25 +195,7 @@ export class CardStore {
 	// Prepare for Prisma (MAPPING!!)
 	cardToPrisma(id: CardID): PrismaCard {
 		const _card = this.getCard(id);
-		return {
-			id: _card.id,
-			creatorId: _card.creatorId ?? '',
-			createdAt: _card.createdAt,
-			updatedAt: _card.updatedAt,
-			userIds: _card.userIds,
-			campaignIds: _card.campaignIds,
-			characterIds: _card.characterIds,
-			name: _card.name,
-			type: _card.type,
-			subtitle: _card.subtitle ?? '',
-			icon: _card.icon ?? '',
-			description: _card.description,
-			image: _card.image,
-			stylePreset: _card.stylePreset,
-			style: _card.style,
-			systems: _card.systems,
-			mechanics: _card.mechanics
-		};
+		return _card.cardToPrisma();
 	}
 
 	/////////////////////
@@ -298,8 +303,8 @@ export class CardStore {
 }
 
 // SERIALIZING FOR CARDS
-export function serializeCard(card: StoredCard | Partial<StoredCard>): JSON {
-	const json = clone({
+export function serializeCard(card: StoredCard | Partial<StoredCard>): Object {
+	const obj = clone({
 		id: clone(card?.id),
 		creatorId: clone(card.creatorId),
 		createdAt: clone(card.createdAt),
@@ -317,5 +322,5 @@ export function serializeCard(card: StoredCard | Partial<StoredCard>): JSON {
 		style: clone(card.style),
 		mechanics: clone(card.mechanics)
 	});
-	return json;
+	return obj;
 }
