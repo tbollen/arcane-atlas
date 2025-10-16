@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Needed types and classes for cardStore
 	import type { card as PrismaCard } from '@prisma/client';
-	import { CardStore } from '$lib/core/cards/cardStore.svelte';
+	import { CardStore, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
 
 	// Context stuff for Svelte (to access cardStore in children)
 	import { setContext } from 'svelte';
@@ -19,7 +19,7 @@
 	// Init cardStore and set context
 	const dbCards = data.dbCards as PrismaCard[];
 	const db_cardStore = new CardStore({ prisma: dbCards });
-	setContext('db_cardStore', db_cardStore);
+	setContext(CARD_CONTEXT_KEY, db_cardStore);
 </script>
 
 {@render children?.()}

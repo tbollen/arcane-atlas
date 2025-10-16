@@ -10,7 +10,7 @@
 
 	// Item stores, types and modules
 	import { cardStore } from '$lib/stores/CardStore';
-	import { StoredCard } from '$lib/core/cards/cardStore.svelte';
+	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
 
 	// Components and Partials
 	import MainLoader from '$lib/partials/MainLoader.svelte';
@@ -26,6 +26,11 @@
 	let isNewCard = $derived(slug_id === 'new');
 
 	const { data } = $props();
+
+	/////////////////////////
+	// DATA INITIALIZATION //
+	/////////////////////////
+	import { getContext } from 'svelte';
 
 	// Data getting (card and cardstore)
 	// Initialize item on page load, use a dummy item for init only!!
