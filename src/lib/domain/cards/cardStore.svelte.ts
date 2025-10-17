@@ -6,11 +6,11 @@ import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 // Prisma Schema Types
 import { type card as PrismaCard } from '@prisma/client';
 
-import { Card } from '$lib/core/cards/card.svelte';
+import { Card } from '$lib/domain/cards/card.svelte';
 // import type { Card as PrismaCard } from '@prisma/client';
 
 // Import defaults
-import { defaultTemplates } from '$lib/core/cards/defaultTemplates';
+import { defaultTemplates } from '$lib/domain/cards/defaultTemplates';
 
 // Shorthand for card id
 export type CardID = Prefixed_UUID<'card'>;

@@ -15,13 +15,13 @@
 	// INIT CARDSTORE
 	import { getContext, setContext } from 'svelte';
 	import cachedTemplate from '$lib/stores/cachedTemplate';
-	import { Card } from '$lib/core/cards/card.svelte';
+	import { Card } from '$lib/domain/cards/card.svelte';
 	import {
 		CARD_CONTEXT_KEY,
 		CardStore,
 		StoredCard,
 		type CardID
-	} from '$lib/core/cards/cardStore.svelte';
+	} from '$lib/domain/cards/cardStore.svelte';
 
 	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
 	let cardStore: CardStore = cardStoreContext;

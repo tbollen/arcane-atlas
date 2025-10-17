@@ -6,7 +6,7 @@
 	import { base } from '$app/paths';
 
 	// Utils
-	import { serializeCard } from '$lib/core/cards/cardStore.svelte';
+	import { serializeCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api.js';
@@ -15,9 +15,9 @@
 	// Card stores, types and modules
 	// import { cardStore } from '$lib/stores/CardStore';
 	import cachedTemplate from '$lib/stores/cachedTemplate.js';
-	import { CardStore } from '$lib/core/cards/cardStore.svelte';
-	import { Card } from '$lib/core/cards/card.svelte.js';
-	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
+	import { CardStore } from '$lib/domain/cards/cardStore.svelte';
+	import { Card } from '$lib/domain/cards/card.svelte.js';
+	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
 
 	// Components and Partials
 	import MainLoader from '$lib/components/partials/MainLoader.svelte';

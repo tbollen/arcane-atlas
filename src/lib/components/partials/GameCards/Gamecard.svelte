@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Import Stored Card type
-	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
-	import type { Card } from '$lib/core/cards/card.svelte';
+	import { type StoredCard } from '$lib/domain/cards/cardStore.svelte';
+	import type { Card } from '$lib/domain/cards/card.svelte';
 	//
 
 	// Card Components

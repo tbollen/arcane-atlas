@@ -35,7 +35,7 @@ export const ar = {
 
 // Card Class
 // This class is used when the selected system is Arcane Rift, and extends the StoredCard class with system-specific mechanics and functionality
-// import { StoredCard } from '$lib/core/cards/cardStore.svelte';
+// import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 // export class AR_Card extends StoredCard {
 // 	constructor(card?: Partial<StoredCard> & { mechanics?: Partial<ArcaneRiftCard> }) {
 // 		// Init as usual

@@ -13,7 +13,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 
 	// Import StoredCard for reference
-	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
+	import { type StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// Popup & Tooltips
 	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
@@ -21,7 +21,7 @@
 	// Import card types for editing options
 	import { cardTypes } from '$lib/modules/cardTypes';
 	import Icon, { iconExists, loadIcon } from '@iconify/svelte';
-	import { cardStylePresets, defaultCardStyle } from '$lib/core/cards/cardStylePresets';
+	import { cardStylePresets, defaultCardStyle } from '$lib/domain/cards/cardStylePresets';
 	import { suggestedColors } from '$lib/styles/colorScheme';
 	import { availableFonts } from '$lib/types/fonts';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Needed types and classes for cardStore
 	import type { card as PrismaCard } from '@prisma/client';
-	import { CardStore, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
+	import { CardStore, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
 
 	// Context stuff for Svelte (to access cardStore in children)
 	import { setContext } from 'svelte';

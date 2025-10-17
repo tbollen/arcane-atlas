@@ -1,6 +1,6 @@
 // src/routes/api/cards/+server.ts
 import type { RequestHandler } from './$types';
-import { StoredCard, type CardID } from '$lib/core/cards/cardStore.svelte';
+import { StoredCard, type CardID } from '$lib/domain/cards/cardStore.svelte';
 import type { card as PrismaCard } from '@prisma/client';
 import { db } from '$lib/server/db';
 

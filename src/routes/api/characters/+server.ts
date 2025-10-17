@@ -1,7 +1,7 @@
 // src/routes/api/characters/+server.ts
 import type { RequestHandler } from './$types';
 import { getCharacters, addCharacter } from '$lib/temp_database';
-import { Character } from '$lib/core/character';
+import { Character } from '$lib/domain/character';
 
 export const GET: RequestHandler = async ({ url }) => {
 	// optional query params: userId and campaignId

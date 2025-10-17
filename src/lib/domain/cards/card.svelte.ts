@@ -4,7 +4,7 @@ import {
 	type CardStylePreset,
 	cardStylePresets,
 	defaultCardStyle
-} from '$lib/core/cards/cardStylePresets';
+} from '$lib/domain/cards/cardStylePresets';
 import { type IsCardType } from '$lib/modules/cardTypes';
 import { AR_KEY, GENERIC_KEY } from '$lib/system/gameSystems';
 
