@@ -20,10 +20,10 @@
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/core/cards/cardStore.svelte';
 
 	// Components and Partials
-	import MainLoader from '$lib/partials/MainLoader.svelte';
-	import Gamecard from '$lib/components/Gamecard.svelte';
-	import GamecardBack from '$lib/components/GamecardBack.svelte';
-	import ItemEditor from '$lib/partials/ItemEditor.svelte';
+	import MainLoader from '$lib/components/partials/MainLoader.svelte';
+	import Gamecard from '$lib/components/partials/GameCards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/GameCards/GamecardBack.svelte';
+	import ItemEditor from '$lib/components/partials/ItemEditor.svelte';
 	// import Button from '$lib/components/coreComponents/Button.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';

@@ -1,8 +1,8 @@
 <!-- Collection -->
 <script lang="ts">
 	// import Button from '$lib/components/coreComponents/Button.svelte';
-	import Gamecard from '$lib/components/Gamecard.svelte';
-	import GamecardBack from '$lib/components/GamecardBack.svelte';
+	import Gamecard from '$lib/components/partials/GameCards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/GameCards/GamecardBack.svelte';
 
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
@@ -143,7 +143,7 @@
 	///////////////////////////
 	// SEARCHING & FILTERING //
 	///////////////////////////
-	import SearchInput from '$lib/partials/SearchInput.svelte';
+	import SearchInput from '$lib/components/partials/SearchInput.svelte';
 	import { render } from 'svelte/server';
 	import { downloadCards } from '$lib/utils/cards/download';
 	let enableFiltering: boolean = $state(false);
