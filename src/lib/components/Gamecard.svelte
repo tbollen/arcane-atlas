@@ -13,7 +13,7 @@
 	// import card type options and icons
 	import { cardTypes } from '$lib/modules/cardTypes';
 
-	// Update the item description for renderering
+	// Update the card description for renderering
 	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
 	interface Props {
 		card: StoredCard | Card;
@@ -26,14 +26,14 @@
 
 	// Get card type, if not found use default [0]
 	let cardType = $derived(cardTypes.find((type) => type.name === _card.type) || cardTypes[0]);
-	let renderedItemDescription = $derived(renderMarkdown(_card.description));
+	let renderedCardDescription = $derived(renderMarkdown(_card.description));
 	// Check for icon
 	let iconOverride = $derived(_card?.icon && iconExists(_card.icon) ? _card.icon : undefined);
 
 	// Arcane Rift specific functions
 	import { AR_KEY } from '$lib/system/gameSystems';
 	let hasArcaneRift: boolean = $derived(_card.systems.includes(AR_KEY));
-	// Check if the item has a skillCheck
+	// Check if the card has a skillCheck
 	let hasSkillCheck: boolean = $derived(
 		hasArcaneRift &&
 			_card.mechanics[AR_KEY]?.check?.characteristic !== undefined &&
@@ -82,7 +82,7 @@
 		style="font-size: {_card.style.fontsize.text}pt; font-family: '{_card.style.font
 			.text}', 'Gotham', sans-serif;"
 	>
-		{@html renderedItemDescription}
+		{@html renderedCardDescription}
 	</p>
 
 	<!-- ARCANE RIFT MECHANICS -->

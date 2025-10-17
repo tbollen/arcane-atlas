@@ -43,8 +43,8 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { base } from '$app/paths';
 
-	// Selected Items
-	import { selectedItems } from '$lib/stores/selectedItems';
+	// Selected Cards
+	import { selectedCardIds } from '$lib/stores/selectedCardIds';
 
 	let imageView: boolean = $state(false);
 
@@ -58,18 +58,16 @@
 
 	function toggleCardSelection(id: CardID) {
 		console.debug(
-			`${!$selectedItems.has(id) ? 'added' : 'removed'} card selection: ${id}`,
-			$selectedItems
+			`${!$selectedCardIds.has(id) ? 'added' : 'removed'} card selection: ${id}`,
+			$selectedCardIds
 		);
-		if ($selectedItems.has(id)) {
-			$selectedItems.delete(id);
+		if ($selectedCardIds.has(id)) {
+			$selectedCardIds.delete(id);
 		} else {
-			$selectedItems.add(id);
+			$selectedCardIds.add(id);
 		}
-		// Set last clicked card to be active
-		// cardStore.setActiveItem(id);
 		// Force svelte to recognise changes
-		$selectedItems = $selectedItems;
+		$selectedCardIds = $selectedCardIds;
 	}
 
 	function deleteCard(card: StoredCard) {
@@ -77,17 +75,17 @@
 		// Confirmation
 		cardStore.destroy(card.id);
 		// Remove from selected cards
-		$selectedItems.delete(card.id); // Remove ID from the selectedItems set
-		$selectedItems = $selectedItems; // Force update
+		$selectedCardIds.delete(card.id); // Remove ID from the selected set
+		$selectedCardIds = $selectedCardIds; // Force update
 		// Make API call
 		CARD_API.delete([prismaCard]);
 	}
 
-	function deleteSelected(ids: Set<CardID> = $selectedItems) {
+	function deleteSelected(ids: Set<CardID> = $selectedCardIds) {
 		const cardIds = Array.from(ids);
 		// Get cards to delete in PrismaCard format
 		// NOTE: first, before actually removing them from the store!!
-		const cardsToDelete = Array.from($selectedItems).map((id) =>
+		const cardsToDelete = Array.from($selectedCardIds).map((id) =>
 			cardStore.getCard(id).cardToPrisma()
 		);
 		// Confirmation and remove from cached Store Instance
@@ -95,8 +93,8 @@
 		// Make API call
 		CARD_API.delete(cardsToDelete);
 		// Remove from selected cards
-		$selectedItems.clear(); // Remove ID from the selectedItems set
-		$selectedItems = $selectedItems; // Force update
+		$selectedCardIds.clear(); // Remove ID from the selected cards set
+		$selectedCardIds = $selectedCardIds; // Force update
 		// Force UI update
 		forceUIUpdate();
 	}
@@ -159,11 +157,11 @@
 	import { downloadCards } from '$lib/utils/cards/download';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
-	let filteredItems: string[] = [];
+	let filteredCards: string[] = [];
 	$effect(() => {
 		if (enableFiltering) {
 			// Filter which match name or description includes the search term
-			filteredItems = cardStore.cards
+			filteredCards = cardStore.cards
 				.filter((card) => {
 					return (
 						card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -171,13 +169,13 @@
 					);
 				})
 				// Return their ID's
-				.map((item) => item.id);
+				.map((card) => card.id);
 		}
-		// Set _items.items to only include the items that match the search term
-		if (filteredItems.length === 0) {
+		// Set rendered cards to match filter state
+		if (filteredCards.length === 0) {
 			renderedCards = cardStore.cards;
 		} else {
-			renderedCards = cardStore.cards.filter((card) => filteredItems.includes(card.id));
+			renderedCards = cardStore.cards.filter((card) => filteredCards.includes(card.id));
 		}
 	});
 	/////////////////////////
@@ -213,7 +211,7 @@
 				Show Templates</Button
 			>
 			<!-- Download -->
-			{#if $selectedItems.size > 0}{:else}
+			{#if $selectedCardIds.size > 0}{:else}
 				<Button
 					onclick={() => {
 						downloadCards(renderedCards_sorted);
@@ -224,12 +222,12 @@
 				>
 			{/if}
 		</div>
-		{#if $selectedItems.size > 0}
+		{#if $selectedCardIds.size > 0}
 			<div class="toolbarCategory">
 				<div class="toolbarLabel text-sm text-muted-foreground">
-					{$selectedItems.size} cards selected
+					{$selectedCardIds.size} cards selected
 				</div>
-				<Button variant="outline" onclick={() => ($selectedItems = new Set())}>
+				<Button variant="outline" onclick={() => ($selectedCardIds = new Set())}>
 					<Icon icon="mdi:content-copy" />
 					Deselect
 				</Button>
@@ -239,7 +237,7 @@
 				>
 				<Button
 					onclick={() => {
-						const cards = Array.from($selectedItems).map((id) => {
+						const cards = Array.from($selectedCardIds).map((id) => {
 							return cardStore.getCard(id);
 						});
 						downloadCards(cards);
@@ -270,7 +268,7 @@
 			</div>
 			<Button
 				variant="advanced"
-				onclick={() => console.log('Serialized Items: ', cardStore.serialize())}
+				onclick={() => console.log('Serialized Cards: ', cardStore.serialize())}
 			>
 				<Icon icon="mdi:code-json" />
 				Serialize</Button
@@ -314,7 +312,7 @@
 				<button
 					class="cardInViewer"
 					class:imageView
-					class:isSelected={$selectedItems.has(card.id)}
+					class:isSelected={$selectedCardIds.has(card.id)}
 					id={card.id}
 					onclick={() => toggleCardSelection(card.id)}
 					ondblclick={() => viewCard(card.id)}
@@ -386,7 +384,7 @@
 		</section>
 	{/if}
 	<section id="printSelected">
-		{#each $selectedItems as sc}{/each}
+		{#each $selectedCardIds as sc}{/each}
 	</section>
 </main>
 

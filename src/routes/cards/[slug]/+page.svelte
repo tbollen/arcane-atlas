@@ -12,7 +12,7 @@
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import USER_API from '$lib/utils/api/users_api.js';
 
-	// Item stores, types and modules
+	// Card stores, types and modules
 	// import { cardStore } from '$lib/stores/CardStore';
 	import cachedTemplate from '$lib/stores/cachedTemplate.js';
 	import { CardStore } from '$lib/core/cards/cardStore.svelte';
@@ -41,7 +41,7 @@
 	const cardStore = getContext<CardStore>(CARD_CONTEXT_KEY);
 
 	// Data getting (card and cardstore)
-	// Initialize item on page load, use a dummy item for init only!!
+	// Initialize card on page load, use a dummy card ('new') for init only!!
 	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
 
 	let creatorName = $state('Unknown');
@@ -61,12 +61,12 @@
 		cardIsSaved = false;
 	});
 
-	// Retrieve and overwrite the dummy item with the real item on page load
+	// Retrieve and overwrite the dummy card with the real card on page load
 	onMount(() => {
-		// Retrieve Item
+		// Retrieve card
 		try {
 			if (!slug_id) throw new Error('No slug id found');
-			// If the slug_id is 'new', get the active item or redirect to collection page if none found
+			// If the slug_id is 'new', get the active card or redirect to collection page if none found
 			if (slug_id === 'new') {
 				console.debug('Creating new card...');
 				if (cachedTemplate.template) {
@@ -77,12 +77,12 @@
 				const retrievedCard = cardStore.getCard(slug_id); // Get card, may throw error
 				if (!retrievedCard) throw new Error(`No card found with id: ${slug_id}`);
 				console.debug('Retrieving card...', retrievedCard);
-				// Get item from store
+				// Get card from store
 				card = retrievedCard;
 				cardIsSaved = true;
 			}
 		} catch (err) {
-			// Redirect to collection page when item not found
+			// Redirect to collection page when card not found
 			alert(`${err} > Redirecting to collection page...`);
 			goto('/cards');
 		}
@@ -112,7 +112,7 @@
 	// FUNCTIONS FOR EDITING AND PAGE ACTIONS //
 	////////////////////////////////////////////
 
-	function newEmptyItem() {
+	function newEmptyCard() {
 		const saveFirst = window.confirm('Do you want to save before creating a New Card?');
 		if (saveFirst) {
 			// TODO: add save method and push to DB
@@ -145,34 +145,34 @@
 	}
 
 	// Printing the card (redirect to print page with only this card selected)
-	import { selectedItems } from '$lib/stores/selectedItems';
+	import { selectedCardIds } from '$lib/stores/selectedCardIds.js';
 	async function printCards() {
 		const _cardId = card.id;
 		saveHandler();
-		selectedItems.set(new Set([_cardId]));
+		selectedCardIds.set(new Set([_cardId]));
 		goto(`${base}/print`);
 	}
 
-	// Download the current item as JSON
+	// Download the current card as JSON
 	import { downloadCards } from '$lib/utils/cards/download.js';
-	function downloadItem() {
+	function downloadCard() {
 		downloadCards([card]);
 	}
 
-	// Save item function
+	// Save card function
 	async function saveHandler() {
 		let response;
-		// Create new item if new
+		// Create new card if new
 		if (isNewCard) {
-			console.debug('Saving new item...');
-			card = cardStore.addNew(card); // Add new item to store
+			console.debug('Saving new card...');
+			card = cardStore.addNew(card); // Add new card to store
 			// API CALL
 			const prismaCard = card.cardToPrisma();
 			console.debug('New prisma card:', prismaCard);
 			response = await CARD_API.create(prismaCard);
 			isNewCard = false;
 		} else {
-			console.debug('Saving existing item...');
+			console.debug('Saving existing card...');
 			cardStore.setCard(card.id, card);
 			// API CALL
 			response = await CARD_API.update(card.cardToPrisma());
@@ -182,7 +182,7 @@
 		console.log(response);
 		cardIsSaved = true;
 
-		// If it was a new item, redirect to the new item's page
+		// If it was a new card, redirect to the new card's page
 		if (slug_id === 'new') {
 			goto(`/cards/${card.id}?edit=1`);
 		}
@@ -253,7 +253,7 @@
 							<Icon icon="memory:anvil" />Advanced
 						</Button>
 						<!-- Download -->
-						<Button onclick={downloadItem} variant="outline" size="sm"
+						<Button onclick={downloadCard} variant="outline" size="sm"
 							><Icon icon="memory:download" />Download</Button
 						>
 						<!-- Print -->
@@ -299,7 +299,7 @@
 
 				<!-- New Card -->
 				{#if !isNewCard}
-					<Button onclick={newEmptyItem}><Icon icon="mdi:plus" />New Card</Button>
+					<Button onclick={newEmptyCard}><Icon icon="mdi:plus" />New Card</Button>
 				{/if}
 
 				<a class="mobileOnly" href="#editor">Go to editor</a>

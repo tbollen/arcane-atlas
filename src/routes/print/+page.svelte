@@ -1,18 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getContext, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
 	// Svelte Components
 	import Gamecard from '$lib/components/Gamecard.svelte';
 	import GamecardBack from '$lib/components/GamecardBack.svelte';
 	// Stores
-	import { items } from '$lib/stores/Items.svelte';
-	import { selectedItems } from '$lib/stores/selectedItems';
+	import { cardStore } from '$lib/stores/CardStore';
+	import { selectedCardIds } from '$lib/stores/selectedCardIds';
 	//
-	let cards = $selectedItems;
-	let cardSet: typeof items.items = $state([]);
+	let cardSet: typeof cardStore.cards = $state([]);
 	// Set Cards
-	cardSet = items.items.filter((item) => cards.has(item.id));
+	cardSet = cardStore.cards.filter((card) => $selectedCardIds.has(card.id));
 
 	// Get info from url parameter
 	const urlParams = new URLSearchParams(window.location.search);
@@ -41,7 +40,7 @@
 	);
 
 	onMount(() => {
-		console.debug('printing cards...', cards);
+		console.debug('printing cards...', $selectedCardIds);
 		setCssPage();
 		// print
 		print();
@@ -88,7 +87,7 @@
 				width: {cardWidth + cardGap}mm;
 				padding: {cardGap / 2}mm;"
 		>
-			<GamecardBack item={card} />
+			<GamecardBack {card} />
 		</div>
 	{/each}
 {:else}
@@ -100,7 +99,7 @@
 			<div class="pageMarker">{i + 1}/{cardSetSplit.length}</div>
 			{#each _cardSet as card, i}
 				<Gamecard {card} />
-				<GamecardBack item={card} />
+				<GamecardBack {card} />
 			{/each}
 		</div>
 	{/each}

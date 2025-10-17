@@ -12,7 +12,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 
-	// Ask for an StoredItem to edit
+	// Import StoredCard for reference
 	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
 
 	// Popup & Tooltips
@@ -48,7 +48,7 @@
 	import { onMount } from 'svelte';
 
 	///////////////////
-	// Get Item here //
+	// Get Card here //
 	///////////////////
 	interface Props {
 		card: StoredCard;
@@ -86,12 +86,11 @@
 		}
 	}
 
-	function updateItem() {
+	function updateCard() {
 		// Tell parent to update item
 	}
 
 	function presetToCustom() {
-		// item.stylePreset = 'custom';
 		card.useStylePreset('custom');
 	}
 
@@ -180,7 +179,7 @@
 				<Input
 					type="text"
 					id="name"
-					oninput={updateItem}
+					oninput={updateCard}
 					bind:value={card.name}
 					placeholder="Name"
 				/>

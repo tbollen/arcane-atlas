@@ -53,7 +53,7 @@ export class StoredCard extends Card {
 }
 
 /////////////////////
-// ItemStore Class //
+// CardStore Class //
 /////////////////////
 export class CardStore {
 	cards: StoredCard[] = $state([]);
@@ -96,7 +96,7 @@ export class CardStore {
 			init.templates = init.store.templates;
 		}
 
-		// Create items from given items
+		// Create cards from given cards
 		const _cardsToOVerwrite = init.cards
 			? init.cards.map((card) => new StoredCard(card.id, card)) // If cards are given, create StoredCards from this data
 			: []; // If no cards are given, create a default card with a unique ID
@@ -120,7 +120,7 @@ export class CardStore {
 		_templatesToOverwrite.forEach((template) => [...this.templates, template]); //Add no matter what, duplicates are allowed!
 
 		// Make the idSet (overwrite whatever was there before)
-		this.idSet = new Set(this.cards.map((item) => item.id));
+		this.idSet = new Set(this.cards.map((card) => card.id));
 		// After init, cache the store
 		this.cache();
 	}
@@ -234,8 +234,8 @@ export class CardStore {
 		const nameArray = _ids.map((id) => this.getCard(id).name);
 		if (!window.confirm(`Are you sure you want to delete ${nameArray.join(', ')}?`)) return;
 		if (_ids.length > 1) {
-			// If multiple items are deleted, ask if really want to delete them all
-			if (!window.confirm(`Are you really sure? Multiple items will be deleted!`)) return;
+			// If multiple cards are deleted, ask if really want to delete them all
+			if (!window.confirm(`Are you really sure? Multiple cards will be deleted!`)) return;
 		}
 		_ids.forEach((id) => this.DELETE(id));
 		// Save Changes
@@ -261,21 +261,21 @@ export class CardStore {
 		let _idSet = this.idSet;
 		let _cards = this.cards;
 		if (this.cards.length < 2) {
-			alert('Cannot destroy last item');
-			throw new Error('Cannot destroy last item');
+			alert('Cannot destroy last card');
+			throw new Error('Cannot destroy last card');
 		}
 		try {
 			// Remove card from Cards
 			const _targetCard = this.getCard(_id);
-			_cards = _cards.filter((item) => item.id !== _targetCard.id); //Filter out the deleted card
+			_cards = _cards.filter((card) => card.id !== _targetCard.id); //Filter out the deleted card
 			// Update idSet
 			if (!_idSet.has(_id)) return console.error(`ID (${_id}) not found in idSet`);
 			_idSet.delete(_id);
-			// Update Items
+			// Update Cards
 			this.cards = _cards;
 			this.idSet = _idSet;
 		} catch (error) {
-			// If item not found, re-throw error
+			// If card not found, re-throw error
 			console.error(error);
 		}
 	}
