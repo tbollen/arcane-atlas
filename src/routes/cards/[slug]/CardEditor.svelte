@@ -22,8 +22,8 @@
 	import { cardTypes } from '$lib/modules/cardTypes';
 	import Icon, { iconExists, loadIcon } from '@iconify/svelte';
 	import { cardStylePresets, defaultCardStyle } from '$lib/domain/cards/cardStylePresets';
-	import { suggestedColors } from '$lib/styles/colorScheme';
-	import { availableFonts } from '$lib/types/fonts';
+	import { suggestedColors } from '$lib/styles/script/colorScheme';
+	import { availableFonts } from '$lib/styles/script/fonts';
 
 	// Get charactersistics and skills
 	import { skillList, characteristics } from '$lib/modules/skillCheckList';

@@ -1,5 +1,5 @@
 import { type CardStyleOptions } from '$lib/utils/types/style';
-import { colorScheme } from '$lib/styles/colorScheme';
+import { colorScheme } from '$lib/styles/script/colorScheme';
 
 // Style Presets
 export const defaultCardStyle: CardStyleOptions = {
