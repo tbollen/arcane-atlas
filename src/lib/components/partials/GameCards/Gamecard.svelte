@@ -11,7 +11,7 @@
 	import Icon, { iconExists } from '@iconify/svelte';
 
 	// import card type options and icons
-	import { cardTypes } from '$lib/modules/cardTypes';
+	import { cardTypes } from '$lib/domain/cards/cardTypes';
 
 	// Update the card description for renderering
 	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';

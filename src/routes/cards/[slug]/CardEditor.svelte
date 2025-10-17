@@ -19,7 +19,7 @@
 	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
 
 	// Import card types for editing options
-	import { cardTypes } from '$lib/modules/cardTypes';
+	import { cardTypes } from '$lib/domain/cards/cardTypes';
 	import Icon, { iconExists, loadIcon } from '@iconify/svelte';
 	import { cardStylePresets, defaultCardStyle } from '$lib/domain/cards/cardStylePresets';
 	import { suggestedColors } from '$lib/styles/script/colorScheme';

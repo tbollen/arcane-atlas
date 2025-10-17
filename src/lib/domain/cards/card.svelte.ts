@@ -5,7 +5,7 @@ import {
 	cardStylePresets,
 	defaultCardStyle
 } from '$lib/domain/cards/cardStylePresets';
-import { type IsCardType } from '$lib/modules/cardTypes';
+import { type IsCardType } from '$lib/domain/cards/cardTypes';
 import { AR_KEY, GENERIC_KEY } from '$lib/system/gameSystems';
 
 // Prisma type for hydrating
