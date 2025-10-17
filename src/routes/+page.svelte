@@ -1,8 +1,4 @@
 <script lang="ts">
-	import { getImageData } from '$lib/metadata/imageAttributionList';
-
-	let firstTimeVisit = $derived(true);
-	const welcomeImage = getImageData('Pixel Art Village');
 </script>
 
 <main id="main">
