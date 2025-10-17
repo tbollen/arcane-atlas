@@ -46,10 +46,10 @@
 		print();
 		window.onafterprint = () => {
 			// go back
-			goto(`${base}/collection`);
+			goto(`${base}/cards`);
 		};
 		// go back right after printing
-		goto(`${base}/collection`);
+		goto(`${base}/cards`);
 	});
 
 	// Set css @page variables

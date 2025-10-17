@@ -7,6 +7,7 @@
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import PrintDialog from './printDialog.svelte';
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api';
@@ -118,7 +119,6 @@
 	}
 
 	import Icon from '@iconify/svelte';
-	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Card) {
 		cachedTemplate.set(base);
 		addNew();
@@ -140,15 +140,6 @@
 	onMount(() => {
 		renderCards = true;
 	});
-
-	async function printDialog() {
-		const printType = await Dialog.choose([
-			{ name: 'Single Cards', response: 'single', icon: 'mdi:cards' },
-			{ name: 'A4 (multiple)', response: 'A4', icon: 'mdi:view-grid' }
-		]);
-		if (printType === null) return;
-		goto(`${base}/print?printMode=${printType}`);
-	}
 	///////////////////////////
 	// SEARCHING & FILTERING //
 	///////////////////////////
@@ -231,10 +222,7 @@
 					<Icon icon="mdi:content-copy" />
 					Deselect
 				</Button>
-				<Button onclick={printDialog}>
-					<Icon icon="mdi:printer" />
-					Print</Button
-				>
+				<PrintDialog />
 				<Button
 					onclick={() => {
 						const cards = Array.from($selectedCardIds).map((id) => {
