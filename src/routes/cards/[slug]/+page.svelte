@@ -21,9 +21,9 @@
 
 	// Components and Partials
 	import MainLoader from '$lib/components/partials/MainLoader.svelte';
-	import Gamecard from '$lib/components/partials/GameCards/Gamecard.svelte';
-	import GamecardBack from '$lib/components/partials/GameCards/GamecardBack.svelte';
-	import ItemEditor from '$lib/components/partials/ItemEditor.svelte';
+	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
+	import CardEditor from './CardEditor.svelte';
 	// import Button from '$lib/components/coreComponents/Button.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';
@@ -276,7 +276,7 @@
 					</div>
 				</header>
 				<div id="itemEditor">
-					<ItemEditor bind:card />
+					<CardEditor bind:card />
 				</div>
 			</section>
 		{/if}

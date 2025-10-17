@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CharacterAvatar from './CharacterAvatar.svelte';
+	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
 	// Set Routes
 	import { base } from '$app/paths';
 	interface BaseRoute {

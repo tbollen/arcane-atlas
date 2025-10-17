@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
 	// Svelte Components
-	import Gamecard from '$lib/components/partials/GameCards/Gamecard.svelte';
-	import GamecardBack from '$lib/components/GamecardBack.svelte';
+	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 	// Stores
 	import { cardStore } from '$lib/stores/CardStore';
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';

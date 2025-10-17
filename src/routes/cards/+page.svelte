@@ -1,8 +1,8 @@
 <!-- Collection -->
 <script lang="ts">
 	// import Button from '$lib/components/coreComponents/Button.svelte';
-	import Gamecard from '$lib/components/partials/GameCards/Gamecard.svelte';
-	import GamecardBack from '$lib/components/partials/GameCards/GamecardBack.svelte';
+	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
