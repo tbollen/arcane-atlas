@@ -130,9 +130,9 @@ export class CardStore {
 	///////////////////
 
 	// Get Card from local Store
-	getCard(_target: CardID | StoredCard): StoredCard {
+	getCard(_target: CardID | string | StoredCard): StoredCard {
 		if (_target instanceof StoredCard) return _target; // If it's already a StoredCard, return it
-		const _card = this.cards.find((card) => card.id == _target);
+		const _card = this.cards.find((card) => card.id.toString() == _target.toString());
 		if (!_card) throw new Error(`Card with ID ${_target} not found in store!`);
 		return _card;
 	}
