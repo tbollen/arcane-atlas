@@ -22,7 +22,7 @@ export type CardPayload = {
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = locals.user;
-	if (!user) return new Response('Unauthorized', { status: 401 });
+	if (!user) return new Response('Unauthorized, client is not a logged in user', { status: 401 });
 	// TODO: add to schema and uncomment
 	// if (user.canView !== true) return new Response('Unauthorized', { status: 401 });
 
@@ -39,7 +39,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 export const POST: RequestHandler = async ({ locals, request }) => {
 	// ✅ ensure user is logged in
 	const user = locals.user;
-	if (!user) return new Response('Unauthorized', { status: 401 });
+	if (!user) return new Response('Unauthorized, client is not a logged in user', { status: 401 });
 	// TODO: add to schema and uncomment
 	// if (user.canCreate !== true) return new Response('Unauthorized', { status: 401 });
 
@@ -70,7 +70,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 export const PUT: RequestHandler = async ({ locals, request }) => {
 	// ✅ ensure user is logged in
 	const user = locals.user;
-	if (!user) return new Response('Unauthorized', { status: 401 });
+	if (!user) return new Response('Unauthorized, client is not a logged in user', { status: 401 });
 	// TODO: add to schema and uncomment
 	// if (user.canEdit !== true) return new Response('Unauthorized', { status: 401 });
 
@@ -103,7 +103,7 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 export const DELETE: RequestHandler = async ({ locals, request }) => {
 	// ✅ ensure user is logged in
 	const user = locals.user;
-	if (!user) return new Response('Unauthorized', { status: 401 });
+	if (!user) return new Response('Unauthorized, client is not a logged in user', { status: 401 });
 	// TODO: add to schema and uncomment
 	// if (user.canDelete !== true) return new Response('Unauthorized', { status: 401 });
 
