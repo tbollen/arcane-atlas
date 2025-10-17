@@ -16,7 +16,7 @@
 	import { type StoredCard } from '$lib/core/cards/cardStore.svelte';
 
 	// Popup & Tooltips
-	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
+	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
 
 	// Import card types for editing options
 	import { cardTypes } from '$lib/modules/cardTypes';

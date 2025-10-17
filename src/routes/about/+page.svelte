@@ -6,7 +6,7 @@
 
 	import dialog from '$lib/components/dialog/dialogs';
 
-	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
+	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
 	const dice = [
 		{
 			name: 'Proficiency',

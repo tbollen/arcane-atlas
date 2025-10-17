@@ -14,7 +14,7 @@
 	import { cardTypes } from '$lib/modules/cardTypes';
 
 	// Update the card description for renderering
-	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
+	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
 	interface Props {
 		card: StoredCard | Card;
 		print?: boolean;
