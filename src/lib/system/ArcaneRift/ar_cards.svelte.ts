@@ -9,7 +9,7 @@ type Aspect = {
 	description: string;
 };
 
-import { skillList, characteristics } from '$lib/modules/skillCheckList';
+import { skillList, characteristics } from '$lib/system/ArcaneRift/ar_skillCheckList';
 export type ArcaneRiftMechanics = {
 	// Arcane Rift specific mechanics here
 	aspects: Aspect[];

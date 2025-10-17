@@ -26,7 +26,7 @@
 	import { availableFonts } from '$lib/styles/script/fonts';
 
 	// Get charactersistics and skills
-	import { skillList, characteristics } from '$lib/modules/skillCheckList';
+	import { skillList, characteristics } from '$lib/system/ArcaneRift/ar_skillCheckList';
 
 	// Advanced Mode for more flexible editing
 	import { advancedMode } from '$lib/stores/advancedMode';
