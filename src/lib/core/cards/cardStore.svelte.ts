@@ -229,15 +229,15 @@ export class CardStore {
 	}
 
 	// Removing a card
-	destroy(_id: CardID | CardID[]): void {
-		if (!Array.isArray(_id)) id: _id = [_id];
-		const nameArray = _id.map((id) => this.getCard(id).name);
+	destroy(input: CardID | CardID[]): void {
+		const _ids: CardID[] = Array.isArray(input) ? input : [input];
+		const nameArray = _ids.map((id) => this.getCard(id).name);
 		if (!window.confirm(`Are you sure you want to delete ${nameArray.join(', ')}?`)) return;
-		if (_id.length > 1) {
+		if (_ids.length > 1) {
 			// If multiple items are deleted, ask if really want to delete them all
 			if (!window.confirm(`Are you really sure? Multiple items will be deleted!`)) return;
 		}
-		_id.forEach((id) => this.DELETE(id));
+		_ids.forEach((id) => this.DELETE(id));
 		// Save Changes
 		this.cache();
 	}

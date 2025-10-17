@@ -56,7 +56,7 @@
 		invalidateAll(); //Trick to reload context (which gets data from API and context model)
 	}
 
-	function toggleCardSelection(id: string) {
+	function toggleCardSelection(id: CardID) {
 		console.debug(
 			`${!$selectedItems.has(id) ? 'added' : 'removed'} card selection: ${id}`,
 			$selectedItems
@@ -82,9 +82,10 @@
 		CARD_API.delete([card.cardToPrisma()]);
 	}
 
-	function deleteSelected(ids: Set<string> = $selectedItems) {
+	function deleteSelected(ids: Set<CardID> = $selectedItems) {
+		const cardIds = Array.from(ids);
 		// Confirmation and Store Instance
-		cardStore.destroy(Array.from(ids) as CardID[]);
+		cardStore.destroy(cardIds);
 		// Get cards to delete in PrismaCard format
 		const cardsToDelete = Array.from($selectedItems).map((id) =>
 			cardStore.getCard(id).cardToPrisma()
