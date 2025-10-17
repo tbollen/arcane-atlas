@@ -160,15 +160,17 @@
 	}
 
 	// Save item function
-	async function saveHandler(preventRedirect = false) {
-		const idsInCardStore = cardStore.cards.map((card) => card.id);
+	async function saveHandler() {
 		let response;
 		// Create new item if new
 		if (isNewCard) {
 			console.debug('Saving new item...');
 			card = cardStore.addNew(card); // Add new item to store
 			// API CALL
-			response = await CARD_API.create(card.cardToPrisma());
+			const prismaCard = card.cardToPrisma();
+			console.debug('New prisma card:', prismaCard);
+			response = await CARD_API.create(prismaCard);
+			isNewCard = false;
 		} else {
 			console.debug('Saving existing item...');
 			cardStore.setCard(card.id, card);
