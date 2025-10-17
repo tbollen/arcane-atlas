@@ -73,27 +73,29 @@
 	}
 
 	function deleteCard(card: StoredCard) {
+		const prismaCard = card.cardToPrisma();
 		// Confirmation
 		cardStore.destroy(card.id);
 		// Remove from selected cards
 		$selectedItems.delete(card.id); // Remove ID from the selectedItems set
 		$selectedItems = $selectedItems; // Force update
 		// Make API call
-		CARD_API.delete([card.cardToPrisma()]);
+		CARD_API.delete([prismaCard]);
 	}
 
 	function deleteSelected(ids: Set<CardID> = $selectedItems) {
 		const cardIds = Array.from(ids);
-		// Confirmation and Store Instance
-		cardStore.destroy(cardIds);
 		// Get cards to delete in PrismaCard format
+		// NOTE: first, before actually removing them from the store!!
 		const cardsToDelete = Array.from($selectedItems).map((id) =>
 			cardStore.getCard(id).cardToPrisma()
 		);
+		// Confirmation and remove from cached Store Instance
+		cardStore.destroy(cardIds);
 		// Make API call
 		CARD_API.delete(cardsToDelete);
 		// Remove from selected cards
-		$selectedItems = new Set(); // Remove ID from the selectedItems set
+		$selectedItems.clear(); // Remove ID from the selectedItems set
 		$selectedItems = $selectedItems; // Force update
 		// Force UI update
 		forceUIUpdate();
@@ -138,7 +140,6 @@
 
 	let renderCards = $state(false);
 	onMount(() => {
-		console.error(cardStore);
 		renderCards = true;
 	});
 
@@ -159,7 +160,6 @@
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
 	let filteredItems: string[] = [];
-	console.error(cardStore);
 	$effect(() => {
 		if (enableFiltering) {
 			// Filter which match name or description includes the search term
