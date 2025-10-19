@@ -41,7 +41,7 @@ domain/
 
 4. **Naming**
 
-   - Use **PascalCase** for classes (e.g., `Card`, `Character`)
+   - Use **PascalCase** for classes and types (e.g., `Card`, `Character`)
    - Use **camelCase** for helper functions or constants.
 
 5. **Dependencies**
