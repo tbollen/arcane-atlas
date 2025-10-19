@@ -1,12 +1,8 @@
 <!-- About -->
 <script lang="ts">
 	// Test with modals
-	import Dialog from '$lib/components/dialog/Dialog.Core.svelte';
-	import Button from '$lib/components/coreComponents/Button.svelte';
 
-	import dialog from '$lib/components/dialog/dialogs';
-
-	import renderMarkdown from '$lib/modules/renderDiceIconsInText';
+	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
 	const dice = [
 		{
 			name: 'Proficiency',

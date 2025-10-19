@@ -1,7 +1,7 @@
 // Cards
 model card {
   // DB Info
-  id String @id @unique
+  id String @id @unique @default(dbgenerated("(concat('card:', gen_random_uuid()))::TEXT"))
   creatorId String
   createdAt DateTime
   updatedAt DateTime
