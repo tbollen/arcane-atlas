@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
 	// Svelte Components
-	import Gamecard from '$lib/components/Gamecard.svelte';
-	import GamecardBack from '$lib/components/GamecardBack.svelte';
+	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 	// Stores
 	import { cardStore } from '$lib/stores/CardStore';
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';
@@ -46,10 +46,10 @@
 		print();
 		window.onafterprint = () => {
 			// go back
-			goto(`${base}/collection`);
+			goto(`${base}/cards`);
 		};
 		// go back right after printing
-		goto(`${base}/collection`);
+		goto(`${base}/cards`);
 	});
 
 	// Set css @page variables

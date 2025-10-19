@@ -1,4 +1,4 @@
-import { CardStore } from '$lib/core/cards/cardStore.svelte';
+import { CardStore } from '$lib/domain/cards/cardStore.svelte';
 import { lsk, checkWebStorage } from '$lib/utils/storage/keys';
 
 // Load cardstore from local storage

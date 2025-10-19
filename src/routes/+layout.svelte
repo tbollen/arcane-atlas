@@ -2,7 +2,7 @@
 	import '../app.css';
 	// Import Style
 	import '$lib/styles/main.css';
-	import Navbar from '$lib/partials/Navbar.svelte';
+	import Navbar from '$lib/components/layout/Navbar.svelte';
 
 	interface Props {
 		children?: import('svelte').Snippet;

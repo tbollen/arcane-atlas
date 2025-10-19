@@ -1,4 +1,4 @@
-import { Card } from '$lib/core/cards/card.svelte';
+import { Card } from '$lib/domain/cards/card.svelte';
 let _cachedTemplate: Partial<Card> | undefined;
 
 const cachedTemplate = {

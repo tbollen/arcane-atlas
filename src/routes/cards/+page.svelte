@@ -1,12 +1,12 @@
 <!-- Collection -->
 <script lang="ts">
-	// import Button from '$lib/components/coreComponents/Button.svelte';
-	import Gamecard from '$lib/components/Gamecard.svelte';
-	import GamecardBack from '$lib/components/GamecardBack.svelte';
+	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
+	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import PrintDialog from './printDialog.svelte';
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api';
@@ -14,13 +14,13 @@
 	// INIT CARDSTORE
 	import { getContext, setContext } from 'svelte';
 	import cachedTemplate from '$lib/stores/cachedTemplate';
-	import { Card } from '$lib/core/cards/card.svelte';
+	import { Card } from '$lib/domain/cards/card.svelte';
 	import {
 		CARD_CONTEXT_KEY,
 		CardStore,
 		StoredCard,
 		type CardID
-	} from '$lib/core/cards/cardStore.svelte';
+	} from '$lib/domain/cards/cardStore.svelte';
 
 	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
 	let cardStore: CardStore = cardStoreContext;
@@ -118,7 +118,6 @@
 	}
 
 	import Icon from '@iconify/svelte';
-	import Dialog from '$lib/components/dialog/dialogs';
 	function createFromTemplate(base: Card) {
 		cachedTemplate.set(base);
 		addNew();
@@ -140,19 +139,10 @@
 	onMount(() => {
 		renderCards = true;
 	});
-
-	async function printDialog() {
-		const printType = await Dialog.choose([
-			{ name: 'Single Cards', response: 'single', icon: 'mdi:cards' },
-			{ name: 'A4 (multiple)', response: 'A4', icon: 'mdi:view-grid' }
-		]);
-		if (printType === null) return;
-		goto(`${base}/print?printMode=${printType}`);
-	}
 	///////////////////////////
 	// SEARCHING & FILTERING //
 	///////////////////////////
-	import SearchInput from '$lib/partials/SearchInput.svelte';
+	import SearchInput from '$lib/components/partials/SearchInput.svelte';
 	import { render } from 'svelte/server';
 	import { downloadCards } from '$lib/utils/cards/download';
 	let enableFiltering: boolean = $state(false);
@@ -231,10 +221,7 @@
 					<Icon icon="mdi:content-copy" />
 					Deselect
 				</Button>
-				<Button onclick={printDialog}>
-					<Icon icon="mdi:printer" />
-					Print</Button
-				>
+				<PrintDialog />
 				<Button
 					onclick={() => {
 						const cards = Array.from($selectedCardIds).map((id) => {

@@ -1,5 +1,5 @@
-import { serializeCard } from '$lib/core/cards/cardStore.svelte';
-import { StoredCard } from '$lib/core/cards/cardStore.svelte';
+import { serializeCard } from '$lib/domain/cards/cardStore.svelte';
+import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 export const downloadCards = (cards: StoredCard[]) => {
 	if (!cards.length) return; // If an empty array is given, do nothing

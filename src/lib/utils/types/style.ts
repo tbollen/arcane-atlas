@@ -1,5 +1,5 @@
-import { type AvailableFonts } from '$lib/types/fonts';
-import { colorScheme } from '$lib/styles/colorScheme';
+import { type AvailableFonts } from '$lib/styles/script/fonts';
+import { colorScheme } from '$lib/styles/script/colorScheme';
 
 // Color Types
 export type RGB = `rgb(${number}, ${number}, ${number})`;
