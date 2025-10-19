@@ -7,7 +7,7 @@
 import {
 	arcaneRiftMechanics,
 	type ArcaneRiftMechanics
-} from '$lib/system/ArcaneRift/ar_cards.svelte';
+} from '$lib/gameSystems/ArcaneRift/ar_cards';
 // ADD MORE WHEN MORE SYSTEMS ARE ADDED
 
 // TYPE AND CONST DEFINITIONS
@@ -45,7 +45,7 @@ export type SystemInfo = {
 /////////////////
 
 // Import system info from each system
-import { arcaneRiftSystemInfo } from '$lib/system/ArcaneRift/ar_systemInfo';
+import { arcaneRiftSystemInfo } from '$lib/gameSystems/ArcaneRift/ar_systemInfo';
 
 // Create a "generic" system without mechanics or specific functions
 const genericSystem: SystemInfo = {

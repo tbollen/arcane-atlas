@@ -26,7 +26,7 @@
 	import { availableFonts } from '$lib/styles/script/fonts';
 
 	// Get charactersistics and skills
-	import { skillList, characteristics } from '$lib/system/ArcaneRift/ar_skillCheckList';
+	import { skillList, characteristics } from '$lib/gameSystems/ArcaneRift/ar_skillCheckList';
 
 	// Advanced Mode for more flexible editing
 	import { advancedMode } from '$lib/stores/advancedMode';
@@ -58,9 +58,9 @@
 	///////////////////////////////////////
 	// Get the Game System and Mechanics //
 	///////////////////////////////////////
-	import { gameSystems, type SystemKey } from '$lib/system/gameSystems';
-	import { arcaneRiftMechanics } from '$lib/system/ArcaneRift/ar_cards.svelte';
-	import { AR_KEY } from '$lib/system/gameSystems';
+	import { gameSystems, type SystemKey } from '$lib/gameSystems';
+	import { arcaneRiftMechanics } from '$lib/gameSystems/ArcaneRift/ar_cards';
+	import { AR_KEY } from '$lib/gameSystems';
 	// TODO: make dynamic and fix. Currently this is the only system so it works fine...
 	let activeSystem: SystemKey = $state(card.systems.includes(AR_KEY) ? AR_KEY : 'generic'); //TODO: make dynamic based on a global value (store or session)
 	let activeSystemInfo = $derived(Object.keys(gameSystems).find((sysId) => sysId === activeSystem));

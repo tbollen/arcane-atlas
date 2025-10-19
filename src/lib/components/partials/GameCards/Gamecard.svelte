@@ -31,7 +31,7 @@
 	let iconOverride = $derived(_card?.icon && iconExists(_card.icon) ? _card.icon : undefined);
 
 	// Arcane Rift specific functions
-	import { AR_KEY } from '$lib/system/gameSystems';
+	import { AR_KEY } from '$lib/gameSystems';
 	let hasArcaneRift: boolean = $derived(_card.systems.includes(AR_KEY));
 	// Check if the card has a skillCheck
 	let hasSkillCheck: boolean = $derived(

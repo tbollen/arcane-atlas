@@ -1,6 +1,7 @@
 // IMPORTS
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
-import { availableGameSystems } from '$lib/system/gameSystems';
+import { gameSystems } from '$lib/gameSystems/';
+import type { keyof } from 'better-auth';
 
 // CHARACTER CLASS
 export class Campaign {
@@ -8,13 +9,9 @@ export class Campaign {
 	name: string;
 	user_ids: Prefixed_UUID<'user'>[];
 	description?: string;
-	system: (typeof availableGameSystems)[number];
+	system: keyof typeof gameSystems;
 
-	constructor(
-		user_ids: Prefixed_UUID<'user'>,
-		system: (typeof availableGameSystems)[number],
-		name?: string
-	) {
+	constructor(user_ids: Prefixed_UUID<'user'>, system: keyof typeof gameSystems, name?: string) {
 		this.id = generatePrefixedUUID('campaign');
 		this.user_ids = [];
 		this.system = system;

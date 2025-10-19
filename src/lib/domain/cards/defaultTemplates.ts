@@ -1,5 +1,5 @@
 import { Card } from './card.svelte';
-import { AR_KEY, GENERIC_KEY } from '$lib/system/gameSystems';
+import { AR_KEY, GENERIC_KEY } from '$lib/gameSystems';
 
 const templatesBase: Partial<Card>[] = [
 	{

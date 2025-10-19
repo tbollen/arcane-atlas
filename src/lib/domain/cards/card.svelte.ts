@@ -6,7 +6,7 @@ import {
 	defaultCardStyle
 } from '$lib/domain/cards/cardStylePresets';
 import { type IsCardType } from '$lib/domain/cards/cardTypes';
-import { AR_KEY, GENERIC_KEY } from '$lib/system/gameSystems';
+import { AR_KEY, GENERIC_KEY } from '$lib/gameSystems';
 
 // Prisma type for hydrating
 import { type card as PrismaCard } from '@prisma/client';
@@ -18,7 +18,7 @@ import { clone } from '$lib/utils/serializing';
 import { type Prefixed_UUID } from '$lib/utils/uuid';
 
 // Import Mechanics
-import { type Mechanics } from '$lib/system/gameSystems';
+import { type Mechanics } from '$lib/gameSystems';
 
 type System = keyof Mechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
 
