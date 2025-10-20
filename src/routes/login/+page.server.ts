@@ -101,25 +101,5 @@ export const actions: Actions = {
 		} else if (response?.ok) {
 			return message(registerForm, 'Registration successful');
 		}
-	},
-
-	loginSocial: async ({ request }) => {
-		const formData = await request.formData();
-		const provider = formData.get('provider')?.toString();
-		if (!provider) {
-			return fail(400, {
-				formResponse: { success: false, message: 'No provider given in url parameters' }
-			});
-		}
-		const response = await auth.api.signInSocial({
-			body: { provider },
-			asResponse: true
-		});
-		if (response) {
-			return { formResponse: { success: true, message: 'Login successful' } };
-		}
-		return fail(400, {
-			formResponse: { success: false, message: 'Failed to log in. Provider may not be supported' }
-		});
 	}
 };

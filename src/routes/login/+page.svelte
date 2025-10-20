@@ -21,6 +21,8 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 
+	// Auth stuff (for SSO)
+
 	// LOAD from server
 	let { data } = $props();
 
@@ -184,25 +186,26 @@
 				<Divider text="or login with" />
 
 				<!-- Social Login -->
-				<form method="POST" class="!p-0" action="?/loginSocial" use:enhance>
+				<!-- GITHUB -->
+				<div class="flex w-full flex-col gap-2">
 					<Button
 						variant="outline"
 						class="w-full"
 						type="submit"
 						formaction="?/loginSocial"
-						onclick={() => (provider = 'github')}
+						onclick={() => authClient.signIn.social({ provider: 'github' })}
 						><Icon icon="logos:github-icon" />Login with Github</Button
 					>
+					<!-- DISCORD -->
 					<Button
 						variant="outline"
 						class="w-full"
 						type="submit"
 						formaction="?/loginSocial"
-						onclick={() => (provider = 'discord')}
+						onclick={() => authClient.signIn.social({ provider: 'discord' })}
 						><Icon icon="logos:discord-icon" />Login with Discord</Button
 					>
-					<input type="hidden" name="provider" id="providerInput" value={provider} />
-				</form>
+				</div>
 			{/if}
 		</Card.Content>
 	</Card.Root>
