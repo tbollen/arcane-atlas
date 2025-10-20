@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 
 	// Navigation
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 
 	import { authClient } from '$lib/utils/auth/auth-client';
 	interface Props {
@@ -19,6 +19,7 @@
 		} catch (e) {
 			console.error(e);
 		}
+		invalidateAll(); //Trick to reload context and update Avatar and locals
 		console.log('Signed out');
 		goto('/login');
 	}
