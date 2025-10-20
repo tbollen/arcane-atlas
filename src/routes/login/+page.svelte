@@ -6,28 +6,68 @@
 	import { base } from '$app/paths';
 	import { enhance } from '$app/forms';
 
-	// Server stuff
-	import type { PageData } from './$types';
-
 	// UI Components
 	import Icon from '@iconify/svelte';
+	import Divider from '$lib/components/ui/divider/Divider.svelte';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card/';
-	import { page } from '$app/state';
+	import * as Form from '$lib/components/ui/form/';
 
-	let data: PageData = $props();
+	// Superform stuff
+	import { loginFormSchema, registerFormSchema } from './formSchema';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 
-	let formResponse = $derived(data.formResponse);
-	let user = $derived(data.user);
+	// LOAD from server
+	let { data } = $props();
+
+	///////////////////////////
+	// SUPERFORM FORMS STUFF //
+	///////////////////////////
+	// REGISTER
+	const form_register = superForm(data?.registerForm, {
+		validators: zod4Client(registerFormSchema),
+		resetForm: true,
+		delayMs: 500,
+		timeoutMs: 8000
+	});
+	const {
+		form: registerForm,
+		errors: registerErrors,
+		enhance: registerEnhance,
+		message: registerMessage,
+		delayed: registerDelayed,
+		submitting: registerSubmitting
+	} = form_register;
+
+	// LOGIN
+	const form_login = superForm(data?.loginForm, {
+		validators: zod4Client(loginFormSchema),
+		resetForm: true,
+		delayMs: 500,
+		timeoutMs: 8000
+	});
+	const {
+		form: loginForm,
+		errors: loginErrors,
+		enhance: loginEnhance,
+		message: loginMessage,
+		delayed: loginDelayed,
+		submitting: loginSubmitting
+	} = form_login;
+
+	///////////////////////
+	// END OF FORM STUFF //
+	///////////////////////
 
 	// Page param for registering / logging in
-	let showSignUp: boolean = $state(false);
-
-	$effect(() => {
-		console.error(formResponse);
-	});
+	let showRegister: boolean = $state(false);
+	// State for social provider
+	type validProviders = 'github' | 'discord'; //TODO: dynamically get
+	let provider: validProviders | undefined = $state();
 
 	let session: any;
 
@@ -38,58 +78,132 @@
 </script>
 
 <main>
-	{#if formResponse?.message}
+	<!-- {#if formResponse?.message}
 		<p>{formResponse?.success ? 'Success' : 'Error'}: {formResponse?.message}</p>
-	{/if}
+	{/if} -->
 	<Card.Root class="w-full max-w-sm">
 		<Card.Header>
-			<Card.Title>Login to your account</Card.Title>
-			<Card.Description>Enter your email below to login to your account</Card.Description>
-			<Card.Action>
-				{#if showSignUp}
-					<Button variant="link" onclick={() => (showSignUp = false)}>Sign In</Button>
-				{:else}
-					<Button variant="link" onclick={() => (showSignUp = true)}>Register</Button>
-				{/if}
-			</Card.Action>
+			{#if showRegister}
+				<Card.Title>Register a new account</Card.Title>
+				<Card.Description>Enter your email below to register a new account</Card.Description>
+				<Card.Action>
+					<Button variant="link" onclick={() => (showRegister = false)}>Sign In</Button>
+				</Card.Action>
+			{:else}
+				<Card.Title>Login to your account</Card.Title>
+				<Card.Description>Enter your email below to login to your account</Card.Description>
+				<Card.Action>
+					<Button variant="link" onclick={() => (showRegister = true)}>Register</Button>
+				</Card.Action>
+			{/if}
 		</Card.Header>
 		<Card.Content>
-			<!-- OLD FORM HERE! -->
-			<form class="!p-0" method="POST" use:enhance>
-				<div class="flex w-full flex-col gap-6">
-					{#if showSignUp}
-						<div class="grid gap-2">
-							<Label for="name">Name</Label>
-							<Input name="name" id="name" type="text" placeholder="my name" required />
-						</div>
-					{/if}
-					<div class="grid gap-2">
-						<Label for="email">Email</Label>
-						<Input name="email" id="email" type="email" placeholder="m@example.com" required />
-					</div>
-					<div class="grid gap-2">
-						<div class="flex items-center">
-							<Label for="password">Password</Label>
-							<a href="##" class="ml-auto inline-block text-sm underline-offset-4 hover:underline">
-								Forgot your password?
-							</a>
-						</div>
-						<Input name="password" id="password" type="password" required />
-					</div>
-				</div>
-				{#if showSignUp}
-					<Button type="submit" variant="bold" formaction="?/signUp" class="w-full">Register</Button
-					>
-				{:else}
-					<Button type="submit" variant="bold" formaction="?/signIn" class="w-full">Login</Button>
-					<Button variant="outline" class="w-full" type="submit" formaction="?/signInWithGoogle"
+			{#if showRegister}
+				<!-- REGISTER -->
+				<form method="POST" class="!p-0" action="?/register" use:registerEnhance>
+					<!-- Username -->
+					<Form.Field form={form_register} name="displayName" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Username</Form.Label>
+								<Input {...props} bind:value={$registerForm.displayName} />
+							{/snippet}
+						</Form.Control>
+						<Form.Description>This is your public display name.</Form.Description>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Email -->
+					<Form.Field form={form_register} name="email" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Email</Form.Label>
+								<Input {...props} bind:value={$registerForm.email} />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+
+					<!-- Password -->
+					<Form.Field form={form_register} name="password" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Password</Form.Label>
+								<Input {...props} type="password" bind:value={$registerForm.password} />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Confirm Password -->
+					<Form.Field form={form_register} name="confirmPassword" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Confirm Password</Form.Label>
+								<Input {...props} type="password" bind:value={$registerForm.confirmPassword} />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Submit -->
+					<Form.Button type="submit" variant="bold" disabled={$registerSubmitting} class="w-full">
+						{#if $registerSubmitting}
+							<Spinner />
+						{:else}Register{/if}
+					</Form.Button>
+				</form>
+			{:else}
+				<!-- LOGIN -->
+				<form method="POST" class="!p-0" action="?/login" use:loginEnhance>
+					<!-- Email -->
+					<Form.Field form={form_login} name="email" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Email</Form.Label>
+								<Input {...props} bind:value={$loginForm.email} />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Password -->
+					<Form.Field form={form_login} name="password" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Password</Form.Label>
+								<Input {...props} type="password" bind:value={$loginForm.password} />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Submit -->
+					<Form.Button type="submit" disabled={$loginSubmitting} variant="bold" class="w-full">
+						{#if $loginSubmitting}
+							<Spinner />
+						{:else}Login{/if}
+					</Form.Button>
+				</form>
+				<!-- DIVIDER -->
+				<Divider text="or login with" />
+
+				<!-- Social Login -->
+				<form method="POST" class="!p-0" action="?/loginSocial" use:enhance>
+					<Button
+						variant="outline"
+						class="w-full"
+						type="submit"
+						formaction="?/loginSocial"
+						onclick={() => (provider = 'github')}
 						><Icon icon="logos:github-icon" />Login with Github</Button
 					>
-					<Button variant="outline" class="w-full"
+					<Button
+						variant="outline"
+						class="w-full"
+						type="submit"
+						formaction="?/loginSocial"
+						onclick={() => (provider = 'discord')}
 						><Icon icon="logos:discord-icon" />Login with Discord</Button
 					>
-				{/if}
-			</form>
+					<input type="hidden" name="provider" id="providerInput" value={provider} />
+				</form>
+			{/if}
 		</Card.Content>
 	</Card.Root>
 </main>

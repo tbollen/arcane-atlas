@@ -1,90 +1,125 @@
 import type { PageServerLoad, Actions } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
+import { db } from '$lib/server/db';
+
+// Superform stuff
+import { loginFormSchema, registerFormSchema } from './formSchema';
+import { message, superValidate, fail, setError } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
 
 // TODO: get all registered emails
-const validEmails = ['thomas@example.com'];
-
-// Form stuff
-import { loginFormSchema, signupFormSchema } from './formSchema';
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-
-type FormResponse = {
-	success?: boolean;
-	message?: string;
-};
+const validEmails = ['thomas.bollen97@gmail.com', 'test@example.com'];
 
 export const load: PageServerLoad = async ({ locals }) => {
-	// optional: redirect if already logged in
+	// redirect if already logged in
 	if (locals.user) throw redirect(302, '/account');
-	const response: { formResponse: FormResponse } = {
-		formResponse: {}
+
+	const loginForm = await superValidate(zod4(loginFormSchema));
+	const registerForm = await superValidate(zod4(registerFormSchema));
+
+	// Respond superform
+	return {
+		loginForm,
+		registerForm
 	};
-	return response;
 };
 
 export const actions: Actions = {
-	signIn: async ({ request }) => {
-		const formData = await request.formData();
-		const email = formData.get('email')?.toString();
-		const password = formData.get('password')?.toString();
+	login: async ({ request }) => {
+		const loginForm = await superValidate(request, zod4(loginFormSchema));
 
-		if (!email || !password) {
-			return fail(400, { formResponse: { success: false, message: 'Missing email or password' } });
+		if (!loginForm.valid) return fail(400, { loginForm });
+
+		// Check if user exists
+		const userReference = await db.user.findUnique({ where: { email: loginForm.data.email } });
+		if (!userReference) {
+			setError(loginForm, 'email', 'User with this email is not registered');
+			return fail(400, { loginForm });
 		}
 
-		// Check if email is registered
-		if (!validEmails.includes(email ?? '')) {
-			return fail(400, { formResponse: { success: false, message: 'Email not found' } });
-		}
-		// Try login
-		const response = await auth.api.signInEmail({ body: { email, password }, asResponse: true });
-		console.log(response.ok);
-		if (response) {
-			return { formResponse: { success: true, message: 'Login successful' } };
-		}
-		return fail(400, {
-			formResponse: { success: false, message: 'Failed to log in. Invalid email or password' }
+		// Try login, checks if username exists and if password is correct
+		const response = await auth.api.signInEmail({
+			body: { email: loginForm.data.email, password: loginForm.data.password },
+			asResponse: true,
+			returnHeaders: true
 		});
+		if (response?.ok) {
+			return message(loginForm, 'Login successful');
+		} else if (response?.status === 401) {
+			setError(loginForm, 'password', 'Incorrect password');
+			return fail(400, { loginForm });
+		} else {
+			message(loginForm, 'Failed to log in');
+			return fail(400, { loginForm });
+		}
 	},
 
-	signUp: async ({ request }) => {
-		const formData = await request.formData();
-		const name = formData.get('name')?.toString();
-		const email = formData.get('email')?.toString();
-		const password = formData.get('password')?.toString();
+	register: async ({ request }) => {
+		const registerForm = await superValidate(request, zod4(registerFormSchema));
 
-		if (!name || !email || !password) {
-			return fail(400, {
-				formResponse: { success: false, message: 'Missing name, email or password' }
-			});
+		if (!registerForm.valid) return fail(400, { registerForm });
+
+		// Check if email is not already registered
+		const userReference = await db.user.findUnique({ where: { email: registerForm.data.email } });
+		if (userReference) {
+			setError(registerForm, 'email', 'User with this email is already registered');
+			return fail(400, { registerForm });
 		}
+
+		// Check if email is in allowlist
+		if (!validEmails.includes(registerForm.data.email)) {
+			setError(registerForm, 'email', 'Email not in allowlist');
+			return fail(400, { registerForm });
+		}
+
+		// Check if password and confirm password match
+		if (registerForm.data.password !== registerForm.data.confirmPassword) {
+			setError(registerForm, 'confirmPassword', 'Passwords do not match');
+			return fail(400, { registerForm });
+		}
+
 		// Try sign up
 		const response = await auth.api.signUpEmail({
-			body: { name, email, password },
+			body: {
+				name: registerForm.data.displayName,
+				email: registerForm.data.email,
+				password: registerForm.data.password
+			},
 			asResponse: true
 		});
-		if (response.ok) {
-			return { formResponse: { success: true, message: 'Sign up successful' } };
+
+		// Set error messages
+		if (response?.ok) {
+			return message(registerForm, 'Registration successful');
+		} else if (response?.status === 400) {
+			setError(registerForm, 'email', 'User with this email is already registered');
+			return fail(400, { registerForm });
+		} else if (response?.status === 409) {
+			setError(registerForm, 'email', 'Email not in allowlist');
+			return fail(400, { registerForm });
+		} else if (response?.ok) {
+			return message(registerForm, 'Registration successful');
 		}
-		return fail(400, {
-			formResponse: { success: false, message: 'Failed to sign up. Email already in use' }
-		});
 	},
 
-	signInSocial: async ({ request }) => {
+	loginSocial: async ({ request }) => {
 		const formData = await request.formData();
 		const provider = formData.get('provider')?.toString();
 		if (!provider) {
-			return fail(400, { formResponse: { success: false, message: 'Missing provider' } });
+			return fail(400, {
+				formResponse: { success: false, message: 'No provider given in url parameters' }
+			});
 		}
-		const response = await auth.api.signInSocial({ body: { provider }, asResponse: true });
+		const response = await auth.api.signInSocial({
+			body: { provider },
+			asResponse: true
+		});
 		if (response) {
 			return { formResponse: { success: true, message: 'Login successful' } };
 		}
 		return fail(400, {
-			formResponse: { success: false, message: 'Failed to log in. Invalid email or password' }
+			formResponse: { success: false, message: 'Failed to log in. Provider may not be supported' }
 		});
 	}
 };
