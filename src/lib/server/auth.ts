@@ -2,6 +2,9 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
+// Mail transporter using Resend
+import { resend } from '$lib/utils/email/resend';
+
 // dotenv for environment variables
 import 'dotenv/config';
 // Plugins
@@ -18,6 +21,18 @@ export const auth = betterAuth({
 		cookieCache: {
 			enabled: true,
 			maxAge: 60 * 5 // 5 minutes
+		}
+	},
+	emailVerification: {
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true,
+		sendVerificationEmail: async (user, url) => {
+			await resend.emails.send({
+				from: `Better Auth <2V9G2@example.com>`,
+				to: user.user.email,
+				subject: 'Verify your email',
+				html: `<p>Click <a href="${url}">here</a> to verify your email</p>`
+			});
 		}
 	},
 	// plugins: [sveltekitCookies(getRequestEvent)],
