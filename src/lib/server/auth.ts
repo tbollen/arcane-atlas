@@ -2,8 +2,9 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
-// Mail transporter using Resend
+// Mail transporter using Resend, send method lives in each email template
 import { sendVerificationEmail } from '$lib/utils/email/emailTemplates/verificationEmail';
+import { sendEmailOTP } from '$lib/utils/email/emailTemplates/emailOTP';
 
 // Method for user id generation
 import { generatePrefixedUUID } from '$lib/utils/uuid';
@@ -12,6 +13,9 @@ import { generatePrefixedUUID } from '$lib/utils/uuid';
 import 'dotenv/config';
 // Plugins
 import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { emailOTP } from 'better-auth/plugins';
+import { passkey } from 'better-auth/plugins/passkey';
+
 // Cookies for SvelteKit imports
 import { getRequestEvent } from '$app/server';
 
@@ -35,7 +39,8 @@ export const auth = betterAuth({
 	},
 	// plugins: [sveltekitCookies(getRequestEvent)],
 	emailAndPassword: {
-		enabled: true
+		enabled: true,
+		sendResetPassword: async ({ user, url }) => {}
 	},
 	socialProviders: {
 		github: {
@@ -62,5 +67,13 @@ export const auth = betterAuth({
 			}
 		}
 	},
-	plugins: [sveltekitCookies(getRequestEvent)]
+	plugins: [
+		sveltekitCookies(getRequestEvent),
+		passkey(),
+		emailOTP({
+			async sendVerificationOTP({ email, otp, type }) {
+				await sendEmailOTP({ email, otp, type });
+			}
+		})
+	]
 });
