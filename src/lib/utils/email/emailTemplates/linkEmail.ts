@@ -14,6 +14,7 @@ function linkEmail({
 	url: string;
 	welcomeMessage: string;
 }) {
+	const buttonColor = welcomeMessage.toLowerCase().includes('delet') ? '#3b82f6' : '#e80b0b'; // Color red if deletion or delete is in the subject
 	return emailWrapper({
 		username,
 		body: `
@@ -21,7 +22,7 @@ function linkEmail({
   
   <a href="${url}" target="_blank" style="
       display: inline-block;
-      background-color: #3b82f6;
+      background-color: ${buttonColor};
       color: white;
       text-decoration: none;
       padding: 0.75rem 1.5rem;
@@ -30,7 +31,7 @@ function linkEmail({
       text-align: center;
       margin-bottom: 2rem;
       ">
-    Verify Email
+    Verify
   </a>
 
   <p style="color: #6b7280; font-size: 0.875rem;">
