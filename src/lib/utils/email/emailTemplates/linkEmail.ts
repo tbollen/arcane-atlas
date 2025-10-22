@@ -5,11 +5,19 @@ import { emailWrapper } from './emailWrapper';
 const domain = process.env.RESEND_DOMAIN as string;
 
 // TODO: Replace h1 with .jpeg banner (from url, not local!!)
-function verificationEmail({ username, url }: { username: string; url: string }) {
+function linkEmail({
+	username,
+	url,
+	welcomeMessage
+}: {
+	username: string;
+	url: string;
+	welcomeMessage: string;
+}) {
 	return emailWrapper({
 		username,
 		body: `
-  <p style="margin-bottom: 2rem;">Thank you for signing up! Please verify your email address by clicking the button below:</p>
+  <p style="margin-bottom: 2rem;">${welcomeMessage}</p>
   
   <a href="${url}" target="_blank" style="
       display: inline-block;
@@ -36,19 +44,23 @@ function verificationEmail({ username, url }: { username: string; url: string })
 	});
 }
 
-export async function sendVerificationEmail({
+export async function sendLinkEmail({
 	username,
+	welcomeMessage,
 	email,
-	url
+	url,
+	subject
 }: {
 	username: string;
+	welcomeMessage: string;
 	email: string;
 	url: string;
+	subject: string;
 }) {
 	resend.emails.send({
 		from: `Arcane Companion <noreply@${domain}>`,
 		to: email,
-		subject: 'Please verify your email',
-		html: verificationEmail({ username, url })
+		subject,
+		html: linkEmail({ welcomeMessage, username, url })
 	});
 }

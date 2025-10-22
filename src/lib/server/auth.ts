@@ -3,7 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
 // Mail transporter using Resend, send method lives in each email template
-import { sendVerificationEmail } from '$lib/utils/email/emailTemplates/verificationEmail';
+import { sendLinkEmail } from '$lib/utils/email/emailTemplates/linkEmail';
 import { sendEmailOTP } from '$lib/utils/email/emailTemplates/emailOTP';
 
 // Method for user id generation
@@ -34,13 +34,28 @@ export const auth = betterAuth({
 		sendOnSignUp: true,
 		autoSignInAfterVerification: true,
 		sendVerificationEmail: async ({ user, url }) => {
-			await sendVerificationEmail({ username: user.name, email: user.email, url });
+			await sendLinkEmail({
+				welcomeMessage:
+					'Thank you for signing up! Please verify your email address by clicking the button below:',
+				subject: 'Please verify your email',
+				username: user.name,
+				email: user.email,
+				url
+			});
 		}
 	},
 	// plugins: [sveltekitCookies(getRequestEvent)],
 	emailAndPassword: {
 		enabled: true,
-		sendResetPassword: async ({ user, url }) => {}
+		sendResetPassword: async ({ user, url }) => {
+			await sendLinkEmail({
+				welcomeMessage: 'Please reset your password by clicking the button below:',
+				subject: 'Reset your password',
+				username: user.name,
+				email: user.email,
+				url
+			});
+		}
 	},
 	socialProviders: {
 		github: {
