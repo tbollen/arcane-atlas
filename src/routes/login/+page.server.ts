@@ -40,7 +40,11 @@ export const actions: Actions = {
 
 		// Try login, checks if username exists and if password is correct
 		const response = await auth.api.signInEmail({
-			body: { email: loginForm.data.email, password: loginForm.data.password },
+			body: {
+				email: loginForm.data.email,
+				password: loginForm.data.password,
+				rememberMe: loginForm.data.rememberMe
+			},
 			asResponse: true,
 			returnHeaders: true
 		});

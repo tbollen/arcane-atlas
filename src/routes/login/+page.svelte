@@ -12,6 +12,7 @@
 	import { Spinner } from '$lib/components/ui/spinner';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card/';
 	import * as Form from '$lib/components/ui/form/';
@@ -111,7 +112,9 @@
 								<Input {...props} bind:value={$registerForm.displayName} />
 							{/snippet}
 						</Form.Control>
-						<Form.Description>This is your public display name.</Form.Description>
+						<Form.Description
+							>This is your <u class="font-medium underline">public</u> display name.</Form.Description
+						>
 						<Form.FieldErrors />
 					</Form.Field>
 					<!-- Email -->
@@ -174,6 +177,17 @@
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Remember Me -->
+					<Form.Field form={form_login} name="rememberMe" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<div class="flex items-center gap-2">
+									<Checkbox {...props} bind:checked={$loginForm.rememberMe} />
+									<Form.Label class="font-normal">Remember Me</Form.Label>
+								</div>
+							{/snippet}
+						</Form.Control>
 					</Form.Field>
 					<!-- Submit -->
 					<Form.Button type="submit" disabled={$loginSubmitting} variant="bold" class="w-full">

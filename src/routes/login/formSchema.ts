@@ -1,12 +1,16 @@
 import * as z from 'zod';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
-export const loginFormSchema = z.object({
+const basicLoginSchema = z.object({
 	email: z.email(),
 	password: z.string().min(8)
 });
 
-export const registerFormSchema = loginFormSchema.extend({
+export const loginFormSchema = basicLoginSchema.extend({
+	rememberMe: z.boolean().default(false)
+});
+
+export const registerFormSchema = basicLoginSchema.extend({
 	displayName: z.string().min(2).max(50),
 	confirmPassword: z.string().min(8)
 });
