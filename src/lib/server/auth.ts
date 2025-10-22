@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 // Mail transporter using Resend
 import { resend } from '$lib/utils/email/resend';
 
+// Method for user id generation
+import { generatePrefixedUUID } from '$lib/utils/uuid';
+
 // dotenv for environment variables
 import 'dotenv/config';
 // Plugins
@@ -48,6 +51,11 @@ export const auth = betterAuth({
 		discord: {
 			clientId: process.env.DISCORD_CLIENT_ID as string,
 			clientSecret: process.env.DISCORD_CLIENT_SECRET as string
+		}
+	},
+	advanced: {
+		database: {
+			generateId: () => generatePrefixedUUID('user')
 		}
 	},
 	plugins: [sveltekitCookies(getRequestEvent)]
