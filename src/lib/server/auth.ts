@@ -2,6 +2,9 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
+// Database stuff
+import { db } from '$lib/server/db';
+
 // Mail transporter using Resend, send method lives in each email template
 import { sendLinkEmail } from '$lib/utils/email/emailTemplates/linkEmail';
 import { sendEmailOTP } from '$lib/utils/email/emailTemplates/emailOTP';
@@ -66,6 +69,26 @@ export const auth = betterAuth({
 		discord: {
 			clientId: process.env.DISCORD_CLIENT_ID as string,
 			clientSecret: process.env.DISCORD_CLIENT_SECRET as string
+		}
+	},
+	user: {
+		deleteUser: {
+			enabled: true,
+			sendDeleteAccountVerification: async ({ user, url }) => {
+				await sendLinkEmail({
+					welcomeMessage: 'Please click the button below to delete your account:',
+					subject: 'Account deletion requested',
+					username: user.name,
+					email: user.email,
+					url
+				});
+			},
+			beforeDelete: async (user) => {
+				// TODO:
+				// Remove user from all cards
+				// Remove all characters
+				// Remove user from all campaigns
+			}
 		}
 	},
 	advanced: {
