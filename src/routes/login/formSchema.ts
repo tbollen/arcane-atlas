@@ -12,7 +12,9 @@ export const loginFormSchema = basicLoginSchema.extend({
 
 export const registerFormSchema = basicLoginSchema.extend({
 	displayName: z.string().min(2).max(50),
-	confirmPassword: z.string().min(8)
+	confirmPassword: z.string().min(8),
+	acceptTerms: z.boolean().default(false),
+	acceptPrivacyPolicy: z.boolean().default(false)
 });
 
 export type LoginFormSchema = typeof loginFormSchema;

@@ -148,8 +148,53 @@
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>
+					<!-- Terms and Conditions -->
+					<Form.Field form={form_register} name="acceptTerms" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<div class="flex items-center gap-2">
+									<Checkbox {...props} bind:checked={$registerForm.acceptTerms} />
+									<Form.Label class="font-normal">
+										I agree to the<a
+											class="underline"
+											href="https://github.com/tbollen/arcane-rift-companion/blob/main/static/terms-and-conditions.md"
+											target="_blank"
+											rel="noopener noreferrer">terms and conditions</a
+										>
+									</Form.Label>
+								</div>
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Privacy Policy -->
+					<Form.Field form={form_register} name="acceptPrivacyPolicy" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<div class="flex items-center gap-2">
+									<Checkbox {...props} bind:checked={$registerForm.acceptPrivacyPolicy} />
+									<Form.Label class="font-normal"
+										>I agree to the <a
+											class="underline"
+											href="https://github.com/tbollen/arcane-rift-companion/blob/main/static/privacy-policy.md"
+											target="_blank"
+											rel="noopener noreferrer">privacy policy</a
+										></Form.Label
+									>
+								</div>
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
 					<!-- Submit -->
-					<Form.Button type="submit" variant="bold" disabled={$registerSubmitting} class="w-full">
+					<Form.Button
+						type="submit"
+						variant="bold"
+						disabled={$registerSubmitting ||
+							!$registerForm.acceptTerms ||
+							!$registerForm.acceptPrivacyPolicy}
+						class="w-full"
+					>
 						{#if $registerSubmitting}
 							<Spinner />
 						{:else}Register{/if}

@@ -64,6 +64,16 @@ export const actions: Actions = {
 
 		if (!registerForm.valid) return fail(400, { registerForm });
 
+		if (!registerForm.data.acceptTerms) {
+			setError(registerForm, 'acceptTerms', 'You must accept the terms and conditions');
+			return fail(400, { registerForm });
+		}
+
+		if (!registerForm.data.acceptPrivacyPolicy) {
+			setError(registerForm, 'acceptPrivacyPolicy', 'You must accept the privacy policy');
+			return fail(400, { registerForm });
+		}
+
 		// Check if email is not already registered
 		const userReference = await db.user.findUnique({ where: { email: registerForm.data.email } });
 		if (userReference) {
