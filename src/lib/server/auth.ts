@@ -3,7 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
 // Mail transporter using Resend
-import { resend } from '$lib/utils/email/resend';
+import { sendVerificationEmail } from '$lib/utils/email/emailTemplates/verificationEmail';
 
 // Method for user id generation
 import { generatePrefixedUUID } from '$lib/utils/uuid';
@@ -29,13 +29,8 @@ export const auth = betterAuth({
 	emailVerification: {
 		sendOnSignUp: true,
 		autoSignInAfterVerification: true,
-		sendVerificationEmail: async (user, url) => {
-			await resend.emails.send({
-				from: `Better Auth <2V9G2@example.com>`,
-				to: user.user.email,
-				subject: 'Verify your email',
-				html: `<p>Click <a href="${url}">here</a> to verify your email</p>`
-			});
+		sendVerificationEmail: async ({ user, url }) => {
+			await sendVerificationEmail({ username: user.name, email: user.email, url });
 		}
 	},
 	// plugins: [sveltekitCookies(getRequestEvent)],
@@ -56,6 +51,15 @@ export const auth = betterAuth({
 	advanced: {
 		database: {
 			generateId: () => generatePrefixedUUID('user')
+		}
+	},
+	databaseHooks: {
+		user: {
+			create: {
+				before: async (user) => {
+					user.image = `https://robohash.org/${user.name}`;
+				}
+			}
 		}
 	},
 	plugins: [sveltekitCookies(getRequestEvent)]
