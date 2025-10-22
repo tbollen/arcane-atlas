@@ -1,5 +1,11 @@
+enum UserRole {
+  ADMIN
+  USER
+}
+
 // Generated using Better Auth Prisma Extension
 model User {
+  // User login info
   id            String    @id @unique @default(dbgenerated("(concat('user:', gen_random_uuid()))::TEXT"))
   name          String
   email         String
@@ -7,9 +13,27 @@ model User {
   image         String?   @default(dbgenerated("(concat('https://robohash.org/', random()))::TEXT"))
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
+  role          UserRole  @default(USER) //Added
   sessions      Session[]
   accounts      Account[]
   passkeys      Passkey[]
+
+  /////////////////////
+  // User data links //
+  ////////////////////
+  // CARDS
+  ownedCards    card[]    @relation("CardOwner")    //Cards this user owns
+  editableCards card[]    @relation("CardEditors")  //Cards this user can edit
+  viewableCards card[]    @relation("CardViewers")  //Cards this user can view
+
+  // CHARACTER
+  ownedCharacters Character[] @relation("CharacterOwner")
+  viewableCharacters Character[] @relation("CharacterViewers")
+
+  // CAMPAIGNS
+  activeCampaigns Campaign[] @relation("CampaignMember")
+  gmCampaigns     Campaign[] @relation("CampaignGM")
+
 
   @@unique([email])
   @@map("user")
