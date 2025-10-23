@@ -45,7 +45,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	// Get and prepare request
 	let prismaCard: PrismaCard = await request.json();
-	prismaCard.creatorId = user.id; // Override creator with logged in user
+	prismaCard.ownerId = user.id; // Override creator with logged in user
 	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
 	prismaCard.createdAt = new Date(); // Override createdAt (fallback)
 
@@ -75,7 +75,7 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 	// if (user.canEdit !== true) return new Response('Unauthorized', { status: 401 });
 
 	let prismaCard: PrismaCard = await request.json();
-	if (user.id !== prismaCard.creatorId)
+	if (user.id !== prismaCard.ownerId)
 		return new Response('Unauthorized, card belongs to another user', { status: 401 });
 
 	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
@@ -110,11 +110,11 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 	let prismaCards: PrismaCard[] = await request.json();
 	// Check if the user is allowed to delete this card
 	// TODO: add to schema and uncomment
-	// if (user.isAdmin !== true && prismaCard.creatorId !== user.id) return new Response('Unauthorized', { status: 401 });
+	// if (user.isAdmin !== true && prismaCard.ownerId !== user.id) return new Response('Unauthorized', { status: 401 });
 
 	const uniqueIds = prismaCards.map((card) => card.id);
 	const cardsToDelete = await db.card.findMany({
-		where: { id: { in: uniqueIds }, creatorId: user.id }
+		where: { id: { in: uniqueIds }, ownerId: user.id }
 	}); //Find all instances of the cards to be deleted
 
 	// Check if allowed
@@ -125,7 +125,7 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 		);
 
 	// Delete in DB
-	await db.card.deleteMany({ where: { id: { in: uniqueIds }, creatorId: user.id } });
+	await db.card.deleteMany({ where: { id: { in: uniqueIds }, ownerId: user.id } });
 
 	return new Response(JSON.stringify({ success: true }), { status: 200 });
 };
