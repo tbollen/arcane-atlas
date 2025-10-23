@@ -43,9 +43,12 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { base } from '$app/paths';
 
+	// Get data from server
+	import type { UserID } from '$lib/domain/users/user';
+	let { data } = $props();
+
 	// Selected Cards
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';
-
 	let imageView: boolean = $state(false);
 
 	///////////////
@@ -111,7 +114,11 @@
 
 	function duplicateCard(card: StoredCard) {
 		// Add to store
-		const newCard = cardStore.addNew(card);
+		if (data.user === null) {
+			throw new Error('User not logged in');
+		}
+		const userId = data.user.id as UserID;
+		const newCard = cardStore.addNew({ card, userId });
 		const newCardAsPrisma = newCard.cardToPrisma();
 		// Make API call
 		CARD_API.create(newCardAsPrisma);
