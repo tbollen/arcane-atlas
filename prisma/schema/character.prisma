@@ -8,6 +8,12 @@ model Character {
     owner           User        @relation("CharacterOwner", fields: [ownerId], references: [id])
     viewers         User[]      @relation("CharacterViewers")
 
+    // Character Cards
+    cards           card[]      @relation("CharacterCards")
+
+    // Campaigns
+    campaigns       Campaign[]  @relation("CharacterCampaign")
+
     // Character Info
     name            String
     image           String
