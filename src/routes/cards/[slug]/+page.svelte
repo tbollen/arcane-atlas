@@ -13,11 +13,13 @@
 	import USER_API from '$lib/utils/api/users_api.js';
 
 	// Card stores, types and modules
-	// import { cardStore } from '$lib/stores/CardStore';
 	import cachedTemplate from '$lib/stores/cachedTemplate.js';
 	import { CardStore } from '$lib/domain/cards/cardStore.svelte';
 	import { Card } from '$lib/domain/cards/card.svelte.js';
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
+
+	// User info and types
+	import type { UserID } from '$lib/domain/users/user';
 
 	// Components and Partials
 	import MainLoader from '$lib/components/partials/MainLoader.svelte';
@@ -33,6 +35,7 @@
 	let isNewCard = $derived(slug_id === 'new');
 
 	const { data } = $props();
+	const userId: UserID = data.user?.id as UserID;
 
 	/////////////////////////
 	// DATA INITIALIZATION //
@@ -42,7 +45,7 @@
 
 	// Data getting (card and cardstore)
 	// Initialize card on page load, use a dummy card ('new') for init only!!
-	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
+	let card: StoredCard = $state<StoredCard>(StoredCard.newCard(userId));
 
 	let creatorName = $state('Unknown');
 
@@ -70,7 +73,7 @@
 			if (slug_id === 'new') {
 				console.debug('Creating new card...');
 				if (cachedTemplate.template) {
-					card = new StoredCard('new', cachedTemplate.template); // Create new card using the cached template
+					card = StoredCard.newCard(userId, cachedTemplate.template); // Create new card using the cached template
 					cachedTemplate.template = undefined; //Reset to undefined
 				}
 			} else {
@@ -88,8 +91,8 @@
 		}
 
 		// Update username
-		if (card?.creatorId) {
-			const response = USER_API.getByID(card.creatorId as string);
+		if (card?.ownerId) {
+			const response = USER_API.getByID(card.ownerId as string);
 			response.then((res) => {
 				creatorName = res.user.name;
 			});
@@ -118,7 +121,7 @@
 			// TODO: add save method and push to DB
 			cardStore.cache();
 		}
-		cardStore.addNew();
+		cardStore.addNew({ userId });
 	}
 
 	// Edit Mode stuff
@@ -165,7 +168,7 @@
 		// Create new card if new
 		if (isNewCard) {
 			console.debug('Saving new card...');
-			card = cardStore.addNew(card); // Add new card to store
+			card = cardStore.addNew({ userId, card }); // Add new card to store
 			// API CALL
 			const prismaCard = card.cardToPrisma();
 			console.debug('New prisma card:', prismaCard);
