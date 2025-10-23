@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import type { card as PrismaCard } from '@prisma/client';
 import { db } from '$lib/server/db';
 import { MAX_CARDS } from '$lib/server/rules/maxCards';
+import type { CardPermissions } from '$lib/domain/cards/cardStore.svelte';
 
 export type CardPayload = {
 	action: 'create' | 'update' | 'delete';
@@ -91,8 +92,6 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 	// if (user.canEdit !== true) return new Response('Unauthorized', { status: 401 });
 
 	let prismaCard: PrismaCard = await request.json();
-	if (user.id !== prismaCard.ownerId)
-		return new Response('Unauthorized, card belongs to another user', { status: 401 });
 
 	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
 
@@ -151,4 +150,54 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 	await db.card.deleteMany({ where: { id: { in: uniqueIds }, ownerId: user.id } });
 
 	return new Response(JSON.stringify({ success: true }), { status: 200 });
+};
+
+// PERMISSIONS
+
+/**
+ * PATCH /api/cards
+ *
+ * Updates the permissions of a card for the current user. Can update multiple permissions!
+ * @returns {Promise<Response>} - Promise of Response object
+ */
+export const PATCH: RequestHandler = async ({ locals, request }) => {
+	// ✅ ensure user is logged in
+	const user = locals.user;
+	if (!user) return new Response('Unauthorized, client is not a logged in user', { status: 401 });
+	// TODO: add to schema and uncomment
+	// if (user.canEdit !== true) return new Response('Unauthorized', { status: 401 });
+
+	const res = await request.json();
+	let prismaCard: PrismaCard = res.card;
+	let permissions: Partial<CardPermissions> = res.permissions;
+
+	// Check if the user is authorized to update permissions
+	if (user.id !== prismaCard.ownerId)
+		return new Response('Unauthorized, card belongs to another user', { status: 401 });
+
+	prismaCard.updatedAt = new Date(); // Override updatedAt (fallback)
+
+	// Check if the card already exists
+	const dbCard = await db.card.findUnique({
+		where: { id: prismaCard.id },
+		include: { owner: true, editors: true, viewers: true }
+	});
+	if (!dbCard) return new Response('Card does not exist', { status: 400 });
+
+	// Check if user is authorized to update card (is owner)
+	if (user.id !== dbCard.ownerId)
+		return new Response('Unauthorized, card belongs to another user', { status: 401 });
+
+	// Update permissions
+	const p_editors = permissions.editors ?? dbCard.editors.map((editor) => editor.id);
+	const p_viewers = permissions.viewers ?? dbCard.viewers.map((viewer) => viewer.id);
+	await db.card.update({
+		where: { id: prismaCard.id },
+		data: {
+			viewers: { set: p_viewers.map((id) => ({ id })) },
+			editors: { set: p_editors.map((id) => ({ id })) }
+		}
+	});
+
+	return new Response(JSON.stringify({ success: true, prismaCard }), { status: 200 });
 };
