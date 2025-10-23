@@ -26,7 +26,12 @@
 						// characters: data.characters // TODO: set and get active character
 					})
 				)
-			: [];
+			: data.db_cards.map((prismaCard) =>
+					StoredCard.newCardFromPrisma({
+						card: prismaCard as PrismaCardExtended
+						// characters: data.characters // TODO: set and get active character
+					})
+				);
 
 	// Init cardStore and set context
 	const db_cardStore = new CardStore({ cards }); //TODO: add localstorage fallback
