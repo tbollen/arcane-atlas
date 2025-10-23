@@ -15,7 +15,6 @@
 	// Card stores, types and modules
 	import cachedTemplate from '$lib/stores/cachedTemplate.js';
 	import { CardStore } from '$lib/domain/cards/cardStore.svelte';
-	import { Card } from '$lib/domain/cards/card.svelte.js';
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
 
 	// User info and types
@@ -34,7 +33,7 @@
 	const slug_id = page.params.slug;
 	let isNewCard = $derived(slug_id === 'new');
 
-	const { data } = $props();
+	let { data } = $props();
 	const userId: UserID = data.user?.id as UserID;
 
 	/////////////////////////
@@ -46,8 +45,8 @@
 	// Data getting (card and cardstore)
 	// Initialize card on page load, use a dummy card ('new') for init only!!
 	let card: StoredCard = $state<StoredCard>(StoredCard.newCard(userId));
-
-	let creatorName = $state('Unknown');
+	let ownerName = $state(data.ownerName);
+	console.error('Owner name:', ownerName);
 
 	/////////////////////////
 	// SAVE STATE TRACKING //
@@ -88,16 +87,6 @@
 			// Redirect to collection page when card not found
 			alert(`${err} > Redirecting to collection page...`);
 			goto('/cards');
-		}
-
-		// Update username
-		if (card?.ownerId) {
-			const response = USER_API.getByID(card.ownerId as string);
-			response.then((res) => {
-				creatorName = res.user.name;
-			});
-		} else {
-			creatorName = data.user?.name || 'ERROR';
 		}
 
 		// Retrieve URL params for edit mode
@@ -233,7 +222,7 @@
 
 						<div class="cardInfoBlock">
 							<div id="cardCreator" class="infoBlockMajor">
-								<span class="mr-1 text-sm text-muted-foreground">by</span>{creatorName}
+								<span class="mr-1 text-sm text-muted-foreground">by</span>{ownerName}
 							</div>
 							<div
 								id="cardDate"
