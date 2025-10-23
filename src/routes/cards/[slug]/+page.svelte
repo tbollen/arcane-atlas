@@ -47,6 +47,7 @@
 	let card: StoredCard = $state<StoredCard>(StoredCard.newCard(userId));
 	let ownerName = $state(data.ownerName);
 	console.error('Owner name:', ownerName);
+	let canEdit = $state(false);
 
 	/////////////////////////
 	// SAVE STATE TRACKING //
@@ -89,9 +90,13 @@
 			goto('/cards');
 		}
 
+		// Set canEdit based on card owner
+		canEdit = card.ownerId === userId;
+
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
-		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
+		//Set edit mode based on URL params, only set to true if canEdit is true
+		editMode = urlParams.get('edit') === '1' && canEdit;
 
 		// Set mounted to true (timeout to avoid race condition)
 		setTimeout(() => {
@@ -267,9 +272,11 @@
 						>
 					</div>
 				</header>
-				<div id="itemEditor">
-					<CardEditor bind:card />
-				</div>
+				{#if canEdit}
+					<div id="itemEditor">
+						<CardEditor bind:card />
+					</div>
+				{/if}
 			</section>
 		{/if}
 		<!-- Card Pane -->
@@ -283,11 +290,13 @@
 					><Icon icon="mdi:arrow-left" />Back</Button
 				>
 				<!-- Toggle Edit/View Mode -->
-				<Button onclick={toggleEditMode}
-					><Icon icon={editMode ? 'mdi:eye' : 'mdi:pencil'} />{editMode
-						? 'Viewing Mode'
-						: 'Edit Card'}</Button
-				>
+				{#if canEdit}
+					<Button onclick={toggleEditMode}
+						><Icon icon={editMode ? 'mdi:eye' : 'mdi:pencil'} />{editMode
+							? 'Viewing Mode'
+							: 'Edit Card'}</Button
+					>
+				{/if}
 
 				<!-- New Card -->
 				{#if !isNewCard}
