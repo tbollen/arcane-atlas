@@ -46,12 +46,9 @@ export const fallbackCardInfo: Partial<Card> = {
 
 export class Card {
 	// ID and db info
-	creatorId: Prefixed_UUID<'user'> | null;
 	createdAt: Date = new Date();
 	updatedAt: Date = $state(new Date());
-	userIds: Prefixed_UUID<'user'>[] = []; // Users that have access to this card (for multi-user support)
-	campaignIds: Prefixed_UUID<'campaign'>[] = []; // Campaigns that use this card (for filtering)
-	characterIds: Prefixed_UUID<'character'>[] = []; // Characters that use this card (for filtering)
+	ownerName: string = $state('Unknown');
 	// Main info, populate with default values
 	name: string = $state('New Card');
 	type: IsCardType = $state('Card');
@@ -82,7 +79,7 @@ export class Card {
 	mechanics: Mechanics = $state({ [GENERIC_KEY]: {} }); // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
-	constructor(_card?: Partial<Card> | PrismaCard) {
+	constructor(_card?: Partial<Card> | PrismaCard, ownerName?: string) {
 		let _cardReference: Partial<Card> = fallbackCardInfo;
 		// Ensure deep cloning works on input
 		function cloneToObj(obj: any): Record<string, any> | undefined {
@@ -91,8 +88,7 @@ export class Card {
 			return Object.keys(clone).length > 0 ? clone : undefined; //returns undefined if obj is empty
 		}
 		// Set card info one by one
-		this.creatorId =
-			(_card?.creatorId as Prefixed_UUID<'user'>) ?? _cardReference.creatorId ?? null;
+		this.ownerName = ownerName ?? 'Unknown';
 		this.createdAt = _card?.createdAt ?? _cardReference.createdAt ?? new Date();
 		this.updatedAt = _card?.updatedAt ?? _cardReference.updatedAt ?? new Date();
 		this.name = _card?.name ?? _cardReference.name ?? 'New Card';
