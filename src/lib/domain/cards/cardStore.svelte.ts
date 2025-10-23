@@ -94,12 +94,13 @@ export class StoredCard extends Card {
 	}
 
 	/**
-	 * Creates a new StoredCard instance, with a generated ID and the given userId set as the owner and client user ID.
-	 * @param {UserID} userId - The ID of the user creating the card.
-	 * @returns {StoredCard} - A new StoredCard instance.
+	 * Create a new StoredCard instance
+	 * @param {UserID} userId - owner of the card
+	 * @param {Partial<Card>} [cardInfo] - optional card info to set
+	 * @returns {StoredCard} - new StoredCard instance
 	 */
-	static newCard(userId: UserID): StoredCard {
-		return new StoredCard({ id: 'new', ownerId: userId, clientUserID: userId });
+	static newCard(userId: UserID, cardInfo?: Partial<Card>): StoredCard {
+		return new StoredCard({ id: 'new', ownerId: userId, clientUserID: userId, cardInfo });
 	}
 	static newCardFromPrisma(c: {
 		card: PrismaCardExtended;
