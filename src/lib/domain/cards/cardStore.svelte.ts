@@ -61,7 +61,7 @@ export class StoredCard extends Card {
 		id: CardID | 'new';
 		ownerId: UserID;
 		// Client info, for setting/checking permissions
-		clientUserID: UserID;
+		clientUserID?: UserID;
 		// Optional properties
 		cardInfo?: Partial<Card> | PrismaCard;
 		// Queried data
@@ -80,7 +80,7 @@ export class StoredCard extends Card {
 			public: false
 		};
 
-		// Set client permissions based on current user (given on init)
+		// Set client permissions based on current user (given on init). If no user is given, give no permissions (guests can view)
 		this.clientPermission = {
 			canEdit:
 				init.clientUserID !== undefined && this.permissions.editors.includes(init.clientUserID),
@@ -104,7 +104,7 @@ export class StoredCard extends Card {
 	}
 	static newCardFromPrisma(c: {
 		card: PrismaCardExtended;
-		user: PrismaUser;
+		user?: PrismaUser;
 		character?: PrismaCharacter;
 	}): StoredCard {
 		// user: PrismaUser): StoredCard {
@@ -117,7 +117,7 @@ export class StoredCard extends Card {
 				viewers: c.card.viewers.map((viewer) => viewer.id as UserID),
 				public: c.card.public
 			},
-			clientUserID: c.user.id as UserID,
+			clientUserID: c.user ? (c.user.id as UserID) : undefined,
 			isCharacterCard:
 				c.character !== undefined &&
 				c.card.characters.some(
