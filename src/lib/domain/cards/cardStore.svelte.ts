@@ -32,13 +32,11 @@ export type PrismaCardExtended = PrismaCard & PrismaCardExtension;
 export type CardPermissions = {
 	editors: UserID[];
 	viewers: UserID[];
-	public: boolean;
 };
 
 export type ClientCardPermission = {
 	canEdit: boolean;
 	canView: boolean;
-	isPublic: boolean;
 };
 
 // Context Key
@@ -53,6 +51,7 @@ export class StoredCard extends Card {
 	ownerId: UserID;
 	private permissions: CardPermissions; // For owner to get/set
 	clientPermission: ClientCardPermission; // "Public" properties that all clients can see
+	public: boolean;
 
 	// Relation to active character (re-init when chaning characters)
 	isCharacterCard: boolean;
@@ -67,6 +66,7 @@ export class StoredCard extends Card {
 		// Queried data
 		permissions?: CardPermissions; // only for owner
 		isCharacterCard?: boolean; // only for play deck
+		public?: boolean;
 	}) {
 		// Init info on card
 		super(init.cardInfo);
@@ -76,17 +76,16 @@ export class StoredCard extends Card {
 		this.ownerId = init.ownerId;
 		this.permissions = init.permissions ?? {
 			editors: [this.ownerId],
-			viewers: [this.ownerId],
-			public: false
+			viewers: [this.ownerId]
 		};
 
 		// Set client permissions based on current user (given on init). If no user is given, give no permissions (guests can view)
+		this.public = init?.public ?? false;
 		this.clientPermission = {
 			canEdit:
 				init.clientUserID !== undefined && this.permissions.editors.includes(init.clientUserID),
 			canView:
-				init.clientUserID !== undefined && this.permissions.viewers.includes(init.clientUserID),
-			isPublic: this.permissions.public
+				init.clientUserID !== undefined && this.permissions.viewers.includes(init.clientUserID)
 		};
 
 		// Set if belongs to active character
@@ -114,15 +113,15 @@ export class StoredCard extends Card {
 			cardInfo: c.card,
 			permissions: {
 				editors: c.card.editors.map((editor) => editor.id as UserID),
-				viewers: c.card.viewers.map((viewer) => viewer.id as UserID),
-				public: c.card.public
+				viewers: c.card.viewers.map((viewer) => viewer.id as UserID)
 			},
 			clientUserID: c.user ? (c.user.id as UserID) : undefined,
 			isCharacterCard:
 				c.character !== undefined &&
 				c.card.characters.some(
 					(registeredCharacters) => registeredCharacters.id === c.character?.id
-				)
+				),
+			public: c.card.public
 		});
 	}
 
@@ -135,7 +134,7 @@ export class StoredCard extends Card {
 			createdAt: _card.createdAt,
 			updatedAt: _card.updatedAt,
 			// Sharing and Permissions
-			public: _card.permissions.public,
+			public: _card.public,
 			// Card Info
 			name: _card.name,
 			type: _card.type,
@@ -389,7 +388,7 @@ export function serializeCard(card: StoredCard | Partial<StoredCard>): JSONified
 		updatedAt: clone(card.updatedAt),
 		// Sharing and Permissions
 		ownerId: clone(card.ownerId),
-		public: clone(card.clientPermission?.isPublic),
+		public: clone(card.public),
 		// Card Info
 		name: clone(card.name),
 		type: clone(card.type),
