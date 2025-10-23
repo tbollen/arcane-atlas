@@ -48,6 +48,7 @@
 	let ownerName = $state(data.ownerName);
 	console.error('Owner name:', ownerName);
 	let canEdit = $state(false);
+	let isOwner = $state(false);
 
 	/////////////////////////
 	// SAVE STATE TRACKING //
@@ -59,7 +60,7 @@
 	// });
 
 	$effect(() => {
-		serializeCard(card);
+		serializeCard(card); // Serialize card as trigger
 		if (!isMounted) return; // Wait for mount
 		cardIsSaved = false;
 	});
@@ -90,8 +91,10 @@
 			goto('/cards');
 		}
 
-		// Set canEdit based on card owner
-		canEdit = card.ownerId === userId;
+		// Set canEdit based on card owner, or logged in user (TODO: check with db instead of client permission)
+		canEdit = card.ownerId === userId || card.clientPermission.canEdit;
+		// Set isOwner based on card owner
+		isOwner = card.ownerId === userId;
 
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
@@ -274,7 +277,7 @@
 				</header>
 				{#if canEdit}
 					<div id="itemEditor">
-						<CardEditor bind:card />
+						<CardEditor bind:card bind:isOwner />
 					</div>
 				{/if}
 			</section>
