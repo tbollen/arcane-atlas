@@ -50,7 +50,7 @@ export class StoredCard extends Card {
 	id: CardID;
 
 	// Sharing and Permissions (for client)
-	owner: UserID;
+	ownerId: UserID;
 	private permissions: CardPermissions; // For owner to get/set
 	clientPermission: ClientCardPermission; // "Public" properties that all clients can see
 
@@ -59,7 +59,7 @@ export class StoredCard extends Card {
 
 	constructor(init: {
 		id: CardID | 'new';
-		owner: UserID;
+		ownerId: UserID;
 		// Client info, for setting/checking permissions
 		clientUserID: UserID;
 		// Optional properties
@@ -73,10 +73,10 @@ export class StoredCard extends Card {
 		// Set ID
 		this.id = init.id === 'new' ? (init.id = generatePrefixedUUID('card')) : init.id;
 		// Set sharing and permissions (or set defaults)
-		this.owner = init.owner;
+		this.ownerId = init.ownerId;
 		this.permissions = init.permissions ?? {
-			editors: [this.owner],
-			viewers: [this.owner],
+			editors: [this.ownerId],
+			viewers: [this.ownerId],
 			public: false
 		};
 
@@ -92,6 +92,15 @@ export class StoredCard extends Card {
 		// Set if belongs to active character
 		this.isCharacterCard = init.isCharacterCard ?? false;
 	}
+
+	/**
+	 * Creates a new StoredCard instance, with a generated ID and the given userId set as the owner and client user ID.
+	 * @param {UserID} userId - The ID of the user creating the card.
+	 * @returns {StoredCard} - A new StoredCard instance.
+	 */
+	static newCard(userId: UserID): StoredCard {
+		return new StoredCard({ id: 'new', ownerId: userId, clientUserID: userId });
+	}
 	static newCardFromPrisma(c: {
 		card: PrismaCardExtended;
 		user: PrismaUser;
@@ -100,7 +109,7 @@ export class StoredCard extends Card {
 		// user: PrismaUser): StoredCard {
 		return new StoredCard({
 			id: c.card.id as CardID,
-			owner: c.card.ownerId as UserID,
+			ownerId: c.card.ownerId as UserID,
 			cardInfo: c.card,
 			permissions: {
 				editors: c.card.editors.map((editor) => editor.id as UserID),
@@ -121,7 +130,7 @@ export class StoredCard extends Card {
 		return {
 			// DB Info
 			id: _card.id,
-			ownerId: _card.owner,
+			ownerId: _card.ownerId,
 			createdAt: _card.createdAt,
 			updatedAt: _card.updatedAt,
 			// Sharing and Permissions
@@ -235,7 +244,7 @@ export class CardStore {
 	/////////////////////
 
 	// Creating a new card
-	addNew(userId: UserID, card?: Partial<Card>): StoredCard {
+	addNew({ userId, card }: { userId: UserID; card?: Partial<Card> }): StoredCard {
 		// Run POST
 		const newCard = this.POST(userId, card);
 		// Save changes
@@ -337,7 +346,7 @@ export class CardStore {
 		// Instantiate a new card
 		const newCard = new StoredCard({
 			id: newId,
-			owner: userId,
+			ownerId: userId,
 			clientUserID: userId,
 			cardInfo: card
 		});
@@ -378,7 +387,7 @@ export function serializeCard(card: StoredCard | Partial<StoredCard>): JSONified
 		createdAt: clone(card.createdAt),
 		updatedAt: clone(card.updatedAt),
 		// Sharing and Permissions
-		ownerId: clone(card.owner),
+		ownerId: clone(card.ownerId),
 		public: clone(card.clientPermission?.isPublic),
 		// Card Info
 		name: clone(card.name),
