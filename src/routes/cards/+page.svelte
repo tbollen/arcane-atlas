@@ -150,7 +150,6 @@
 	// SEARCHING & FILTERING //
 	///////////////////////////
 	import SearchInput from '$lib/components/partials/SearchInput.svelte';
-	import { render } from 'svelte/server';
 	import { downloadCards } from '$lib/utils/cards/download';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
@@ -313,6 +312,7 @@
 				>
 					<!-- Edit Options -->
 					<div class="editOptions">
+						<!-- Options when user can edit -->
 						<Button
 							title="Show card"
 							size="icon"
@@ -323,16 +323,7 @@
 						>
 							<Icon icon="mdi:zoom-in" />
 						</Button>
-						<Button
-							size="icon"
-							title="Edit Card"
-							onclick={(e) => {
-								e.stopPropagation();
-								editCard(card.id);
-							}}
-						>
-							<Icon icon="mdi:pencil" />
-						</Button>
+						<!-- DOWNLOAD -->
 						<Button
 							size="icon"
 							title="Download as JSON"
@@ -343,29 +334,62 @@
 						>
 							<Icon icon="mdi:download" />
 						</Button>
-						<Button
-							variant="advanced"
-							size="icon"
-							title="Duplicate Card"
-							onclick={(e) => {
-								e.stopPropagation();
-								duplicateCard(card);
-							}}
-						>
-							<Icon icon="mdi:content-copy" />
-						</Button>
-						<Button
-							size="icon"
-							variant="destructive"
-							title="Delete Card"
-							color="threat"
-							onclick={(e) => {
-								e.stopPropagation();
-								deleteCard(card);
-							}}
-						>
-							<Icon icon="mdi:trash" />
-						</Button>
+						<!-- USER NEEDS TO BE LOGGED IN -->
+						{#if data.user !== null}
+							<!-- IF USER CAN EDIT -->
+							{#if card.clientPermission.canEdit || card.ownerId === data.user?.id}
+								<!-- EDIT -->
+								<Button
+									size="icon"
+									variant="blossom"
+									title="Edit Card"
+									onclick={(e) => {
+										e.stopPropagation();
+										editCard(card.id);
+									}}
+								>
+									<Icon icon="mdi:pencil" />
+								</Button>
+								<!-- DUPLICATE - SMALL -->
+								<Button
+									variant="advanced"
+									size="icon"
+									title="Duplicate Card"
+									onclick={(e) => {
+										e.stopPropagation();
+										duplicateCard(card);
+									}}
+								>
+									<Icon icon="mdi:content-copy" />
+								</Button>
+							{:else}
+								<!-- DUPLICATE - LARGE -->
+								<Button
+									variant="advanced"
+									title="Create card from this template"
+									onclick={() => createFromTemplate(card)}
+								>
+									<Icon icon="mdi:content-copy" />
+									Create</Button
+								>
+							{/if}
+
+							{#if data.user?.id === card.ownerId}
+								<!-- DELETE -->
+								<Button
+									size="icon"
+									variant="destructive"
+									title="Delete Card"
+									color="threat"
+									onclick={(e) => {
+										e.stopPropagation();
+										deleteCard(card);
+									}}
+								>
+									<Icon icon="mdi:trash" />
+								</Button>
+							{/if}
+						{/if}
 					</div>
 					<div class="frontSideCard">
 						<Gamecard {card} />
