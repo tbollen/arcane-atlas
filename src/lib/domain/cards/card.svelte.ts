@@ -48,7 +48,6 @@ export class Card {
 	// ID and db info
 	createdAt: Date = new Date();
 	updatedAt: Date = $state(new Date());
-	ownerName: string = $state('Unknown');
 	// Main info, populate with default values
 	name: string = $state('New Card');
 	type: IsCardType = $state('Card');
@@ -79,7 +78,7 @@ export class Card {
 	mechanics: Mechanics = $state({ [GENERIC_KEY]: {} }); // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
-	constructor(_card?: Partial<Card> | PrismaCard, ownerName?: string) {
+	constructor(_card?: Partial<Card> | PrismaCard) {
 		let _cardReference: Partial<Card> = fallbackCardInfo;
 		// Ensure deep cloning works on input
 		function cloneToObj(obj: any): Record<string, any> | undefined {
@@ -88,7 +87,6 @@ export class Card {
 			return Object.keys(clone).length > 0 ? clone : undefined; //returns undefined if obj is empty
 		}
 		// Set card info one by one
-		this.ownerName = ownerName ?? 'Unknown';
 		this.createdAt = _card?.createdAt ?? _cardReference.createdAt ?? new Date();
 		this.updatedAt = _card?.updatedAt ?? _cardReference.updatedAt ?? new Date();
 		this.name = _card?.name ?? _cardReference.name ?? 'New Card';
