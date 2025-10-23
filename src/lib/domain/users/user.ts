@@ -4,6 +4,8 @@ import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 // USER ROLE TYPE
 export type UserRole = 'admin' | 'plus_user' | 'basic_user' | 'guest';
 
+export type UserID = Prefixed_UUID<'user'>;
+
 // Username validation and Type
 export type Username = string & { __brand: 'username' };
 export function isValidUsername(username: string): username is Username {
@@ -18,7 +20,7 @@ export function userNameExists(username: string, users_db: Users): boolean {
 
 // USER CLASS
 export class User {
-	id: Prefixed_UUID<'user'> = generatePrefixedUUID('user');
+	id: UserID = generatePrefixedUUID('user');
 	username: Username;
 	nickname: string = 'New User';
 	characterIds: Prefixed_UUID<'character'>[] = [];
