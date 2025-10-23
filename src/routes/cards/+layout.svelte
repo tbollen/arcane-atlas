@@ -17,21 +17,13 @@
 	let { children, data } = $props();
 
 	// INIT cards from data
-	let cards: StoredCard[] =
-		data.user !== null // Check if user is logged in
-			? data.db_cards.map((prismaCard) =>
-					StoredCard.newCardFromPrisma({
-						card: prismaCard as PrismaCardExtended,
-						user: data.user as PrismaUser
-						// characters: data.characters // TODO: set and get active character
-					})
-				)
-			: data.db_cards.map((prismaCard) =>
-					StoredCard.newCardFromPrisma({
-						card: prismaCard as PrismaCardExtended
-						// characters: data.characters // TODO: set and get active character
-					})
-				);
+	let cards: StoredCard[] = data.db_cards.map((prismaCard) =>
+		StoredCard.newCardFromPrisma({
+			card: prismaCard as PrismaCardExtended,
+			user: (data.user as PrismaUser) ?? undefined // undefined if no user is given
+			// characters: data.characters // TODO: set and get active character
+		})
+	);
 
 	// Init cardStore and set context
 	const db_cardStore = new CardStore({ cards }); //TODO: add localstorage fallback
