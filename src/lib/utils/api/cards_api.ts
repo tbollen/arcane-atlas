@@ -27,13 +27,14 @@ const CARD_API = {
 	},
 
 	async setPermissions(
-		card: PrismaCard,
+		cards: PrismaCard[],
 		permissions: Partial<CardPermissions>
 	): Promise<{ success: boolean }> {
+		// If multiple cards are given, all permissions must be given!
 		logTrace('setPermissions');
 		const res = await fetch(API_BASE, {
 			method: 'PATCH',
-			body: JSON.stringify({ card, permissions })
+			body: JSON.stringify({ cards, permissions })
 		});
 		return await res.json();
 	}
