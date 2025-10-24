@@ -6,6 +6,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Avatar from '$lib/components/ui/avatar';
 
+	// Partials
+	import UnderConstruction from '$lib/components/partials/UnderConstruction.svelte';
+
 	// Typography
 	import { Header } from '$lib/components/typography';
 
@@ -17,13 +20,11 @@
 
 	import { authClient } from '$lib/utils/auth/auth-client';
 	import Icon from '@iconify/svelte';
-	import { Root } from 'postcss';
 	import Label from '$lib/components/ui/label/label.svelte';
-	interface Props {
-		data: any;
-	}
+	import { onMount } from 'svelte';
+	import CARD_API from '$lib/utils/api/cards_api.js';
 
-	let { data }: Props = $props();
+	let { data } = $props();
 	let user = $derived(data.user) as PrismaUser;
 
 	async function logOut() {
@@ -65,7 +66,18 @@
 		}
 	}
 
-	console.error('Data:', data);
+	// CARD ACCESS CONTROL
+	async function allPublicToPrivate() {
+		alert('Not yet implemented');
+	}
+
+	async function revokeEditors() {
+		alert('Not yet implemented');
+	}
+
+	async function revokeViewers() {
+		alert('Not yet implemented');
+	}
 </script>
 
 <main class="mx-auto w-full max-w-3xl">
@@ -76,7 +88,7 @@
 			<Card.Header>
 				<Card.Title>
 					<div class="flex flex-row gap-2">
-						<Avatar.Root class="size-24">
+						<Avatar.Root class="size-24 ">
 							<Avatar.Image src={user.image} />
 							<Avatar.Fallback>{user.name.charAt(0)}</Avatar.Fallback>
 						</Avatar.Root>
@@ -87,11 +99,16 @@
 					</div>
 				</Card.Title>
 				<Card.Action>
-					<Button variant="destructive" onclick={logOut}>Logout</Button>
+					<Button variant="blossom" disabled onclick={() => {}}>
+						<Icon icon="mdi:pencil" />Edit Account
+					</Button>
+					<Button variant="destructive" onclick={logOut}>
+						<Icon icon="mdi:logout" />Logout
+					</Button>
 				</Card.Action>
 				<Card.Content class="col-span-2 px-0">
 					<hr class="divider mb-2" />
-					<!-- ACCOUNT STUFF HERE -->
+					<!-- ACCOUNT INFO -->
 					<Header variant="h2" addition="asFirst" class="mb-2">Account Info</Header>
 					<div class="fieldGrid">
 						<!-- Email -->
@@ -115,17 +132,16 @@
 						<span class="text-muted-foreground">
 							{user.image}
 							{#if user.image?.includes('robohash')}
-								<span class=" ml-auto text-sm text-muted-foreground"
-									>Courtesy of <a
-										target="_blank"
-										class="hover:underline"
-										href="https://robohash.org">robohash.org</a
-									></span
+								<a
+									target="_blank"
+									href="https://robohash.org"
+									class="noLine mt-2 ml-auto text-xs text-muted-foreground hover:underline"
 								>
+									Courtesy of robohash.org
+								</a>
 							{/if}
 						</span>
 					</div>
-
 					<!-- Warning banner if email not verified -->
 					{#if !user.emailVerified}
 						<Alert.Root variant="warn" class="mt-4">
@@ -146,20 +162,128 @@
 							</Alert.Description>
 						</Alert.Root>
 					{/if}
+					<!-- CARDS -->
+					<Header variant="h2" class="mt-4 mb-2">Cards</Header>
+					<p class="text-muted-foreground">Overview of your cards and cards shared with you</p>
+					<!-- CARDS => user owned cards -->
+					<div class="fieldGrid mt-2">
+						<Header variant="h3" class="col-span-2 mb-2">Your cards</Header>
+						<!-- Owned -->
+						<h3>Owned</h3>
+						<span class="text-muted-foreground">
+							You own {data.cardsInfo.ownedCards.length ?? '0'} cards
+							{#if data.cardsInfo.ownedCards.length > 0}
+								<Button href="/cards?owned=true" variant="link" size="sm" class="ml-auto"
+									>View</Button
+								>
+							{:else}
+								<Button href="/cards/new" variant="secondary" size="sm" class="ml-auto">
+									Create
+								</Button>
+							{/if}
+						</span>
+						<!-- Cards with Co-editors -->
+						<h3>Co-editors</h3>
+						<span class="text-muted-foreground">
+							You have {data.cardsInfo.cardsWithEditors.length ?? '0'} cards with co-editors
+							{#if data.cardsInfo.cardsWithEditors.length > 0}
+								<Button href="/cards?public=true" variant="link" size="sm" class="ml-auto">
+									View
+								</Button>
+								<Button onclick={revokeEditors} variant="destructive" size="sm">
+									Revoke Access
+								</Button>
+							{/if}
+						</span>
+						<!-- Cards with Viewers -->
+						<h3>Viewers</h3>
+						<span class="text-muted-foreground">
+							You have {data.cardsInfo.cardsWithViewers.length ?? '0'} cards with viewers
+							{#if data.cardsInfo.cardsWithViewers.length > 0}
+								<Button href="/cards?public=true" variant="link" size="sm" class="ml-auto">
+									View
+								</Button>
+								<Button onclick={revokeViewers} variant="destructive" size="sm">
+									Revoke Access
+								</Button>
+							{/if}
+						</span>
+						<!-- Public -->
+						<h3>Public</h3>
+						<span class="text-muted-foreground">
+							You have {data.cardsInfo.publicCards.length ?? '0'} marked as "public"
+							{#if data.cardsInfo.publicCards.length > 0}
+								<Button href="/cards?public=true" variant="link" size="sm" class="ml-auto">
+									View
+								</Button>
+								<Button onclick={allPublicToPrivate} variant="destructive" size="sm">
+									Make all private
+								</Button>
+							{/if}
+						</span>
+						<!-- CARDS => Shared with you -->
+						<Header variant="h3" class="col-span-2 mt-4 mb-2">Shared with you</Header>
+						<!-- Cards you may edit -->
+						<h3>Editor</h3>
+						<span class="text-muted-foreground">
+							You are co-editor of {data.cardsInfo.editorCards.length ?? '0'} cards
+							{#if data.cardsInfo.editorCards.length > 0}
+								<Button
+									href="/cards?canEdit=true&owned=false"
+									variant="link"
+									size="sm"
+									class="ml-auto"
+								>
+									View
+								</Button>
+							{/if}
+						</span>
+						<!-- Cards you may view -->
+						<h3>Viewer</h3>
+						<span class="text-muted-foreground">
+							You are viewer of {data.cardsInfo.viewerCards.length ?? '0'} cards
+							{#if data.cardsInfo.viewerCards.length > 0}
+								<Button
+									href="/cards?canView=true&owned=false"
+									variant="link"
+									size="sm"
+									class="ml-auto"
+								>
+									View
+								</Button>
+							{/if}
+						</span>
+					</div>
+					<!-- CAMPAIGNS -->
+					<Header variant="h2" class="mt-4 mb-2">Campaigns</Header>
+					<!-- TODO -->
+					<UnderConstruction />
+					<!-- CHARACTERS -->
+					<Header variant="h2" class="mt-4 mb-2">Characters</Header>
+					<!-- TODO -->
+					<UnderConstruction />
+
+					<!-- Account Control -->
+					<Header variant="h2" class="mt-4 mb-2">Account Control</Header>
+					<div class="flex flex-row items-center gap-2">
+						<Button
+							variant="destructive"
+							disabled={!data.user.emailVerified}
+							onclick={deleteAccount}>Delete Account</Button
+						>
+						<p class="text-sm text-muted-foreground">
+							{#if data.user.emailVerified}
+								*This will delete your account and all of your data.
+							{:else}
+								*For safety reasons, you must verify your email before you can delete your account.
+							{/if}
+						</p>
+					</div>
 				</Card.Content>
 			</Card.Header>
 		</Card.Root>
 
 		<!-- https://github.com/tbollen/arcane-rift-companion/blob/main/static/legal/terms-and-conditions.md -->
-
-		<p>Logged in as {user.name}</p>
-		<p>Email: {user.email}</p>
-		<img src={user.image} alt={user.name} />
-		<br />
-		<div class="flex flex-row gap-2">
-			<Button variant="destructive" onclick={logOut}>Log Out</Button>
-			<Button variant="destructive" onclick={deleteAccount}>Delete Account</Button>
-		</div>
 	{:catch error}
 		<p>Error: {error.message}</p>
 	{/await}
@@ -168,7 +292,7 @@
 <style>
 	.fieldGrid {
 		display: grid;
-		grid-template-columns: min-content 1fr;
+		grid-template-columns: auto 1fr;
 		column-gap: 0;
 		--rowgap: 0.5rem;
 		row-gap: var(--rowgap);
@@ -195,11 +319,17 @@
 	.fieldGrid h3 {
 		font-weight: 500;
 		padding-right: 0.5rem;
+		height: 100%;
+		min-height: 1.6rem;
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.fieldGrid span {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
+		height: 100%;
+		min-height: 1.6rem;
 	}
 </style>
