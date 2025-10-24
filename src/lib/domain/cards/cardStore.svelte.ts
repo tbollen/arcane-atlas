@@ -74,10 +74,17 @@ export class StoredCard extends Card {
 		this.id = init.id === 'new' ? (init.id = generatePrefixedUUID('card')) : init.id;
 		// Set sharing and permissions (or set defaults)
 		this.ownerId = init.ownerId;
-		this.permissions = init.permissions ?? {
-			editors: [this.ownerId],
-			viewers: [this.ownerId]
-		};
+		const checkPermssions =
+			init.permissions !== undefined &&
+			init.permissions.editors.length > 0 &&
+			init.permissions.viewers.length > 0;
+		const fallbackPermissions = { editors: [this.ownerId], viewers: [this.ownerId] };
+		this.permissions = checkPermssions
+			? init.permissions ?? fallbackPermissions
+			: {
+					editors: [this.ownerId],
+					viewers: [this.ownerId]
+				};
 
 		// Set client permissions based on current user (given on init). If no user is given, give no permissions (guests can view)
 		this.public = init?.public ?? false;
@@ -106,7 +113,6 @@ export class StoredCard extends Card {
 		user?: PrismaUser;
 		character?: PrismaCharacter;
 	}): StoredCard {
-		// user: PrismaUser): StoredCard {
 		return new StoredCard({
 			id: c.card.id as CardID,
 			ownerId: c.card.ownerId as UserID,
