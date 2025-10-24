@@ -1,41 +1,25 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
+	// UI Components
+	import * as Avatar from '$lib/components/ui/avatar';
+	import Icon from '@iconify/svelte';
 
-	import { page } from '$app/state';
-
-	interface Props {
-		fallbackUser?: any;
-	}
-
-	let {
-		fallbackUser = {
-			name: 'Character',
-			image: 'https://robohash.org/test',
-			id: 'test'
-		}
-	}: Props = $props();
-
-	// Get session data (user info)
-	let user = $derived(page.data.user || fallbackUser);
-	let campaign = $derived(page?.data?.campaign || { name: 'my campaign' });
-	run(() => {
-		console.log('user:', user);
-	});
+	// user and character are passed from layout to this component THROUGH the Navbar component!
+	let { user, character } = $props();
 </script>
 
-{#if page.data.user}
-	<a href="./account" id="characterAvatar" class=" transition-all">
-		<img src={user.image || `https://robohash.org/${user.name}`} alt={user.name} />
+{#if user}
+	<a href="/account" id="characterAvatar" class=" transition-all">
+		<img src={user.image} alt={user.name} />
 		<div class="flex-col">
 			<div class="leading-none font-medium">{user.name}</div>
-			{#if campaign && campaign?.name}
-				<div class="text-xs leading-none text-muted-foreground">{campaign.name}</div>
+			{#if character}
+				<div class="text-xs leading-none text-muted-foreground">{character.name}</div>
 			{/if}
 		</div>
 	</a>
 {:else}
-	<a href="./login" id="characterAvatar">
-		<img src={user.image || `https://robohash.org/${user.name}`} alt="login" />
+	<a href="/login" id="characterAvatar">
+		<Icon icon="mdi:account" />
 		<span>Login</span>
 	</a>
 {/if}

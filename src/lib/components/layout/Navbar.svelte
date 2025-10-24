@@ -80,6 +80,9 @@
 	// Imports
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/state';
+
+	// Accept and handle server data
+	let { data } = $props();
 </script>
 
 <section id="navigation" class="navbar">
@@ -120,7 +123,7 @@
 		<!-- <a class="badge" href="https://github.com/tbollen/Game_Card_Builder" target="_blank">
 			<Icon icon="mdi:github" />
 		</a> -->
-		<CharacterAvatar />
+		<CharacterAvatar user={data.user} character={data.character} />
 	</div>
 </section>
 
