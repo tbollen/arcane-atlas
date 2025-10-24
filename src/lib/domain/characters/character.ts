@@ -2,6 +2,9 @@
 import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
 import { type Image } from '$lib/utils/types/image';
 
+// ID Shorthands
+export type CharacterID = Prefixed_UUID<'character'>;
+
 type unsetCampaign = 'no_campagin_set';
 
 // CHARACTER CLASS

@@ -13,7 +13,7 @@ model User {
   image         String?   @default(dbgenerated("(concat('https://robohash.org/', random()))::TEXT"))
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
-  role          UserRole  @default(USER) //Added
+  //role          UserRole  @default(USER) //Added
   sessions      Session[]
   accounts      Account[]
   passkeys      Passkey[]

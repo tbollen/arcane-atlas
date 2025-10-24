@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	// Core Components
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import Accordion from '$lib/components/coreComponents/Accordion.svelte';
@@ -52,8 +50,11 @@
 	///////////////////
 	interface Props {
 		card: StoredCard;
+		isOwner: boolean;
 	}
-	let { card = $bindable() }: Props = $props();
+	let { card = $bindable(), isOwner = $bindable() }: Props = $props();
+
+	// Get permissions
 
 	///////////////////////////////////////
 	// Get the Game System and Mechanics //
@@ -61,6 +62,7 @@
 	import { gameSystems, type SystemKey } from '$lib/gameSystems';
 	import { arcaneRiftMechanics } from '$lib/gameSystems/ArcaneRift/ar_cards';
 	import { AR_KEY } from '$lib/gameSystems';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	// TODO: make dynamic and fix. Currently this is the only system so it works fine...
 	let activeSystem: SystemKey = $state(card.systems.includes(AR_KEY) ? AR_KEY : 'generic'); //TODO: make dynamic based on a global value (store or session)
 	let activeSystemInfo = $derived(Object.keys(gameSystems).find((sysId) => sysId === activeSystem));
@@ -647,6 +649,29 @@
 						</div>
 					{/each}
 				{/if}
+			</div>
+		{/snippet}
+	</Accordion>
+	<hr class="divider" />
+	<!-- Sharing -->
+	<Accordion>
+		{#snippet head()}
+			<div>Sharing</div>
+		{/snippet}
+		{#snippet content()}
+			<div class="mainFields">
+				<h2 class="text-sm text-muted-foreground uppercase">under development</h2>
+				<div class="flex flex-row items-center gap-2">
+					<Checkbox
+						checked={card.public}
+						onCheckedChange={(state) => {
+							card.public = state; // Somehow doesn't update card
+							card.updatedAt = new Date(); //Stupid trick to force an update of the card
+						}}
+						name="public"
+					/>
+					<Label for="public">Make Public</Label>
+				</div>
 			</div>
 		{/snippet}
 	</Accordion>

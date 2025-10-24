@@ -7,7 +7,10 @@ model Campaign {
     gameMasters     User[]          @relation("CampaignGM")
     members         User[]          @relation("CampaignMember")
 
-    // Character specific info
+    // Characters
+    characters      Character[]     @relation("CharacterCampaign")
+
+    // Campaign specific info
     name        String
     system      String
     mechanics   Json

@@ -13,11 +13,12 @@
 	import USER_API from '$lib/utils/api/users_api.js';
 
 	// Card stores, types and modules
-	// import { cardStore } from '$lib/stores/CardStore';
 	import cachedTemplate from '$lib/stores/cachedTemplate.js';
 	import { CardStore } from '$lib/domain/cards/cardStore.svelte';
-	import { Card } from '$lib/domain/cards/card.svelte.js';
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
+
+	// User info and types
+	import type { UserID } from '$lib/domain/users/user';
 
 	// Components and Partials
 	import MainLoader from '$lib/components/partials/MainLoader.svelte';
@@ -32,7 +33,8 @@
 	const slug_id = page.params.slug;
 	let isNewCard = $derived(slug_id === 'new');
 
-	const { data } = $props();
+	let { data } = $props();
+	const userId: UserID = data.user?.id as UserID;
 
 	/////////////////////////
 	// DATA INITIALIZATION //
@@ -42,9 +44,11 @@
 
 	// Data getting (card and cardstore)
 	// Initialize card on page load, use a dummy card ('new') for init only!!
-	let card: StoredCard = $state<StoredCard>(new StoredCard('new'));
-
-	let creatorName = $state('Unknown');
+	let card: StoredCard = $state<StoredCard>(StoredCard.newCard(userId));
+	let ownerName = $state(data.ownerName);
+	console.error('Owner name:', ownerName);
+	let canEdit = $state(false);
+	let isOwner = $state(false);
 
 	/////////////////////////
 	// SAVE STATE TRACKING //
@@ -56,7 +60,7 @@
 	// });
 
 	$effect(() => {
-		serializeCard(card);
+		serializeCard(card); // Serialize card as trigger
 		if (!isMounted) return; // Wait for mount
 		cardIsSaved = false;
 	});
@@ -70,7 +74,7 @@
 			if (slug_id === 'new') {
 				console.debug('Creating new card...');
 				if (cachedTemplate.template) {
-					card = new StoredCard('new', cachedTemplate.template); // Create new card using the cached template
+					card = StoredCard.newCard(userId, cachedTemplate.template); // Create new card using the cached template
 					cachedTemplate.template = undefined; //Reset to undefined
 				}
 			} else {
@@ -87,19 +91,15 @@
 			goto('/cards');
 		}
 
-		// Update username
-		if (card?.creatorId) {
-			const response = USER_API.getByID(card.creatorId as string);
-			response.then((res) => {
-				creatorName = res.user.name;
-			});
-		} else {
-			creatorName = data.user?.name || 'ERROR';
-		}
+		// Set canEdit based on card owner, or logged in user (TODO: check with db instead of client permission)
+		canEdit = card.ownerId === userId || card.clientPermission.canEdit;
+		// Set isOwner based on card owner
+		isOwner = card.ownerId === userId;
 
 		// Retrieve URL params for edit mode
 		const urlParams = new URLSearchParams(window.location.search);
-		urlParams.get('edit') === '1' ? (editMode = true) : (editMode = false);
+		//Set edit mode based on URL params, only set to true if canEdit is true
+		editMode = urlParams.get('edit') === '1' && canEdit;
 
 		// Set mounted to true (timeout to avoid race condition)
 		setTimeout(() => {
@@ -118,7 +118,7 @@
 			// TODO: add save method and push to DB
 			cardStore.cache();
 		}
-		cardStore.addNew();
+		cardStore.addNew({ userId });
 	}
 
 	// Edit Mode stuff
@@ -165,7 +165,7 @@
 		// Create new card if new
 		if (isNewCard) {
 			console.debug('Saving new card...');
-			card = cardStore.addNew(card); // Add new card to store
+			card = cardStore.addNew({ userId, card }); // Add new card to store
 			// API CALL
 			const prismaCard = card.cardToPrisma();
 			console.debug('New prisma card:', prismaCard);
@@ -230,7 +230,7 @@
 
 						<div class="cardInfoBlock">
 							<div id="cardCreator" class="infoBlockMajor">
-								<span class="mr-1 text-sm text-muted-foreground">by</span>{creatorName}
+								<span class="mr-1 text-sm text-muted-foreground">by</span>{ownerName}
 							</div>
 							<div
 								id="cardDate"
@@ -275,9 +275,11 @@
 						>
 					</div>
 				</header>
-				<div id="itemEditor">
-					<CardEditor bind:card />
-				</div>
+				{#if canEdit}
+					<div id="itemEditor">
+						<CardEditor bind:card bind:isOwner />
+					</div>
+				{/if}
 			</section>
 		{/if}
 		<!-- Card Pane -->
@@ -291,11 +293,13 @@
 					><Icon icon="mdi:arrow-left" />Back</Button
 				>
 				<!-- Toggle Edit/View Mode -->
-				<Button onclick={toggleEditMode}
-					><Icon icon={editMode ? 'mdi:eye' : 'mdi:pencil'} />{editMode
-						? 'Viewing Mode'
-						: 'Edit Card'}</Button
-				>
+				{#if canEdit}
+					<Button onclick={toggleEditMode}
+						><Icon icon={editMode ? 'mdi:eye' : 'mdi:pencil'} />{editMode
+							? 'Viewing Mode'
+							: 'Edit Card'}</Button
+					>
+				{/if}
 
 				<!-- New Card -->
 				{#if !isNewCard}

@@ -1,7 +1,7 @@
 // Cards
 model card {
   // DB Info
-  id            String              @id @unique @default(dbgenerated("(concat('card:', gen_random_uuid()))::TEXT"))
+  id            String              @id @unique
   createdAt     DateTime
   updatedAt     DateTime
 
@@ -12,7 +12,10 @@ model card {
   // Permissions
   editors       User[]              @relation("CardEditors")
   viewers       User[]              @relation("CardViewers")
-  public        Boolean
+  public        Boolean             @default(false)
+
+  // Characters
+  characters  Character[]           @relation("CharacterCards")
 
   // Card Info
   name String

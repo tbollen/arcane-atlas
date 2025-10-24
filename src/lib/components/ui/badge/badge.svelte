@@ -14,7 +14,13 @@
 					'bg-destructive [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/70 border-transparent text-white',
 				outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
 				advanced:
-					'bg-weave-500 text-primary-foreground [a&]:hover:bg-weave-600/90 border-transparent'
+					'bg-weave-500 text-primary-foreground [a&]:hover:bg-weave-600/90 border-transparent',
+				blossom:
+					'bg-blossom-700 text-primary-foreground [a&]:hover:bg-blossom-800 border-transparent',
+				success:
+					'bg-success-500 text-white [a&]:hover:bg-success-600 focus-visible:ring-success-500/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 border-transparent',
+				triumph:
+					'bg-[#ffbf00] text-black [a&]:hover:bg-[#ffbf00] focus-visible:ring-[#ffbf00]/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 border-transparent shadow-[0px_0px_10px_3px_#ffbf00]'
 			}
 		},
 		defaultVariants: {
