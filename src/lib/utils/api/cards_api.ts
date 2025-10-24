@@ -2,7 +2,7 @@
 const API_BASE = '/api/cards';
 import type { card as PrismaCard } from '@prisma/client';
 import { logTrace } from '../debug/logtrace';
-import type { CardPermissions } from '$lib/domain/cards/cardStore.svelte';
+import type { CardID, CardPermissions } from '$lib/domain/cards/cardStore.svelte';
 
 const CARD_API = {
 	async create(card: PrismaCard): Promise<{ success: boolean }> {
@@ -26,15 +26,22 @@ const CARD_API = {
 		return await res.json();
 	},
 
-	async setPermissions(
-		cards: PrismaCard[],
-		permissions: Partial<CardPermissions>
-	): Promise<{ success: boolean }> {
+	async setPermissions({
+		cards,
+		ids,
+		permissions
+	}: {
+		cards: PrismaCard[];
+		ids?: CardID[];
+		permissions: Partial<CardPermissions> & { public?: boolean };
+	}): Promise<{ success: boolean }> {
+		// Return error when no cards are given, or when no ids are given
+		if (cards.length == 0 && (!ids || ids?.length == 0)) return { success: false };
 		// If multiple cards are given, all permissions must be given!
 		logTrace('setPermissions');
 		const res = await fetch(API_BASE, {
 			method: 'PATCH',
-			body: JSON.stringify({ cards, permissions })
+			body: JSON.stringify({ cards, permissions, ids })
 		});
 		return await res.json();
 	}

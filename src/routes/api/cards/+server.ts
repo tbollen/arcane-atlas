@@ -4,6 +4,7 @@ import type { card as PrismaCard } from '@prisma/client';
 import { db } from '$lib/server/db';
 import { MAX_CARDS } from '$lib/server/rules/maxCards';
 import type { CardPermissions } from '$lib/domain/cards/cardStore.svelte';
+import type { CardID } from '$lib/domain/cards/cardStore.svelte';
 
 export type CardPayload = {
 	action: 'create' | 'update' | 'delete';
@@ -169,21 +170,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
 	const res = await request.json();
 	let prismaCards: PrismaCard[] = res.cards;
-	let permissions: Partial<CardPermissions> = res.permissions;
+	let ids: CardID[] = res.ids;
+	let permissions: Partial<CardPermissions> & { public?: boolean } = res.permissions;
 
-	// Check if the user is authorized to update permissions
-	if (prismaCards.some((card) => card.ownerId !== user.id))
-		return new Response(
-			'Unauthorized, user is not authorized to update permissions for all given cards',
-			{ status: 401 }
-		);
+	const idsArray = prismaCards ? prismaCards.map((card) => card.id) : ids;
+	if (idsArray.length == 0) return new Response('No cards given', { status: 400 });
 
 	// Check if the card already exists
 	const dbCards = await db.card.findMany({
-		where: { id: { in: prismaCards.map((card) => card.id) } },
+		where: { id: { in: idsArray } },
 		include: { owner: true, editors: true, viewers: true }
 	});
-	if (prismaCards.length !== dbCards.length)
+	if (idsArray.length !== dbCards.length)
 		return new Response('Some selected cards do not exist', { status: 400 });
 
 	// Check if user is authorized to update card (is owner)
@@ -192,36 +190,29 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 			status: 401
 		});
 
-	// Update permissions
-	if (dbCards.length > 1) {
-		const permissionMap: Record<(typeof dbCards)[0]['id'], typeof permissions> = Object.fromEntries(
-			dbCards.map((card) => [card.id, permissions])
-		);
-		await db.$transaction(
-			prismaCards.map((card) =>
-				db.card.update({
-					where: { id: card.id },
-					data: {
-						viewers: { set: permissionMap[card.id].viewers?.map((id) => ({ id })) ?? [] },
-						editors: { set: permissionMap[card.id].editors?.map((id) => ({ id })) ?? [] }
-					}
-				})
-			)
-		);
-	} else {
-		// If only 1 card is given, use the single card endpoint
-		const dbCard = dbCards[0];
-		const p_editors = permissions.editors ?? dbCard.editors.map((editor) => editor.id);
-		const p_viewers = permissions.viewers ?? dbCard.viewers.map((viewer) => viewer.id);
+	// SHORTHAND FOR PUBLIC SETTING: used for appending to update call
+	const publicDataAppend: { public: boolean } | {} = permissions?.public
+		? { public: permissions?.public }
+		: {};
 
-		await db.card.update({
-			where: { id: prismaCards[0].id },
-			data: {
-				viewers: { set: p_viewers.map((id) => ({ id })) },
-				editors: { set: p_editors.map((id) => ({ id })) }
-			}
-		});
-	}
+	// Update permissions
+	const permissionMap: Record<(typeof dbCards)[0]['id'], typeof permissions> = Object.fromEntries(
+		dbCards.map((card) => [card.id, permissions])
+	);
+
+	// Wrap updates in a db transaction (1 or many)
+	await db.$transaction(
+		idsArray.map((id) =>
+			db.card.update({
+				where: { id: id },
+				data: {
+					viewers: { set: permissionMap[id].viewers?.map((id) => ({ id })) ?? [] },
+					editors: { set: permissionMap[id].editors?.map((id) => ({ id })) ?? [] },
+					...publicDataAppend
+				}
+			})
+		)
+	);
 
 	return new Response(JSON.stringify({ success: true, prismaCards }), { status: 200 });
 };
