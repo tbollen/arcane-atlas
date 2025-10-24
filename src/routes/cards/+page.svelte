@@ -6,6 +6,7 @@
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import * as Avatar from '$lib/components/ui/avatar';
 	import PrintDialog from './printDialog.svelte';
 
 	// API
@@ -50,6 +51,13 @@
 	// Selected Cards
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';
 	let imageView: boolean = $state(false);
+
+	// Get Character (for badges and character cards)
+	// TODO: get/set using context, currently uses a dummy
+	let selectedCharacter = {
+		name: 'Neovald',
+		image: 'https://robohash.org/Neovald'
+	};
 
 	///////////////
 	// FUNCTIONS //
@@ -282,16 +290,19 @@
 							<Icon icon="mdi:clipboard-outline" />
 							Template
 						</Badge>
-						<div class="editOptions">
-							<Button
-								variant="advanced"
-								title="Create card from this template"
-								onclick={() => createFromTemplate(card)}
-							>
-								<Icon icon="mdi:content-copy" />
-								Create</Button
-							>
-						</div>
+						{#if data.user}
+							<!-- Create from Template, only show if user is logged in -->
+							<div class="editOptions">
+								<Button
+									variant="advanced"
+									title="Create card from this template"
+									onclick={() => createFromTemplate(card)}
+								>
+									<Icon icon="mdi:content-copy" />
+									Create</Button
+								>
+							</div>
+						{/if}
 						<div class="frontSideCard">
 							<Gamecard {card} />
 						</div>
@@ -310,6 +321,36 @@
 					onclick={() => toggleCardSelection(card.id)}
 					ondblclick={() => viewCard(card.id)}
 				>
+					<!-- BADGES (for showing ownership and character enabled cards) -->
+					<!-- TODO: remove badges when filtering on permissions -->
+					<div class="cardBadges">
+						{#if card.ownerId === data.user?.id}
+							<!-- IS OWNER -->
+							<Badge variant="triumph">
+								<Icon icon="mdi:star" />
+								Creator
+							</Badge>
+						{:else if card.clientPermission.canEdit}
+							<!-- Can Edit -->
+							<Badge variant="blossom">
+								<Icon icon="mdi:pencil" />
+								Can edit
+							</Badge>
+						{:else if data.user && card.public}
+							<!-- PUBLIC (only when not all cards are public, i.e user is not logged in) -->
+							<Badge variant="secondary">
+								<Icon icon="mdi:user-group" />
+								Public
+							</Badge>
+						{/if}
+						{#if selectedCharacter && card.isCharacterCard}
+							<!-- SHOW AVATAR IF CHARACTER CARD -->
+							<Avatar.Root class="ml-auto border-2 border-blossom-500 bg-secondary">
+								<Avatar.Image src={selectedCharacter.image} />
+								<Avatar.Fallback>{selectedCharacter.name.charAt(0)}</Avatar.Fallback>
+							</Avatar.Root>
+						{/if}
+					</div>
 					<!-- Edit Options -->
 					<div class="editOptions">
 						<!-- Options when user can edit -->
@@ -462,6 +503,24 @@
 		margin: 5mm;
 		/* Click */
 		cursor: pointer;
+	}
+
+	.cardBadges {
+		/* Placement */
+		position: absolute;
+		z-index: 1;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		/* Layout */
+		display: flex;
+		gap: 3px;
+		justify-content: flex-start;
+		align-items: center;
+		padding: 10px;
+		/* Styling */
+		font-size: 2em;
+		/* Effect */
 	}
 
 	.cardInViewer:hover,
