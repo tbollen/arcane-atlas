@@ -5,7 +5,7 @@
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 
 	// SPINNER STUFF
-	import { spinner } from '$lib/stores/loadingSpinner';
+	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 	import { onMount } from 'svelte';
 
