@@ -6,6 +6,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Avatar from '$lib/components/ui/avatar';
 
+	// Spinner Store
+	import { spinner } from '$lib/stores/loadingSpinner.svelte';
+
 	// Partials
 	import UnderConstruction from '$lib/components/partials/UnderConstruction.svelte';
 
@@ -30,11 +33,13 @@
 	let user = $derived(data.user) as PrismaUser;
 
 	async function logOut() {
+		spinner.set('logOut', 'Logging out...');
 		try {
 			await authClient.signOut();
 		} catch (e) {
 			console.error(e);
 		}
+		spinner.complete();
 		invalidateAll(); //Trick to reload context and update Avatar and locals
 		console.log('Signed out');
 		goto('/login');
@@ -46,8 +51,8 @@
 			alert('Email already verified');
 			return;
 		}
-		isSending = true;
-		setTimeout(() => (isSending = false), 2000);
+		spinner.set('Sending...', 'emailVerification');
+		setTimeout(() => spinner.complete(), 2000);
 		try {
 			await authClient.sendVerificationEmail({ email: user.email });
 		} catch (e) {
@@ -55,10 +60,10 @@
 		}
 	}
 	// Helper for showing spinner when sending
-	let isSending = $state(false);
 
 	// DELETE ACCOUNT
 	async function deleteAccount() {
+		spinner.set('deleteAccount', 'Sending email...');
 		if (confirm('Are you sure you want to delete your account?')) {
 			try {
 				await authClient.deleteUser({ callbackURL: '/login' });
@@ -66,6 +71,7 @@
 				console.error(e);
 			}
 		}
+		spinner.complete();
 	}
 
 	// CARD ACCESS CONTROL
@@ -76,12 +82,16 @@
 			alert('You have no public cards!');
 			throw new Error('No public cards');
 		}
+		// Set spinner
+		spinner.set('allPublicToPrivate', 'Processing...');
+		// API Call
 		const res = await CARD_API.setPermissions({
 			cards: [],
 			ids: data.cardsInfo.publicCards as CardID[],
 			permissions: { public: false }
 		});
 		if (res.ok) {
+			spinner.complete();
 			invalidateAll();
 		}
 	}
@@ -93,12 +103,16 @@
 			alert('You have no cards with editors!');
 			throw new Error('No cards with editors');
 		}
+		// Set spinner
+		spinner.set('revokeEditors', 'Processing...');
+		// API Call
 		const res = await CARD_API.setPermissions({
 			cards: [],
 			ids: data.cardsInfo.cardsWithEditors as CardID[],
 			permissions: { editors: [data.user.id] as UserID[] }
 		});
 		if (res.ok) {
+			spinner.complete();
 			invalidateAll();
 		}
 	}
@@ -110,12 +124,16 @@
 			alert('You have no cards with viewers!');
 			throw new Error('No cards with viewers');
 		}
+		// Set spinner
+		spinner.set('revokeViewers', 'Processing...');
+		// API Call
 		const res = await CARD_API.setPermissions({
 			cards: [],
 			ids: data.cardsInfo.cardsWithViewers as CardID[],
 			permissions: { viewers: [data.user.id] as UserID[] }
 		});
 		if (res.ok) {
+			spinner.complete();
 			invalidateAll();
 		}
 	}
@@ -143,8 +161,12 @@
 					<Button variant="blossom" disabled onclick={() => {}}>
 						<Icon icon="mdi:pencil" />Edit Account
 					</Button>
-					<Button variant="destructive" onclick={logOut}>
-						<Icon icon="mdi:logout" />Logout
+					<Button variant="destructive" disabled={spinner.id === 'logOut'} onclick={logOut}>
+						{#if spinner.id === 'logOut'}
+							Logging out...<Spinner />
+						{:else}
+							<Icon icon="mdi:logout" />Logout
+						{/if}
 					</Button>
 				</Card.Action>
 				<Card.Content class="col-span-2 px-0">
@@ -193,8 +215,12 @@
 									Your email address has not been verified. Please check your inbox for a
 									verification or click resend to send the verification email again.
 								</p>
-								<Button variant="bold" disabled={isSending} onclick={resendVerificationEmail}>
-									{#if isSending}
+								<Button
+									variant="bold"
+									disabled={spinner.id === 'emailVerification'}
+									onclick={resendVerificationEmail}
+								>
+									{#if spinner.id === 'emailVerification'}
 										Sending...<Spinner />
 									{:else}
 										Resend
@@ -231,8 +257,17 @@
 								<Button href="/cards?public=true" variant="link" size="sm" class="ml-auto">
 									View
 								</Button>
-								<Button onclick={revokeEditors} variant="destructive" size="sm">
-									Revoke Access
+								<Button
+									onclick={revokeEditors}
+									disabled={spinner.id === 'revokeEditors'}
+									variant="destructive"
+									size="sm"
+								>
+									{#if spinner.id === 'revokeEditors'}
+										{spinner.message}<Spinner />
+									{:else}
+										Revoke Access
+									{/if}
 								</Button>
 							{/if}
 						</span>
@@ -244,8 +279,17 @@
 								<Button href="/cards?public=true" variant="link" size="sm" class="ml-auto">
 									View
 								</Button>
-								<Button onclick={revokeViewers} variant="destructive" size="sm">
-									Revoke Access
+								<Button
+									onclick={revokeViewers}
+									disabled={spinner.id === 'revokeViewers'}
+									variant="destructive"
+									size="sm"
+								>
+									{#if spinner.id === 'revokeViewers'}
+										{spinner.message}<Spinner />
+									{:else}
+										Revoke Access
+									{/if}
 								</Button>
 							{/if}
 						</span>
@@ -257,8 +301,17 @@
 								<Button href="/cards?public=true" variant="link" size="sm" class="ml-auto">
 									View
 								</Button>
-								<Button onclick={allPublicToPrivate} variant="destructive" size="sm">
-									Make all private
+								<Button
+									onclick={allPublicToPrivate}
+									disabled={spinner.id === 'allPublicToPrivate'}
+									variant="destructive"
+									size="sm"
+								>
+									{#if spinner.id === 'allPublicToPrivate'}
+										{spinner.message}<Spinner />
+									{:else}
+										Make all private
+									{/if}
 								</Button>
 							{/if}
 						</span>
@@ -309,9 +362,15 @@
 					<div class="flex flex-row items-center gap-2">
 						<Button
 							variant="destructive"
-							disabled={!data.user.emailVerified}
-							onclick={deleteAccount}>Delete Account</Button
+							disabled={!data.user.emailVerified || spinner.id === 'deleteAccount'}
+							onclick={deleteAccount}
 						>
+							{#if spinner.id === 'deleteAccount'}
+								{spinner.message}<Spinner />
+							{:else}
+								Delete Account
+							{/if}
+						</Button>
 						<p class="text-sm text-muted-foreground">
 							{#if data.user.emailVerified}
 								*This will delete your account and all of your data.
