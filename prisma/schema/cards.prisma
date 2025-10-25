@@ -1,13 +1,22 @@
 // Cards
 model card {
   // DB Info
-  id String @id @unique @default(dbgenerated("(concat('card:', gen_random_uuid()))::TEXT"))
-  creatorId String
-  createdAt DateTime
-  updatedAt DateTime
-  userIds String[]
-  campaignIds String[]
-  characterIds String[]
+  id            String              @id @unique
+  createdAt     DateTime
+  updatedAt     DateTime
+
+  // Owner
+  ownerId       String
+  owner         User                @relation("CardOwner", fields: [ownerId], references: [id])
+
+  // Permissions
+  editors       User[]              @relation("CardEditors")
+  viewers       User[]              @relation("CardViewers")
+  public        Boolean             @default(false)
+
+  // Characters
+  characters  Character[]           @relation("CharacterCards")
+
   // Card Info
   name String
   type String

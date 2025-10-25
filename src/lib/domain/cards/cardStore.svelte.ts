@@ -5,39 +5,143 @@ import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 
 // Prisma Schema Types
 import { type card as PrismaCard } from '@prisma/client';
+import { type User as PrismaUser } from '@prisma/client';
+import { type Character as PrismaCharacter } from '@prisma/client';
 
 import { Card } from '$lib/domain/cards/card.svelte';
-// import type { Card as PrismaCard } from '@prisma/client';
 
 // Import defaults
 import { defaultTemplates } from '$lib/domain/cards/defaultTemplates';
 
-// Shorthand for card id
+// Shorthand for prefixed UUIDs
+import type { UserID } from '$lib/domain/users/user';
+import type { CharacterID } from '$lib/domain/characters/character';
 export type CardID = Prefixed_UUID<'card'>;
+
+// TODO: Find way to load dynamically
+
+type PrismaCardExtension = {
+	owner: PrismaUser;
+	editors: PrismaUser[];
+	viewers: PrismaUser[];
+	characters: PrismaCharacter[];
+};
+export type PrismaCardExtended = PrismaCard & PrismaCardExtension;
+
+// Permissions Types
+export type CardPermissions = {
+	editors: UserID[];
+	viewers: UserID[];
+};
+
+export type ClientCardPermission = {
+	canEdit: boolean;
+	canView: boolean;
+};
 
 // Context Key
 export const CARD_CONTEXT_KEY: string = 'db_cardStore' as const;
 
 // StoredCard Class (Card with ID)
 export class StoredCard extends Card {
+	// DB Info
 	id: CardID;
 
-	constructor(id: CardID | 'new', card?: Partial<Card> | PrismaCard) {
-		super(card);
-		if (id === 'new') id = generatePrefixedUUID('card');
-		this.id = id;
+	// Sharing and Permissions (for client)
+	ownerId: UserID;
+	private permissions: CardPermissions; // For owner to get/set
+	clientPermission: ClientCardPermission; // "Public" properties that all clients can see
+	public: boolean;
+
+	// Relation to active character (re-init when chaning characters)
+	isCharacterCard: boolean;
+
+	constructor(init: {
+		id: CardID | 'new';
+		ownerId: UserID;
+		// Client info, for setting/checking permissions
+		clientUserID?: UserID;
+		// Optional properties
+		cardInfo?: Partial<Card> | PrismaCard;
+		// Queried data
+		permissions?: CardPermissions; // only for owner
+		isCharacterCard?: boolean; // only for play deck
+		public?: boolean;
+	}) {
+		// Init info on card
+		super(init.cardInfo);
+		// Set ID
+		this.id = init.id === 'new' ? (init.id = generatePrefixedUUID('card')) : init.id;
+		// Set sharing and permissions (or set defaults)
+		this.ownerId = init.ownerId;
+		const checkPermssions =
+			init.permissions !== undefined &&
+			init.permissions.editors.length > 0 &&
+			init.permissions.viewers.length > 0;
+		const fallbackPermissions = { editors: [this.ownerId], viewers: [this.ownerId] };
+		this.permissions = checkPermssions
+			? init.permissions ?? fallbackPermissions
+			: {
+					editors: [this.ownerId],
+					viewers: [this.ownerId]
+				};
+
+		// Set client permissions based on current user (given on init). If no user is given, give no permissions (guests can view)
+		this.public = init?.public ?? false;
+		this.clientPermission = {
+			canEdit:
+				init.clientUserID !== undefined && this.permissions.editors.includes(init.clientUserID),
+			canView:
+				init.clientUserID !== undefined && this.permissions.viewers.includes(init.clientUserID)
+		};
+
+		// Set if belongs to active character
+		this.isCharacterCard = init.isCharacterCard ?? false;
+	}
+
+	/**
+	 * Create a new StoredCard instance
+	 * @param {UserID} userId - owner of the card
+	 * @param {Partial<Card>} [cardInfo] - optional card info to set
+	 * @returns {StoredCard} - new StoredCard instance
+	 */
+	static newCard(userId: UserID, cardInfo?: Partial<Card>): StoredCard {
+		return new StoredCard({ id: 'new', ownerId: userId, clientUserID: userId, cardInfo });
+	}
+	static newCardFromPrisma(c: {
+		card: PrismaCardExtended;
+		user?: PrismaUser;
+		character?: PrismaCharacter;
+	}): StoredCard {
+		return new StoredCard({
+			id: c.card.id as CardID,
+			ownerId: c.card.ownerId as UserID,
+			cardInfo: c.card,
+			permissions: {
+				editors: c.card.editors.map((editor) => editor.id as UserID),
+				viewers: c.card.viewers.map((viewer) => viewer.id as UserID)
+			},
+			clientUserID: c.user ? (c.user.id as UserID) : undefined,
+			isCharacterCard:
+				c.character !== undefined &&
+				c.card.characters.some(
+					(registeredCharacters) => registeredCharacters.id === c.character?.id
+				),
+			public: c.card.public
+		});
 	}
 
 	public cardToPrisma(): PrismaCard {
 		const _card = this;
 		return {
+			// DB Info
 			id: _card.id,
-			creatorId: _card.creatorId ?? '',
+			ownerId: _card.ownerId,
 			createdAt: _card.createdAt,
 			updatedAt: _card.updatedAt,
-			userIds: _card.userIds,
-			campaignIds: _card.campaignIds,
-			characterIds: _card.characterIds,
+			// Sharing and Permissions
+			public: _card.public,
+			// Card Info
 			name: _card.name,
 			type: _card.type,
 			subtitle: _card.subtitle ?? '',
@@ -60,70 +164,25 @@ export class CardStore {
 	templates: Card[] = $state(defaultTemplates);
 	private idSet: Set<CardID> = $state(new Set());
 
-	constructor(
-		init: {
-			json?: JSON;
-			prisma?: PrismaCard[];
-			multiStore?: CardStore[];
-			store?: CardStore;
-			cards?: StoredCard[];
-			templates?: Card[];
-		} = {}
-	) {
-		// If The cards from the Prisma DB are given, use that
-		if (init.prisma) {
-			this.cards = init.prisma.map((card) => new StoredCard(card.id as CardID, card));
-		}
-		// If an exisiting store is given,
-		if (init.json) {
-			const _obj = Object(init.json);
-			const _cards = Object.hasOwn(_obj, 'cards') ? _obj.cards : [];
-			const _templates = Object.hasOwn(_obj, 'templates') ? _obj.templates : [];
-			this.cards = _cards.map(
-				(card: StoredCard) => new StoredCard(card.id ? card.id : this.returnUniqueId(), card) // If the card has an ID, use it, otherwise generate a new one
-			);
-			this.templates = _templates;
-		}
-		if (init.multiStore) {
-			// Merge all stores together
-			init.multiStore.forEach((store) => {
-				this.cards = [...this.cards, ...store.cards];
-				this.templates = [...this.templates, ...store.templates];
-			});
-		} else if (init.store) {
-			// Override all other values
-			init.cards = init.store.cards;
-			init.templates = init.store.templates;
-		}
-
-		// Create cards from given cards
-		const _cardsToOVerwrite = init.cards
-			? init.cards.map((card) => new StoredCard(card.id, card)) // If cards are given, create StoredCards from this data
-			: []; // If no cards are given, create a default card with a unique ID
-		_cardsToOVerwrite.forEach((card) => {
-			if (!this.idSet.has(card.id)) {
-				this.POST(card); // If the card doesn't exist, add it
-			} else {
-				this.PUT(card.id, card); // If the card does exist, update it
-			}
-		});
-		if (this.cards.length === 0) {
-			// If no cards are given, add a default card
-			console.debug('No cards given in initialization of the card store; adding default card');
-			this.POST();
-		}
-
-		// Same for templates
-		const _templatesToOverwrite = init.templates
-			? init.templates.map((template) => new Card(template))
-			: [];
-		_templatesToOverwrite.forEach((template) => [...this.templates, template]); //Add no matter what, duplicates are allowed!
+	constructor(c: { cards: StoredCard[]; templates?: Card[] }) {
+		// Set cards and templates
+		this.cards = c.cards;
+		this.templates = c.templates ?? defaultTemplates;
 
 		// Make the idSet (overwrite whatever was there before)
 		this.idSet = new Set(this.cards.map((card) => card.id));
 		// After init, cache the store
 		this.cache();
 	}
+
+	// Convert JSON to StoredCards
+	// static fromJSON(json: JSON): CardStore {
+	// 	const _obj = Object(json); //Convert to object first
+	// 	const _cards = Object.hasOwn(_obj, 'cards') ? _obj.cards : [];
+	// 	const _storedCards = _cards.map((card) => new StoredCard(card));
+	// 	const _templates = Object.hasOwn(_obj, 'templates') ? _obj.templates : [];
+	// 	return new CardStore({ cards: _cards, templates: _templates });
+	// }
 
 	///////////////////
 	// GET Functions //
@@ -191,14 +250,20 @@ export class CardStore {
 	/////////////////////
 
 	// Creating a new card
-	addNew(card?: Partial<Card>): StoredCard {
+	addNew({ userId, card }: { userId: UserID; card?: Partial<Card> }): StoredCard {
 		// Run POST
-		const newCard = this.POST(card);
+		const newCard = this.POST(userId, card);
 		// Save changes
 		this.cache();
 		// Return the new card (for optional further processing)
 		return newCard;
 	}
+
+	////////////////
+	// PERMISSION //
+	////////////////
+
+	getPermissions(_id: CardID, userId: UserID) {}
 
 	////////////
 	// Saving //
@@ -281,11 +346,16 @@ export class CardStore {
 	}
 
 	// CREATE A NEW CARD
-	private POST(card?: Partial<Card>): StoredCard {
+	private POST(userId: UserID, card?: Partial<Card>): StoredCard {
 		// Create a new ID
 		const newId = this.returnUniqueId();
 		// Instantiate a new card
-		const newCard = new StoredCard(newId, card);
+		const newCard = new StoredCard({
+			id: newId,
+			ownerId: userId,
+			clientUserID: userId,
+			cardInfo: card
+		});
 		// Add the new card to the store
 		this.cards = [...this.cards, newCard];
 		// Update the idSet
@@ -303,7 +373,8 @@ export class CardStore {
 			throw error;
 		}
 		// Create an updated card
-		const updatedCard = new StoredCard(_card.id, { ..._card, ...serializeCard(cardUpdate) });
+		// FIX: check if this works!
+		const updatedCard = Object.assign(_card, cardUpdate);
 		// Update the cards array
 		const newCards = this.cards.map((card) => (card.id == _id ? updatedCard : card));
 		this.cards = newCards;
@@ -313,15 +384,18 @@ export class CardStore {
 }
 
 // SERIALIZING FOR CARDS
-export function serializeCard(card: StoredCard | Partial<StoredCard>): Object {
-	const obj = clone({
+type JSONifiedCardObject = Record<keyof PrismaCard, JSON>;
+export function serializeCard(card: StoredCard | Partial<StoredCard>): JSONifiedCardObject {
+	// NOTE: serialization does not handle card permissions, these need to be set separately via the card API
+	const json: JSONifiedCardObject = {
+		// DB Info
 		id: clone(card?.id),
-		creatorId: clone(card.creatorId),
 		createdAt: clone(card.createdAt),
 		updatedAt: clone(card.updatedAt),
-		userIds: clone(card.userIds),
-		campaignIds: clone(card.campaignIds),
-		characterIds: clone(card.characterIds),
+		// Sharing and Permissions
+		ownerId: clone(card.ownerId),
+		public: clone(card.public),
+		// Card Info
 		name: clone(card.name),
 		type: clone(card.type),
 		subtitle: clone(card.subtitle),
@@ -330,7 +404,8 @@ export function serializeCard(card: StoredCard | Partial<StoredCard>): Object {
 		image: clone(card.image),
 		stylePreset: clone(card.stylePreset),
 		style: clone(card.style),
+		systems: clone(card.systems),
 		mechanics: clone(card.mechanics)
-	});
-	return obj;
+	};
+	return Object(clone(json));
 }

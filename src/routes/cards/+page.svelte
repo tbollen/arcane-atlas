@@ -6,6 +6,7 @@
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import * as Avatar from '$lib/components/ui/avatar';
 	import PrintDialog from './printDialog.svelte';
 
 	// API
@@ -43,10 +44,20 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { base } from '$app/paths';
 
+	// Get data from server
+	import type { UserID } from '$lib/domain/users/user';
+	let { data } = $props();
+
 	// Selected Cards
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';
-
 	let imageView: boolean = $state(false);
+
+	// Get Character (for badges and character cards)
+	// TODO: get/set using context, currently uses a dummy
+	let selectedCharacter = {
+		name: 'Neovald',
+		image: 'https://robohash.org/Neovald'
+	};
 
 	///////////////
 	// FUNCTIONS //
@@ -111,7 +122,11 @@
 
 	function duplicateCard(card: StoredCard) {
 		// Add to store
-		const newCard = cardStore.addNew(card);
+		if (data.user === null) {
+			throw new Error('User not logged in');
+		}
+		const userId = data.user.id as UserID;
+		const newCard = cardStore.addNew({ card, userId });
 		const newCardAsPrisma = newCard.cardToPrisma();
 		// Make API call
 		CARD_API.create(newCardAsPrisma);
@@ -143,7 +158,6 @@
 	// SEARCHING & FILTERING //
 	///////////////////////////
 	import SearchInput from '$lib/components/partials/SearchInput.svelte';
-	import { render } from 'svelte/server';
 	import { downloadCards } from '$lib/utils/cards/download';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
@@ -276,16 +290,19 @@
 							<Icon icon="mdi:clipboard-outline" />
 							Template
 						</Badge>
-						<div class="editOptions">
-							<Button
-								variant="advanced"
-								title="Create card from this template"
-								onclick={() => createFromTemplate(card)}
-							>
-								<Icon icon="mdi:content-copy" />
-								Create</Button
-							>
-						</div>
+						{#if data.user}
+							<!-- Create from Template, only show if user is logged in -->
+							<div class="editOptions">
+								<Button
+									variant="advanced"
+									title="Create card from this template"
+									onclick={() => createFromTemplate(card)}
+								>
+									<Icon icon="mdi:content-copy" />
+									Create</Button
+								>
+							</div>
+						{/if}
 						<div class="frontSideCard">
 							<Gamecard {card} />
 						</div>
@@ -304,8 +321,39 @@
 					onclick={() => toggleCardSelection(card.id)}
 					ondblclick={() => viewCard(card.id)}
 				>
+					<!-- BADGES (for showing ownership and character enabled cards) -->
+					<!-- TODO: remove badges when filtering on permissions -->
+					<div class="cardBadges">
+						{#if card.ownerId === data.user?.id}
+							<!-- IS OWNER -->
+							<Badge variant="triumph">
+								<Icon icon="mdi:star" />
+								Creator
+							</Badge>
+						{:else if card.clientPermission.canEdit}
+							<!-- Can Edit -->
+							<Badge variant="blossom">
+								<Icon icon="mdi:pencil" />
+								Can edit
+							</Badge>
+						{:else if data.user && card.public}
+							<!-- PUBLIC (only when not all cards are public, i.e user is not logged in) -->
+							<Badge variant="secondary">
+								<Icon icon="mdi:user-group" />
+								Public
+							</Badge>
+						{/if}
+						{#if selectedCharacter && card.isCharacterCard}
+							<!-- SHOW AVATAR IF CHARACTER CARD -->
+							<Avatar.Root class="ml-auto border-2 border-blossom-500 bg-secondary">
+								<Avatar.Image src={selectedCharacter.image} />
+								<Avatar.Fallback>{selectedCharacter.name.charAt(0)}</Avatar.Fallback>
+							</Avatar.Root>
+						{/if}
+					</div>
 					<!-- Edit Options -->
 					<div class="editOptions">
+						<!-- Options when user can edit -->
 						<Button
 							title="Show card"
 							size="icon"
@@ -316,16 +364,7 @@
 						>
 							<Icon icon="mdi:zoom-in" />
 						</Button>
-						<Button
-							size="icon"
-							title="Edit Card"
-							onclick={(e) => {
-								e.stopPropagation();
-								editCard(card.id);
-							}}
-						>
-							<Icon icon="mdi:pencil" />
-						</Button>
+						<!-- DOWNLOAD -->
 						<Button
 							size="icon"
 							title="Download as JSON"
@@ -336,29 +375,62 @@
 						>
 							<Icon icon="mdi:download" />
 						</Button>
-						<Button
-							variant="advanced"
-							size="icon"
-							title="Duplicate Card"
-							onclick={(e) => {
-								e.stopPropagation();
-								duplicateCard(card);
-							}}
-						>
-							<Icon icon="mdi:content-copy" />
-						</Button>
-						<Button
-							size="icon"
-							variant="destructive"
-							title="Delete Card"
-							color="threat"
-							onclick={(e) => {
-								e.stopPropagation();
-								deleteCard(card);
-							}}
-						>
-							<Icon icon="mdi:trash" />
-						</Button>
+						<!-- USER NEEDS TO BE LOGGED IN -->
+						{#if data.user !== null}
+							<!-- IF USER CAN EDIT -->
+							{#if card.clientPermission.canEdit || card.ownerId === data.user?.id}
+								<!-- EDIT -->
+								<Button
+									size="icon"
+									variant="blossom"
+									title="Edit Card"
+									onclick={(e) => {
+										e.stopPropagation();
+										editCard(card.id);
+									}}
+								>
+									<Icon icon="mdi:pencil" />
+								</Button>
+								<!-- DUPLICATE - SMALL -->
+								<Button
+									variant="advanced"
+									size="icon"
+									title="Duplicate Card"
+									onclick={(e) => {
+										e.stopPropagation();
+										duplicateCard(card);
+									}}
+								>
+									<Icon icon="mdi:content-copy" />
+								</Button>
+							{:else}
+								<!-- DUPLICATE - LARGE -->
+								<Button
+									variant="advanced"
+									title="Create card from this template"
+									onclick={() => createFromTemplate(card)}
+								>
+									<Icon icon="mdi:content-copy" />
+									Create</Button
+								>
+							{/if}
+
+							{#if data.user?.id === card.ownerId}
+								<!-- DELETE -->
+								<Button
+									size="icon"
+									variant="destructive"
+									title="Delete Card"
+									color="threat"
+									onclick={(e) => {
+										e.stopPropagation();
+										deleteCard(card);
+									}}
+								>
+									<Icon icon="mdi:trash" />
+								</Button>
+							{/if}
+						{/if}
 					</div>
 					<div class="frontSideCard">
 						<Gamecard {card} />
@@ -431,6 +503,24 @@
 		margin: 5mm;
 		/* Click */
 		cursor: pointer;
+	}
+
+	.cardBadges {
+		/* Placement */
+		position: absolute;
+		z-index: 1;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		/* Layout */
+		display: flex;
+		gap: 3px;
+		justify-content: flex-start;
+		align-items: center;
+		padding: 10px;
+		/* Styling */
+		font-size: 2em;
+		/* Effect */
 	}
 
 	.cardInViewer:hover,

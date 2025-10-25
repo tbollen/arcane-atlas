@@ -1,0 +1,17 @@
+model Campaign {
+    id            String      @id @unique
+    createdAt     DateTime
+    updatedAt     DateTime
+
+    // GM's and members
+    gameMasters     User[]          @relation("CampaignGM")
+    members         User[]          @relation("CampaignMember")
+
+    // Characters
+    characters      Character[]     @relation("CharacterCampaign")
+
+    // Campaign specific info
+    name        String
+    system      String
+    mechanics   Json
+}

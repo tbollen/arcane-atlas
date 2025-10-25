@@ -1,0 +1,22 @@
+model Character {
+    id              String      @unique @id
+    createdAt       DateTime
+    updatedAt       DateTime
+
+    // Owner
+    ownerId         String
+    owner           User        @relation("CharacterOwner", fields: [ownerId], references: [id])
+    viewers         User[]      @relation("CharacterViewers")
+
+    // Character Cards
+    cards           card[]      @relation("CharacterCards")
+
+    // Campaigns
+    campaigns       Campaign[]  @relation("CharacterCampaign")
+
+    // Character Info
+    name            String
+    image           String
+    description     String
+    mechanics       Json
+}

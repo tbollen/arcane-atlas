@@ -149,3 +149,14 @@
 	font-family: 'Jacquard 24', serif;
 	font-weight: 600;
 }
+
+main {
+	padding: 0 1rem;
+}
+
+main.content {
+	width: 100%;
+	max-width: var(--container-3xl, 48rem);
+	margin-inline: auto;
+	margin-top: calc(var(--spacing, 0.25rem) * 4);
+}

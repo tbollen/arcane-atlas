@@ -80,10 +80,15 @@
 	// Imports
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/state';
+
+	// Accept and handle server data
+	let { data } = $props();
 </script>
 
-<section id="navigation" class="navbar">
-	<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Companion</a>
+<section id="navigation" class="navbar border-b-2 border-threat-500 bg-obsidian-50">
+	<div class="z-2">
+		<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Companion</a>
+	</div>
 	<!-- Navigation -->
 	<nav class="links">
 		{#each routes as route}
@@ -91,7 +96,7 @@
 				<!-- Skip hidden routes -->
 			{:else if typeof route === 'object' && 'dropdown' in route}
 				<!-- Route is a MasterRoute, show dropdown on hover -->
-				<div class="navItem navDropdown navUnderline">
+				<div class="navItem navDropdown linkLine">
 					<a href="{base}/{route.path}">
 						{route.name}
 					</a>
@@ -106,7 +111,7 @@
 				</div>
 			{:else}
 				<!-- BaseRoute -->
-				<div class="navItem navUnderline" class:active={currentRoute === route.path}>
+				<div class="navItem linkLine" class:active={currentRoute === route.path}>
 					<a href="{base}/{route.path}">
 						<!-- <Icon icon={routes[routeName].icon} /> -->
 						{route.name}
@@ -120,7 +125,7 @@
 		<!-- <a class="badge" href="https://github.com/tbollen/Game_Card_Builder" target="_blank">
 			<Icon icon="mdi:github" />
 		</a> -->
-		<CharacterAvatar />
+		<CharacterAvatar user={data.user} character={data.character} />
 	</div>
 </section>
 
@@ -134,12 +139,15 @@
 		align-items: center;
 		/* Areas */
 		grid-template-areas: 'logo links badges';
+		padding-inline: min(1rem, 3vw);
+		/* Make sticky */
 	}
 
 	@media screen and (max-width: 750px) {
 		#navigation {
 			grid-template-columns: 1fr;
 			grid-template-areas: 'logo badges' 'links links';
+			padding-inline: 2.5mm;
 		}
 	}
 
@@ -221,15 +229,15 @@
 		text-decoration: unset;
 	}
 
-	/* .navUnderline {
-		background: orange;
-	} */
+	.linkLine {
+		position: relative;
+	}
 
-	.navUnderline::after {
+	.linkLine::after {
 		content: ' ';
 		/* Placement */
 		position: absolute;
-		z-index: -1;
+		z-index: 0;
 		bottom: 0;
 		/* effect */
 		--width: 0;
@@ -254,7 +262,7 @@
 		background-color: var(--color-threat-4);
 	}
 
-	.navUnderline:hover::after {
+	.linkLine:hover::after {
 		--width: 50%;
 		background-color: var(--color-threat-2);
 	}
@@ -275,17 +283,19 @@
 		transition: all 0.2s ease-in-out;
 	}
 
-	.websiteLogo::before {
-		content: 'Arcane Companion';
+	.websiteLogo::after {
+		content: '';
 		position: absolute;
-		z-index: -1;
 		inset: 0;
+		height: 100%;
+		width: 100%;
+		z-index: -1;
 		background: linear-gradient(90deg, var(--color-threat-2), var(--color-weave-2));
 		background-clip: inherit;
 	}
 
 	.websiteLogo:hover {
-		background: transparent;
+		background: var(--color-weave-2);
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}

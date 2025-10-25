@@ -2,10 +2,23 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
 
+// Database stuff
+import { db } from '$lib/server/db';
+
+// Mail transporter using Resend, send method lives in each email template
+import { sendLinkEmail } from '$lib/utils/email/emailTemplates/linkEmail';
+import { sendEmailOTP } from '$lib/utils/email/emailTemplates/emailOTP';
+
+// Method for user id generation
+import { generatePrefixedUUID } from '$lib/utils/uuid';
+
 // dotenv for environment variables
 import 'dotenv/config';
 // Plugins
 import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { emailOTP } from 'better-auth/plugins';
+import { passkey } from 'better-auth/plugins/passkey';
+
 // Cookies for SvelteKit imports
 import { getRequestEvent } from '$app/server';
 
@@ -20,9 +33,32 @@ export const auth = betterAuth({
 			maxAge: 60 * 5 // 5 minutes
 		}
 	},
+	emailVerification: {
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true,
+		sendVerificationEmail: async ({ user, url }) => {
+			await sendLinkEmail({
+				welcomeMessage:
+					'Thank you for signing up! Please verify your email address by clicking the button below:',
+				subject: 'Please verify your email',
+				username: user.name,
+				email: user.email,
+				url
+			});
+		}
+	},
 	// plugins: [sveltekitCookies(getRequestEvent)],
 	emailAndPassword: {
-		enabled: true
+		enabled: true,
+		sendResetPassword: async ({ user, url }) => {
+			await sendLinkEmail({
+				welcomeMessage: 'Please reset your password by clicking the button below:',
+				subject: 'Reset your password',
+				username: user.name,
+				email: user.email,
+				url
+			});
+		}
 	},
 	socialProviders: {
 		github: {
@@ -35,5 +71,47 @@ export const auth = betterAuth({
 			clientSecret: process.env.DISCORD_CLIENT_SECRET as string
 		}
 	},
-	plugins: [sveltekitCookies(getRequestEvent)]
+	user: {
+		deleteUser: {
+			enabled: true,
+			sendDeleteAccountVerification: async ({ user, url }) => {
+				await sendLinkEmail({
+					welcomeMessage: 'Please click the button below to delete your account:',
+					subject: 'Account deletion requested',
+					username: user.name,
+					email: user.email,
+					url
+				});
+			},
+			beforeDelete: async (user) => {
+				// TODO:
+				// Remove user from all cards
+				// Remove all characters
+				// Remove user from all campaigns
+			}
+		}
+	},
+	advanced: {
+		database: {
+			generateId: () => generatePrefixedUUID('user')
+		}
+	},
+	databaseHooks: {
+		user: {
+			create: {
+				before: async (user) => {
+					user.image = `https://robohash.org/${user.name}`;
+				}
+			}
+		}
+	},
+	plugins: [
+		sveltekitCookies(getRequestEvent),
+		passkey(),
+		emailOTP({
+			async sendVerificationOTP({ email, otp, type }) {
+				await sendEmailOTP({ email, otp, type });
+			}
+		})
+	]
 });

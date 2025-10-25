@@ -8,19 +8,7 @@
 
 	let values: number[] = $state([]);
 
-	function updateCharacteristicValue(index: number) {
-		values[index] = Math.min(Math.max(Number(values[index]), cr.minPoints), cr.maxPoints);
-		if (totalCharacteristicsPoints > cr.totalPoints) {
-			alert(
-				`You have exceeded the maximum number of points (${totalCharacteristicsPoints}/${cr.totalPoints})`
-			);
-		}
-	}
-
-
-	import { characteristics, characteristicRules as cr } from '$lib/modules/mechanics';
-	let totalCharacteristicsPoints = $derived(values.reduce((acc, curr) => acc + curr, 0));
-	let totalPointsExceeded = $derived(totalCharacteristicsPoints > cr.totalPoints);
+	import { characteristics, skillList } from '$lib/gameSystems/ArcaneRift/ar_skillCheckList';
 </script>
 
 <section id="sheet">
@@ -37,18 +25,12 @@
 	<section id="characteristics">
 		{#each characteristics as characteristic, index}
 			<div class="characteristic">
-				<div class="name" id={characteristic.name}>{characteristic.name}</div>
-				<input
-					type="number"
-					onchange={() => updateCharacteristicValue(index)}
-					bind:value={values[index]}
-					min={cr.minPoints}
-					max={cr.maxPoints}
-				/>
+				<div class="name" id={characteristic}>{characteristic}</div>
+				<input type="number" bind:value={values[index]} />
 				<div class="skills">
-					{#each characteristic.skills as skill}
+					{#each skillList[characteristic] as skill}
 						<div class="skillName">
-							{skill.name}
+							{skill}
 						</div>
 					{/each}
 				</div>
