@@ -23,6 +23,8 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { onMount } from 'svelte';
 	import CARD_API from '$lib/utils/api/cards_api.js';
+	import type { CardID } from '$lib/domain/cards/cardStore.svelte';
+	import type { UserID } from '$lib/domain/users/user';
 
 	let { data } = $props();
 	let user = $derived(data.user) as PrismaUser;
@@ -68,15 +70,54 @@
 
 	// CARD ACCESS CONTROL
 	async function allPublicToPrivate() {
-		alert('Not yet implemented');
+		const confirm = window.confirm('Are you sure you want to make all your cards private?');
+		if (!confirm) return;
+		if (!data.cardsInfo.publicCards || data.cardsInfo.publicCards.length == 0) {
+			alert('You have no public cards!');
+			throw new Error('No public cards');
+		}
+		const res = await CARD_API.setPermissions({
+			cards: [],
+			ids: data.cardsInfo.publicCards as CardID[],
+			permissions: { public: false }
+		});
+		if (res.ok) {
+			invalidateAll();
+		}
 	}
 
 	async function revokeEditors() {
-		alert('Not yet implemented');
+		const confirm = window.confirm('Are you sure you want to revoke Editor access to all cards?');
+		if (!confirm) return;
+		if (!data.cardsInfo.cardsWithEditors || data.cardsInfo.cardsWithEditors.length == 0) {
+			alert('You have no cards with editors!');
+			throw new Error('No cards with editors');
+		}
+		const res = await CARD_API.setPermissions({
+			cards: [],
+			ids: data.cardsInfo.cardsWithEditors as CardID[],
+			permissions: { editors: [data.user.id] as UserID[] }
+		});
+		if (res.ok) {
+			invalidateAll();
+		}
 	}
 
 	async function revokeViewers() {
-		alert('Not yet implemented');
+		const confirm = window.confirm('Are you sure you want to revoke Viewer access to all cards?');
+		if (!confirm) return;
+		if (!data.cardsInfo.cardsWithViewers || data.cardsInfo.cardsWithViewers.length == 0) {
+			alert('You have no cards with viewers!');
+			throw new Error('No cards with viewers');
+		}
+		const res = await CARD_API.setPermissions({
+			cards: [],
+			ids: data.cardsInfo.cardsWithViewers as CardID[],
+			permissions: { viewers: [data.user.id] as UserID[] }
+		});
+		if (res.ok) {
+			invalidateAll();
+		}
 	}
 </script>
 
