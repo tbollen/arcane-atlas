@@ -3,7 +3,7 @@ class Spinner {
 	isLoading: boolean = $state(false);
 	id: string | 'full' | undefined = $state();
 
-	set(msg: string, id?: string | 'full') {
+	set(id: string | 'full', msg?: string) {
 		if (id) this.id = id;
 		this.isLoading = true;
 		this.message = msg;
