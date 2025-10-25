@@ -4,15 +4,11 @@
 	import '$lib/styles/main.css';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 
-	interface Props {
-		children?: import('svelte').Snippet;
-	}
-
-	let { children }: Props = $props();
+	let { children, data } = $props();
 </script>
 
 <header>
-	<Navbar />
+	<Navbar {data} />
 </header>
 {@render children?.()}
 

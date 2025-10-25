@@ -1,0 +1,17 @@
+/* Use this style for lists. Just apply the class "list" to <ul> or <ol> elements */
+
+ul.list,
+ol.list {
+	list-style-position: inside;
+}
+
+ul.list > li,
+ol.list > li {
+	text-indent: 0.5rem;
+}
+
+ul.list > li::marker,
+ol.list > li::marker {
+	content: '> ';
+	color: rgba(0, 0, 0, 0.5);
+}

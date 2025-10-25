@@ -1,70 +1,37 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
+	// UI Components
+	import * as Avatar from '$lib/components/ui/avatar';
+	import Icon from '@iconify/svelte';
+	import { Button } from '$lib/components/ui/button';
 
-	import { page } from '$app/state';
-
-	interface Props {
-		fallbackUser?: any;
-	}
-
-	let {
-		fallbackUser = {
-			name: 'Character',
-			image: 'https://robohash.org/test',
-			id: 'test'
-		}
-	}: Props = $props();
-
-	// Get session data (user info)
-	let user = $derived(page.data.user || fallbackUser);
-	let campaign = $derived(page?.data?.campaign || { name: 'my campaign' });
-	run(() => {
-		console.log('user:', user);
-	});
+	// user and character are passed from layout to this component THROUGH the Navbar component!
+	let { user, character } = $props();
 </script>
 
-{#if page.data.user}
-	<a href="./account" id="characterAvatar" class=" transition-all">
-		<img src={user.image || `https://robohash.org/${user.name}`} alt={user.name} />
+{#if user}
+	<!-- If user is logged in -->
+	<Button variant="ghost" class="rounded-full pr-4 pl-1" size="default" href="/account">
+		<Avatar.Root>
+			<!-- If character is selected, show character image, else show user image -->
+			<Avatar.Image src={character ? character.image : user.image} />
+			<Avatar.Fallback>{user.name.charAt(0)}</Avatar.Fallback>
+		</Avatar.Root>
 		<div class="flex-col">
-			<div class="leading-none font-medium">{user.name}</div>
-			{#if campaign && campaign?.name}
-				<div class="text-xs leading-none text-muted-foreground">{campaign.name}</div>
+			{#if character}
+				<div class="leading-none font-medium">{character.name}</div>
+				<div class="text-xs leading-none font-normal text-muted-foreground">{user.name}</div>
+			{:else}
+				<div class="leading-none font-medium">{user.name}</div>
 			{/if}
 		</div>
-	</a>
+	</Button>
 {:else}
-	<a href="./login" id="characterAvatar">
-		<img src={user.image || `https://robohash.org/${user.name}`} alt="login" />
-		<span>Login</span>
-	</a>
+	<!-- If user is not logged in -->
+	<Button variant="link" size="default" href="/login">
+		<Icon icon="mdi:account" />
+		<span class="font-normal">Login</span>
+	</Button>
 {/if}
 
 <style>
-	a#characterAvatar {
-		/* Reset */
-		color: unset;
-		text-decoration: unset;
-	}
-	#characterAvatar {
-		height: 2.5rem;
-		/* Styling */
-		padding: 0.2rem;
-		padding-right: 1em;
-		background-color: var(--color-blossom-3);
-		border-radius: 999px;
-		/* Layout */
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		gap: 0.5em;
-	}
-	#characterAvatar img {
-		border-radius: 50%;
-		height: 100%;
-	}
-
-	#characterAvatar:hover {
-		background-color: var(--color-blossom-4);
-	}
 </style>
