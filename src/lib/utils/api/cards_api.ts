@@ -34,16 +34,17 @@ const CARD_API = {
 		cards: PrismaCard[];
 		ids?: CardID[];
 		permissions: Partial<CardPermissions> & { public?: boolean };
-	}): Promise<{ success: boolean }> {
+	}): Promise<Response> {
 		// Return error when no cards are given, or when no ids are given
-		if (cards.length == 0 && (!ids || ids?.length == 0)) return { success: false };
+		if (cards.length == 0 && (!ids || ids?.length == 0))
+			return new Response('No cards given', { status: 400 });
 		// If multiple cards are given, all permissions must be given!
-		logTrace('setPermissions');
+		// logTrace('setPermissions');
 		const res = await fetch(API_BASE, {
 			method: 'PATCH',
 			body: JSON.stringify({ cards, permissions, ids })
 		});
-		return await res.json();
+		return res;
 	}
 };
 

@@ -173,7 +173,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 	let ids: CardID[] = res.ids;
 	let permissions: Partial<CardPermissions> & { public?: boolean } = res.permissions;
 
-	const idsArray = prismaCards ? prismaCards.map((card) => card.id) : ids;
+	const idsArray = prismaCards.length !== 0 ? prismaCards.map((card) => card.id) : ids;
 	if (idsArray.length == 0) return new Response('No cards given', { status: 400 });
 
 	// Check if the card already exists
@@ -181,6 +181,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		where: { id: { in: idsArray } },
 		include: { owner: true, editors: true, viewers: true }
 	});
+
 	if (idsArray.length !== dbCards.length)
 		return new Response('Some selected cards do not exist', { status: 400 });
 
@@ -191,9 +192,8 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		});
 
 	// SHORTHAND FOR PUBLIC SETTING: used for appending to update call
-	const publicDataAppend: { public: boolean } | {} = permissions?.public
-		? { public: permissions?.public }
-		: {};
+	const publicDataAppend: { public?: boolean } =
+		permissions?.public !== undefined ? { public: permissions.public } : {};
 
 	// Update permissions
 	const permissionMap: Record<(typeof dbCards)[0]['id'], typeof permissions> = Object.fromEntries(
