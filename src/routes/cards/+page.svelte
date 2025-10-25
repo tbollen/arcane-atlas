@@ -336,7 +336,8 @@
 								<Icon icon="mdi:pencil" />
 								Can edit
 							</Badge>
-						{:else if data.user && card.public}
+						{/if}
+						{#if data.user && card.public}
 							<!-- PUBLIC (only when not all cards are public, i.e user is not logged in) -->
 							<Badge variant="secondary">
 								<Icon icon="mdi:user-group" />
@@ -514,7 +515,7 @@
 		right: -20px;
 		/* Layout */
 		display: flex;
-		gap: 3px;
+		gap: 0.5rem;
 		justify-content: flex-start;
 		align-items: center;
 		padding: 10px;
