@@ -20,7 +20,7 @@
 	<Navbar {data} />
 </header>
 {@render children?.()}
-{#if spinner.isLoading}
+{#if spinner.isLoading && spinner.id === 'full'}
 	<div
 		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3.5 bg-primary/80"
 		aria-busy="true"
