@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	// Import Style
-	import '$lib/styles/main.css';
+	import '$lib/styles';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 
 	// SPINNER STUFF
