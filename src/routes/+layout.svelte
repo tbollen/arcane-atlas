@@ -7,7 +7,7 @@
 	let { children, data } = $props();
 </script>
 
-<header>
+<header class="sticky top-0 z-1">
 	<Navbar {data} />
 </header>
 {@render children?.()}
