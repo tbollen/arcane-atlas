@@ -143,7 +143,7 @@
 		/* Make sticky */
 	}
 
-	@media screen and (max-width: 750px) {
+	@media screen and (max-width: 920px) {
 		#navigation {
 			grid-template-columns: 1fr;
 			grid-template-areas: 'logo badges' 'links links';
