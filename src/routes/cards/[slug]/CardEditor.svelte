@@ -201,7 +201,7 @@
 				></Textarea>
 				<p class="useTip col-span-full text-sm text-muted-foreground">
 					You can add dice icons like such '[pr]' = {@html renderMarkdown('[pr]')}
-					<a href="{base}/about">click here</a> for more info
+					<a class="link hover:underline" href="/about#diceShorthands">click here</a> for more info
 				</p>
 				<hr />
 				<!-- Type -->
