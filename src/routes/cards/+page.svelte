@@ -1,7 +1,16 @@
 <!-- Collection -->
 <script lang="ts">
+	// Partials
 	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
 	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
+
+	// Svelte stuff
+	import { onMount } from 'svelte';
+	import { fly } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { expoOut } from 'svelte/easing';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { base } from '$app/paths';
 
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
@@ -36,13 +45,6 @@
 			}
 		})
 	);
-
-	// Svelte stuff
-	import { onMount } from 'svelte';
-	import { fly } from 'svelte/transition';
-	import { expoOut } from 'svelte/easing';
-	import { goto, invalidateAll } from '$app/navigation';
-	import { base } from '$app/paths';
 
 	// Get data from server
 	import type { UserID } from '$lib/domain/users/user';
@@ -188,42 +190,47 @@
 <main>
 	<section id="controls">
 		<div class="toolbarCategory">
+			<!-- CHANGE VIEWS -->
 			<!-- Filter -->
 			<Button
 				variant={enableFiltering ? 'advanced' : 'default'}
 				onclick={() => (enableFiltering = !enableFiltering)}
 				><Icon icon="mdi:filter" />Filter</Button
 			>
-			<!-- Create New Card -->
-			<Button variant="destructive" onclick={addNew}>
-				<Icon icon="mdi:plus" />
-				New Card</Button
-			>
 			<!-- Image View -->
 			<Button variant={imageView ? 'blossom' : 'default'} onclick={() => (imageView = !imageView)}>
 				<Icon icon={imageView ? 'mdi:file-image' : 'mdi:file-document'} />
 				Change View</Button
 			>
-			<!-- Upload with JSON -->
-			<Button onclick={() => {}}>
-				<Icon icon="mdi:upload" />
-				Upload</Button
-			>
-			<!-- Show Templates -->
-			<Button variant={showTemplates ? 'advanced' : 'default'} onclick={toggleTemplates}>
-				<Icon icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'} />
-				Show Templates</Button
-			>
-			<!-- Download -->
-			{#if $selectedCardIds.size > 0}{:else}
-				<Button
-					onclick={() => {
-						downloadCards(renderedCards_sorted);
-					}}
+
+			<!-- ONLY FOR LOGGED IN USERS -->
+			{#if data.user !== null}
+				<!-- Create New Card -->
+				<Button variant="destructive" onclick={addNew}>
+					<Icon icon="mdi:plus" />
+					New Card</Button
 				>
-					<Icon icon="mdi:download" />
-					Download All</Button
+				<!-- Upload with JSON -->
+				<Button onclick={() => {}}>
+					<Icon icon="mdi:upload" />
+					Upload</Button
 				>
+				<!-- Show Templates -->
+				<Button variant={showTemplates ? 'advanced' : 'default'} onclick={toggleTemplates}>
+					<Icon icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'} />
+					Show Templates</Button
+				>
+				<!-- Download -->
+				{#if $selectedCardIds.size > 0}{:else}
+					<Button
+						onclick={() => {
+							downloadCards(renderedCards_sorted);
+						}}
+					>
+						<Icon icon="mdi:download" />
+						Download All</Button
+					>
+				{/if}
 			{/if}
 		</div>
 		{#if $selectedCardIds.size > 0}
@@ -267,19 +274,15 @@
 			<div id="filterContainer" class="">
 				<SearchInput bind:searchTerm />
 			</div>
-			<Button
-				variant="advanced"
-				onclick={() => console.log('Serialized Cards: ', cardStore.serialize())}
-			>
-				<Icon icon="mdi:code-json" />
-				Serialize</Button
-			>
+			<p class="text-sm text-muted-foreground">More to come...</p>
 		</section>
 	{/if}
-	{#if renderCards}
+	<!-- Render cards -->
+	{#if (renderCards && renderedCards_sorted.length > 0) || (showTemplates && cardStore.templates.length > 0)}
 		<section
 			id="viewer"
-			transition:fly={{ delay: 200, duration: 800, opacity: 0, y: 40, easing: expoOut }}
+			out:fly|local={{ duration: 400, opacity: 0, y: 20, easing: expoOut }}
+			in:fly|local={{ delay: 400, duration: 800, opacity: 0, y: 40, easing: expoOut }}
 		>
 			<!-- TEMPLATES -->
 			{#if showTemplates}
@@ -442,10 +445,15 @@
 				</button>
 			{/each}
 		</section>
+	{:else}
+		<section
+			class="flex h-42 w-full items-center justify-center"
+			out:fly|local={{ duration: 400, opacity: 0, y: 20, easing: expoOut }}
+			in:fly|local={{ delay: 400, duration: 800, opacity: 0, y: 40, easing: expoOut }}
+		>
+			<p class="text-center text-lg text-muted-foreground">No cards to display.</p>
+		</section>
 	{/if}
-	<section id="printSelected">
-		{#each $selectedCardIds as sc}{/each}
-	</section>
 </main>
 
 <style>
