@@ -11,6 +11,9 @@
 	// Spinner
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 
+	// Toaster
+	import { toast } from 'svelte-sonner';
+
 	// API
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import USER_API from '$lib/utils/api/users_api.js';
@@ -49,7 +52,6 @@
 	// Initialize card on page load, use a dummy card ('new') for init only!!
 	let card: StoredCard = $state<StoredCard>(StoredCard.newCard(userId));
 	let ownerName = $state(data.ownerName);
-	console.error('Owner name:', ownerName);
 	let canEdit = $state(false);
 	let isOwner = $state(false);
 
@@ -153,7 +155,7 @@
 		const _cardId = card.id;
 		saveHandler();
 		selectedCardIds.set(new Set([_cardId]));
-		goto(`${base}/print`);
+		goto(`${base}/cards/print`);
 	}
 
 	// Download the current card as JSON
@@ -182,9 +184,12 @@
 			// API CALL
 			response = await CARD_API.update(card.cardToPrisma());
 		}
+		if (response.ok === true) {
+			toast.success('Card saved successfully');
+		} else {
+			toast.error('Error saving card');
+		}
 		cardStore.save();
-		// LOG API RESPONSE
-		console.log(response);
 		cardIsSaved = true;
 		// Complete spinner
 		spinner.complete();
@@ -318,7 +323,9 @@
 					<Button onclick={newEmptyCard}><Icon icon="mdi:plus" />New Card</Button>
 				{/if}
 
-				<a class="mobileOnly" href="#editor">Go to editor</a>
+				<Button variant="link" class="mobileOnly" href="#editor"
+					><Icon icon="mdi:arrow-down" />Editor</Button
+				>
 			</div>
 			<div id="cardArea">
 				<Gamecard {card} />
@@ -352,7 +359,7 @@
 		display: none;
 	}
 
-	@media screen and (max-width: 750px) {
+	@media screen and (max-width: 920px) {
 		#main {
 			grid-template-areas: 'cardView' 'editor';
 			grid-template-rows: min-content min-content;
