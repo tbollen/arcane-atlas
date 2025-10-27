@@ -20,8 +20,6 @@ type CardsInfo = {
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	console.log('account');
-
 	if (!locals.user) {
 		throw redirect(302, '/login');
 	}
