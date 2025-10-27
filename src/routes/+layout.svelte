@@ -4,6 +4,9 @@
 	import '$lib/styles';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 
+	// Sonner for Toasts
+	import { Toaster } from '$lib/components/ui/sonner';
+
 	// SPINNER STUFF
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
@@ -16,6 +19,10 @@
 	});
 </script>
 
+<!-- TOASTER -->
+<Toaster />
+
+<!-- CONTENT -->
 <header class="sticky top-0 z-1">
 	<Navbar {data} />
 </header>
