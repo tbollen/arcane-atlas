@@ -573,11 +573,24 @@
 							{/if}
 						</p>
 					</div>
+					<hr class="my-4" />
+					<div class="mt-4 flex flex-row justify-evenly text-sm text-muted-foreground">
+						<a
+							class="hover:underline"
+							href="https://github.com/tbollen/arcane-rift-companion/blob/main/static/legal/terms-and-conditions.md"
+							target="_blank"
+							rel="noopener noreferrer">terms and conditions</a
+						>
+						<a
+							class="hover:underline"
+							href="https://github.com/tbollen/arcane-rift-companion/blob/main/static/legal/privacy-policy.md"
+							target="_blank"
+							rel="noopener noreferrer">privacy policy</a
+						>
+					</div>
 				</Card.Content>
 			</Card.Header>
 		</Card.Root>
-
-		<!-- https://github.com/tbollen/arcane-rift-companion/blob/main/static/legal/terms-and-conditions.md -->
 	{:catch error}
 		<p>Error: {error.message}</p>
 	{/await}

@@ -284,7 +284,7 @@
 									<Form.Label class="font-normal">
 										I agree to the<a
 											class="underline"
-											href="https://github.com/tbollen/arcane-rift-companion/blob/main/static/legal/terms-and-conditions.md"
+											href="https://github.com/tbollen/arcane-atlas/blob/main/static/legal/terms-and-conditions.md"
 											target="_blank"
 											rel="noopener noreferrer">terms and conditions</a
 										>
@@ -303,7 +303,7 @@
 									<Form.Label class="font-normal"
 										>I agree to the <a
 											class="underline"
-											href="https://github.com/tbollen/arcane-rift-companion/blob/main/static/legal/privacy-policy.md"
+											href="https://github.com/tbollen/arcane-atlas/blob/main/static/legal/privacy-policy.md"
 											target="_blank"
 											rel="noopener noreferrer">privacy policy</a
 										></Form.Label
