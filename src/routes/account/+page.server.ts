@@ -4,7 +4,7 @@ import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 
 // Superform stuff
-import { changePasswordSchema } from './formSchema';
+import { changePasswordSchema, updateAccountInfoSchema } from './formSchema';
 import { message, superValidate, fail, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -20,8 +20,6 @@ type CardsInfo = {
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	console.log('account');
-
 	if (!locals.user) {
 		throw redirect(302, '/login');
 	}
@@ -69,8 +67,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Setup and return form info
 	const changePasswordForm = await superValidate(zod4(changePasswordSchema));
+	const updateAccountInfoForm = await superValidate(zod4(updateAccountInfoSchema));
 
-	return { user: locals.user, cardsInfo, changePasswordForm };
+	return { user: locals.user, cardsInfo, changePasswordForm, updateAccountInfoForm };
 };
 
 export const actions: Actions = {
@@ -130,6 +129,62 @@ export const actions: Actions = {
 			console.log(error);
 			setError(changePasswordForm, 'current-password', 'Current password is incorrect');
 			return fail(400, { changePasswordForm });
+		}
+	},
+	updateAccountInfo: async ({ request, locals }) => {
+		const updateAccountInfoForm = await superValidate(request, zod4(updateAccountInfoSchema));
+		// Check if the form is valid
+		if (!updateAccountInfoForm.valid) return fail(400, { updateAccountInfoForm });
+
+		// Check if user is logged in
+		if (!locals.user) {
+			setError(updateAccountInfoForm, '', 'User not logged in');
+			return fail(400, { updateAccountInfoForm });
+		}
+
+		// Check if imageUrl is reachable
+		if (updateAccountInfoForm.data?.imageUrl && updateAccountInfoForm.data.imageUrl !== '') {
+			try {
+				fetch(updateAccountInfoForm.data.imageUrl, { method: 'HEAD' }).then((res) => {
+					if (!res.ok) {
+						setError(updateAccountInfoForm, 'imageUrl', 'Image URL is not reachable');
+						return fail(400, { updateAccountInfoForm });
+					}
+				});
+			} catch (error) {
+				setError(updateAccountInfoForm, 'imageUrl', 'Image URL is not reachable');
+				return fail(400, { updateAccountInfoForm });
+			}
+		}
+
+		console.log(
+			'Updating account info for user:',
+			locals.user.id,
+			'with data:',
+			updateAccountInfoForm.data
+		);
+
+		// API CALL
+		try {
+			const response = await db.user.update({
+				where: { id: locals.user.id },
+				data: {
+					name: updateAccountInfoForm.data?.name,
+					image: updateAccountInfoForm.data?.imageUrl
+				}
+			});
+			return message(updateAccountInfoForm, {
+				success: true,
+				type: 'success',
+				text: 'Account info updated successfully'
+			});
+		} catch (error) {
+			console.log(error);
+			return message(updateAccountInfoForm, {
+				success: false,
+				type: 'error',
+				text: 'Failed to update account info'
+			});
 		}
 	}
 };
