@@ -18,6 +18,9 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import PrintDialog from './printDialog.svelte';
 
+	// Toaster
+	import { toast } from 'svelte-sonner';
+
 	// API
 	import CARD_API from '$lib/utils/api/cards_api';
 
@@ -83,7 +86,7 @@
 		$selectedCardIds = $selectedCardIds;
 	}
 
-	function deleteCard(card: StoredCard) {
+	async function deleteCard(card: StoredCard) {
 		const prismaCard = card.cardToPrisma();
 		// Confirmation
 		cardStore.destroy(card.id);
@@ -91,10 +94,12 @@
 		$selectedCardIds.delete(card.id); // Remove ID from the selected set
 		$selectedCardIds = $selectedCardIds; // Force update
 		// Make API call
-		CARD_API.delete([prismaCard]);
+		const response = await CARD_API.delete([prismaCard]);
+		if (response.ok === true) toast.success('Card deleted successfully');
+		else toast.error('Error deleting card');
 	}
 
-	function deleteSelected(ids: Set<CardID> = $selectedCardIds) {
+	async function deleteSelected(ids: Set<CardID> = $selectedCardIds) {
 		const cardIds = Array.from(ids);
 		// Get cards to delete in PrismaCard format
 		// NOTE: first, before actually removing them from the store!!
@@ -104,7 +109,9 @@
 		// Confirmation and remove from cached Store Instance
 		cardStore.destroy(cardIds);
 		// Make API call
-		CARD_API.delete(cardsToDelete);
+		const response = await CARD_API.delete(cardsToDelete);
+		if (response.ok === true) toast.success('Cards deleted successfully');
+		else toast.error('Error deleting cards');
 		// Remove from selected cards
 		$selectedCardIds.clear(); // Remove ID from the selected cards set
 		$selectedCardIds = $selectedCardIds; // Force update
@@ -122,16 +129,22 @@
 		goto(`${base}/cards/${id}?edit=1`);
 	}
 
-	function duplicateCard(card: StoredCard) {
+	async function duplicateCard(card: StoredCard) {
 		// Add to store
 		if (data.user === null) {
 			throw new Error('User not logged in');
 		}
+		// CONFIRM
+		const confirm = window.confirm('Are you sure you want to duplicate this card?');
+		if (!confirm) return;
+		// CREATE
 		const userId = data.user.id as UserID;
 		const newCard = cardStore.addNew({ card, userId });
 		const newCardAsPrisma = newCard.cardToPrisma();
 		// Make API call
-		CARD_API.create(newCardAsPrisma);
+		const response = await CARD_API.create(newCardAsPrisma);
+		if (response.ok === true) toast.success('Card duplicated successfully');
+		else toast.error('Error duplicating card');
 	}
 
 	import Icon from '@iconify/svelte';
