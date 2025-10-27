@@ -8,6 +8,12 @@
 	// Utils
 	import { serializeCard } from '$lib/domain/cards/cardStore.svelte';
 
+	// Spinner
+	import { spinner } from '$lib/stores/loadingSpinner.svelte';
+
+	// Toaster
+	import { toast } from 'svelte-sonner';
+
 	// API
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import USER_API from '$lib/utils/api/users_api.js';
@@ -46,7 +52,6 @@
 	// Initialize card on page load, use a dummy card ('new') for init only!!
 	let card: StoredCard = $state<StoredCard>(StoredCard.newCard(userId));
 	let ownerName = $state(data.ownerName);
-	console.error('Owner name:', ownerName);
 	let canEdit = $state(false);
 	let isOwner = $state(false);
 
@@ -150,7 +155,7 @@
 		const _cardId = card.id;
 		saveHandler();
 		selectedCardIds.set(new Set([_cardId]));
-		goto(`${base}/print`);
+		goto(`${base}/cards/print`);
 	}
 
 	// Download the current card as JSON
@@ -161,6 +166,8 @@
 
 	// Save card function
 	async function saveHandler() {
+		// Set spinner
+		spinner.set('Saving...', 'save');
 		let response;
 		// Create new card if new
 		if (isNewCard) {
@@ -177,10 +184,15 @@
 			// API CALL
 			response = await CARD_API.update(card.cardToPrisma());
 		}
+		if (response.ok === true) {
+			toast.success('Card saved successfully');
+		} else {
+			toast.error('Error saving card');
+		}
 		cardStore.save();
-		// LOG API RESPONSE
-		console.log(response);
 		cardIsSaved = true;
+		// Complete spinner
+		spinner.complete();
 
 		// If it was a new card, redirect to the new card's page
 		if (slug_id === 'new') {
@@ -190,6 +202,7 @@
 
 	// Preventing navigating away when the card is not saved
 	import { beforeNavigate } from '$app/navigation';
+	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 	beforeNavigate((nav) => {
 		if (!cardIsSaved) {
 			const confirmLeave = confirm('Are you sure you want to leave? You have unsaved changes.');
@@ -264,14 +277,18 @@
 						<!-- Save -->
 						<Button
 							onclick={() => saveHandler()}
-							disabled={cardIsSaved}
+							disabled={cardIsSaved || spinner.id === 'save'}
 							color={cardIsSaved ? 'success' : 'blossom'}
 							variant="success"
 							size="sm"
 							class="ml-auto"
-							><Icon icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'} />{cardIsSaved
-								? 'Saved'
-								: 'Save'}</Button
+						>
+							{#if spinner.id === 'save'}
+								<Spinner />
+							{:else}
+								<Icon icon={cardIsSaved ? 'mdi:check' : 'memory:floppy-disk'} />
+							{/if}
+							{cardIsSaved ? 'Saved' : 'Save'}</Button
 						>
 					</div>
 				</header>
@@ -306,7 +323,9 @@
 					<Button onclick={newEmptyCard}><Icon icon="mdi:plus" />New Card</Button>
 				{/if}
 
-				<a class="mobileOnly" href="#editor">Go to editor</a>
+				<div class="mobileOnly">
+					<Button variant="link" href="#editor"><Icon icon="mdi:arrow-down" />Editor</Button>
+				</div>
 			</div>
 			<div id="cardArea">
 				<Gamecard {card} />
@@ -337,10 +356,10 @@
 
 	/* Changed layout for mobile */
 	.mobileOnly {
-		display: none;
+		display: none !important;
 	}
 
-	@media screen and (max-width: 750px) {
+	@media screen and (max-width: 920px) {
 		#main {
 			grid-template-areas: 'cardView' 'editor';
 			grid-template-rows: min-content min-content;
@@ -349,7 +368,7 @@
 		}
 
 		.mobileOnly {
-			display: initial;
+			display: initial !important;
 		}
 	}
 

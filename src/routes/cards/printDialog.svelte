@@ -18,8 +18,8 @@
 			<li>Single with print all front and backsides as individual pages</li>
 		</ul>
 		<Dialog.Footer>
-			<Button href="/print?printMode=A4"><Icon icon="mdi:cards" />A4</Button>
-			<Button href="/print?printMode=single"><Icon icon="mdi:view-grid" />Single</Button>
+			<Button href="/cards/print?printMode=A4"><Icon icon="mdi:cards" />A4</Button>
+			<Button href="/cards/print?printMode=single"><Icon icon="mdi:view-grid" />Single</Button>
 			<Dialog.Close class={buttonVariants({ variant: 'destructive' })}
 				><Icon icon="mdi:close" />Cancel</Dialog.Close
 			>

@@ -1,13 +1,25 @@
 <!-- Collection -->
 <script lang="ts">
+	// Partials
 	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
 	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
+
+	// Svelte stuff
+	import { onMount } from 'svelte';
+	import { fly } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { expoOut } from 'svelte/easing';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { base } from '$app/paths';
 
 	// UI Components
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import PrintDialog from './printDialog.svelte';
+
+	// Toaster
+	import { toast } from 'svelte-sonner';
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api';
@@ -36,13 +48,6 @@
 			}
 		})
 	);
-
-	// Svelte stuff
-	import { onMount } from 'svelte';
-	import { fly } from 'svelte/transition';
-	import { expoOut } from 'svelte/easing';
-	import { goto, invalidateAll } from '$app/navigation';
-	import { base } from '$app/paths';
 
 	// Get data from server
 	import type { UserID } from '$lib/domain/users/user';
@@ -81,7 +86,7 @@
 		$selectedCardIds = $selectedCardIds;
 	}
 
-	function deleteCard(card: StoredCard) {
+	async function deleteCard(card: StoredCard) {
 		const prismaCard = card.cardToPrisma();
 		// Confirmation
 		cardStore.destroy(card.id);
@@ -89,10 +94,12 @@
 		$selectedCardIds.delete(card.id); // Remove ID from the selected set
 		$selectedCardIds = $selectedCardIds; // Force update
 		// Make API call
-		CARD_API.delete([prismaCard]);
+		const response = await CARD_API.delete([prismaCard]);
+		if (response.ok === true) toast.success('Card deleted successfully');
+		else toast.error('Error deleting card');
 	}
 
-	function deleteSelected(ids: Set<CardID> = $selectedCardIds) {
+	async function deleteSelected(ids: Set<CardID> = $selectedCardIds) {
 		const cardIds = Array.from(ids);
 		// Get cards to delete in PrismaCard format
 		// NOTE: first, before actually removing them from the store!!
@@ -102,7 +109,9 @@
 		// Confirmation and remove from cached Store Instance
 		cardStore.destroy(cardIds);
 		// Make API call
-		CARD_API.delete(cardsToDelete);
+		const response = await CARD_API.delete(cardsToDelete);
+		if (response.ok === true) toast.success('Cards deleted successfully');
+		else toast.error('Error deleting cards');
 		// Remove from selected cards
 		$selectedCardIds.clear(); // Remove ID from the selected cards set
 		$selectedCardIds = $selectedCardIds; // Force update
@@ -120,16 +129,22 @@
 		goto(`${base}/cards/${id}?edit=1`);
 	}
 
-	function duplicateCard(card: StoredCard) {
+	async function duplicateCard(card: StoredCard) {
 		// Add to store
 		if (data.user === null) {
 			throw new Error('User not logged in');
 		}
+		// CONFIRM
+		const confirm = window.confirm('Are you sure you want to duplicate this card?');
+		if (!confirm) return;
+		// CREATE
 		const userId = data.user.id as UserID;
 		const newCard = cardStore.addNew({ card, userId });
 		const newCardAsPrisma = newCard.cardToPrisma();
 		// Make API call
-		CARD_API.create(newCardAsPrisma);
+		const response = await CARD_API.create(newCardAsPrisma);
+		if (response.ok === true) toast.success('Card duplicated successfully');
+		else toast.error('Error duplicating card');
 	}
 
 	import Icon from '@iconify/svelte';
@@ -188,42 +203,47 @@
 <main>
 	<section id="controls">
 		<div class="toolbarCategory">
+			<!-- CHANGE VIEWS -->
 			<!-- Filter -->
 			<Button
 				variant={enableFiltering ? 'advanced' : 'default'}
 				onclick={() => (enableFiltering = !enableFiltering)}
 				><Icon icon="mdi:filter" />Filter</Button
 			>
-			<!-- Create New Card -->
-			<Button variant="destructive" onclick={addNew}>
-				<Icon icon="mdi:plus" />
-				New Card</Button
-			>
 			<!-- Image View -->
 			<Button variant={imageView ? 'blossom' : 'default'} onclick={() => (imageView = !imageView)}>
 				<Icon icon={imageView ? 'mdi:file-image' : 'mdi:file-document'} />
 				Change View</Button
 			>
-			<!-- Upload with JSON -->
-			<Button onclick={() => {}}>
-				<Icon icon="mdi:upload" />
-				Upload</Button
-			>
-			<!-- Show Templates -->
-			<Button variant={showTemplates ? 'advanced' : 'default'} onclick={toggleTemplates}>
-				<Icon icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'} />
-				Show Templates</Button
-			>
-			<!-- Download -->
-			{#if $selectedCardIds.size > 0}{:else}
-				<Button
-					onclick={() => {
-						downloadCards(renderedCards_sorted);
-					}}
+
+			<!-- ONLY FOR LOGGED IN USERS -->
+			{#if data.user !== null}
+				<!-- Create New Card -->
+				<Button variant="destructive" onclick={addNew}>
+					<Icon icon="mdi:plus" />
+					New Card</Button
 				>
-					<Icon icon="mdi:download" />
-					Download All</Button
+				<!-- Upload with JSON -->
+				<Button onclick={() => {}}>
+					<Icon icon="mdi:upload" />
+					Upload</Button
 				>
+				<!-- Show Templates -->
+				<Button variant={showTemplates ? 'advanced' : 'default'} onclick={toggleTemplates}>
+					<Icon icon={showTemplates ? 'mdi:clipboard-outline' : 'mdi:clipboard-off-outline'} />
+					Show Templates</Button
+				>
+				<!-- Download -->
+				{#if $selectedCardIds.size > 0}{:else}
+					<Button
+						onclick={() => {
+							downloadCards(renderedCards_sorted);
+						}}
+					>
+						<Icon icon="mdi:download" />
+						Download All</Button
+					>
+				{/if}
 			{/if}
 		</div>
 		{#if $selectedCardIds.size > 0}
@@ -267,19 +287,15 @@
 			<div id="filterContainer" class="">
 				<SearchInput bind:searchTerm />
 			</div>
-			<Button
-				variant="advanced"
-				onclick={() => console.log('Serialized Cards: ', cardStore.serialize())}
-			>
-				<Icon icon="mdi:code-json" />
-				Serialize</Button
-			>
+			<p class="text-sm text-muted-foreground">More to come...</p>
 		</section>
 	{/if}
-	{#if renderCards}
+	<!-- Render cards -->
+	{#if (renderCards && renderedCards_sorted.length > 0) || (showTemplates && cardStore.templates.length > 0)}
 		<section
 			id="viewer"
-			transition:fly={{ delay: 200, duration: 800, opacity: 0, y: 40, easing: expoOut }}
+			out:fly|local={{ duration: 400, opacity: 0, y: 20, easing: expoOut }}
+			in:fly|local={{ delay: 400, duration: 800, opacity: 0, y: 40, easing: expoOut }}
 		>
 			<!-- TEMPLATES -->
 			{#if showTemplates}
@@ -442,10 +458,15 @@
 				</button>
 			{/each}
 		</section>
+	{:else}
+		<section
+			class="flex h-42 w-full items-center justify-center"
+			out:fly|local={{ duration: 400, opacity: 0, y: 20, easing: expoOut }}
+			in:fly|local={{ delay: 400, duration: 800, opacity: 0, y: 40, easing: expoOut }}
+		>
+			<p class="text-center text-lg text-muted-foreground">No cards to display.</p>
+		</section>
 	{/if}
-	<section id="printSelected">
-		{#each $selectedCardIds as sc}{/each}
-	</section>
 </main>
 
 <style>
