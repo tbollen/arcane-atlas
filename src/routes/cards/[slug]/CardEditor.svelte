@@ -496,10 +496,6 @@
 						<Icon icon="mdi:refresh" />
 						Reset Position</Button
 					>
-					<Button color="plain" class="w-full" onclick={() => {}}>
-						<Icon icon="mdi:upload" />
-						Upload Image</Button
-					>
 				</div>
 			</div>
 		{/snippet}

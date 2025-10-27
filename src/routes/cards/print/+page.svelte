@@ -6,12 +6,15 @@
 	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
 	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 	// Stores
-	import { cardStore } from '$lib/stores/CardStore';
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';
+	import { type CardStore } from '$lib/domain/cards/cardStore.svelte';
+	import { getContext } from 'svelte';
+	import { CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
+	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
 	//
-	let cardSet: typeof cardStore.cards = $state([]);
+	let cardSet: typeof cardStoreContext.cards = $state([]);
 	// Set Cards
-	cardSet = cardStore.cards.filter((card) => $selectedCardIds.has(card.id));
+	cardSet = cardStoreContext.cards.filter((card) => $selectedCardIds.has(card.id));
 
 	// Get info from url parameter
 	const urlParams = new URLSearchParams(window.location.search);

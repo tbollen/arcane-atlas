@@ -4,7 +4,7 @@
 <main id="main">
 	<section id="welcome">
 		<div id="titleWrapper" class="">
-			<h1 id="title" class="displayText bg-obsidian-800 text-secondary">Arcane Companion</h1>
+			<h1 id="title" class="displayText bg-obsidian-800 text-secondary">Arcane Atlas</h1>
 			<div id="subtitle">A digital companion for building TTRPG cards</div>
 		</div>
 	</section>

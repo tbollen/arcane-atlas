@@ -87,7 +87,7 @@
 
 <section id="navigation" class="navbar border-b-2 border-threat-500 bg-obsidian-50">
 	<div class="z-2">
-		<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Companion</a>
+		<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Atlas</a>
 	</div>
 	<!-- Navigation -->
 	<nav class="links">
@@ -143,7 +143,7 @@
 		/* Make sticky */
 	}
 
-	@media screen and (max-width: 750px) {
+	@media screen and (max-width: 920px) {
 		#navigation {
 			grid-template-columns: 1fr;
 			grid-template-areas: 'logo badges' 'links links';

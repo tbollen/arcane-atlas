@@ -55,7 +55,7 @@ export async function sendEmailOTP({
 	const subject = markupOTP(otp, type).subject;
 	const html = markupOTP(otp, type).html;
 	resend.emails.send({
-		from: `Arcane Companion <noreply@${domain}>`,
+		from: `Arcane Atlas <noreply@${domain}>`,
 		to: email,
 		subject,
 		html
