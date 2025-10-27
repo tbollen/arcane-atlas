@@ -159,4 +159,5 @@ main.content {
 	max-width: var(--container-3xl, 48rem);
 	margin-inline: auto;
 	margin-top: calc(var(--spacing, 0.25rem) * 4);
+	margin-bottom: calc(var(--spacing, 0.25rem) * 8);
 }
