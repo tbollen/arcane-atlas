@@ -496,12 +496,16 @@
 				<Divider text="or login with" />
 
 				<!-- Social Login -->
+				<p class="mb-4 text-center text-sm text-muted-foreground">
+					Sorry, social login is temporarily disabled. These features will be back soon!
+				</p>
 				<!-- GITHUB -->
 				<div class="flex w-full flex-col gap-2">
 					<Button
 						variant="outline"
 						class="w-full"
 						type="submit"
+						disabled
 						formaction="?/loginSocial"
 						onclick={() => authClient.signIn.social({ provider: 'github' })}
 						><Icon icon="logos:github-icon" />Login with Github</Button
@@ -511,6 +515,7 @@
 						variant="outline"
 						class="w-full"
 						type="submit"
+						disabled
 						formaction="?/loginSocial"
 						onclick={() => authClient.signIn.social({ provider: 'discord' })}
 						><Icon icon="logos:discord-icon" />Login with Discord</Button
