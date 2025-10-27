@@ -20,10 +20,10 @@
 </script>
 
 <!-- TOASTER -->
-<Toaster />
+<Toaster richColors />
 
 <!-- CONTENT -->
-<header class="sticky top-0 z-1">
+<header class="sticky top-0 z-1 print:hidden">
 	<Navbar {data} />
 </header>
 {@render children?.()}
