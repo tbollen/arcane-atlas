@@ -1,5 +1,6 @@
 <!-- About -->
 <script lang="ts">
+	import Header from '$lib/components/typography/header.svelte';
 	// Test with modals
 
 	import renderMarkdown from '$lib/utils/rendering/renderDiceIconsInText';
@@ -54,18 +55,13 @@
 			shorthand: '[da]'
 		}
 	];
-
-	// Version info
-	const lastUpdated = import.meta.env.VITE_LAST_UPDATED;
-	console.log(import.meta.env);
 </script>
 
-<section id="content">
-	<h1 class="text-3xl font-bold underline">About this app</h1>
+<main class="content">
+	<Header variant="h1" class="mb-8">About this app</Header>
 	<!-- Dice info table -->
-	<hr />
-	<h3>Dice shorthands for texts</h3>
-	<table class="w-full">
+	<Header variant="h2" addition="divider">Dice shorthands for texts</Header>
+	<table class="mt-2 w-full">
 		<thead>
 			<tr class="text-left">
 				<th>Dice</th>
@@ -83,10 +79,4 @@
 			{/each}
 		</tbody>
 	</table>
-</section>
-
-<style>
-	section {
-		padding: var(--padding);
-	}
-</style>
+</main>
