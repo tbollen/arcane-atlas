@@ -59,7 +59,7 @@ export async function sendLinkEmail({
 	subject: string;
 }) {
 	resend.emails.send({
-		from: `Arcane Companion <noreply@${domain}>`,
+		from: `Arcane Atlas <noreply@${domain}>`,
 		to: email,
 		subject,
 		html: linkEmail({ welcomeMessage, username, url })
