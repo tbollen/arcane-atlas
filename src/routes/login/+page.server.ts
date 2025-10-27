@@ -2,14 +2,17 @@ import type { PageServerLoad, Actions } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
+import { BASE_URL } from '$env/static/private';
 
 // Superform stuff
-import { forgotPasswordSchema, loginFormSchema, registerFormSchema } from './formSchema';
+import {
+	forgotPasswordSchema,
+	loginFormSchema,
+	registerFormSchema,
+	tokenSchema
+} from './formSchema';
 import { message, superValidate, fail, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-
-// TODO: get all registered emails
-const validEmails = ['thomas.bollen97@gmail.com', 'test@example.com'];
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// redirect if already logged in
@@ -18,12 +21,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const loginForm = await superValidate(zod4(loginFormSchema));
 	const registerForm = await superValidate(zod4(registerFormSchema));
 	const forgotPasswordForm = await superValidate(zod4(forgotPasswordSchema));
+	const tokenForm = await superValidate(zod4(tokenSchema));
 
 	// Respond superform
 	return {
 		loginForm,
 		registerForm,
-		forgotPasswordForm
+		forgotPasswordForm,
+		tokenForm
 	};
 };
 
@@ -88,15 +93,23 @@ export const actions: Actions = {
 		try {
 			const response = await auth.api.requestPasswordReset({
 				body: {
-					email: forgotPasswordForm.data.email
+					email: forgotPasswordForm.data.email,
+					redirectTo: `${BASE_URL}/login`
 				},
 				asResponse: true
 			});
 			if (response.ok === true) {
-				return message(forgotPasswordForm, 'Password reset email sent');
+				return message(forgotPasswordForm, {
+					type: 'success',
+					message: 'Password reset email sent'
+				});
 			} else {
 				setError(forgotPasswordForm, 'email', 'Failed to send password reset email');
-				return message(forgotPasswordForm, 'Failed to send password reset email');
+				return message(forgotPasswordForm, {
+					status: 400,
+					type: 'error',
+					message: 'Failed to send password reset email'
+				});
 			}
 		} catch (error) {
 			return fail(400, { forgotPasswordForm });
@@ -126,10 +139,10 @@ export const actions: Actions = {
 		}
 
 		// Check if email is in allowlist
-		if (!validEmails.includes(registerForm.data.email)) {
-			setError(registerForm, 'email', 'Email not in allowlist');
-			return fail(400, { registerForm });
-		}
+		// if (!validEmails.includes(registerForm.data.email)) {
+		// 	setError(registerForm, 'email', 'Email not in allowlist');
+		// 	return fail(400, { registerForm });
+		// }
 
 		// Check if password and confirm password match
 		if (registerForm.data.password !== registerForm.data.confirmPassword) {
@@ -148,7 +161,7 @@ export const actions: Actions = {
 		});
 
 		// Set error messages
-		if (response?.ok) {
+		if (response.ok === true) {
 			return message(registerForm, 'Registration successful');
 		} else if (response?.status === 400) {
 			setError(registerForm, 'email', 'User with this email is already registered');
@@ -158,6 +171,51 @@ export const actions: Actions = {
 			return fail(400, { registerForm });
 		} else if (response?.ok) {
 			return message(registerForm, 'Registration successful');
+		}
+	},
+
+	reset: async ({ request }) => {
+		const tokenForm = await superValidate(request, zod4(tokenSchema));
+		console.log('token:', tokenForm.data.token);
+
+		if (!tokenForm.valid) return fail(400, { tokenForm });
+		// Check if new password and confirm new password match
+		if (tokenForm.data.newPassword !== tokenForm.data.confirmPassword) {
+			setError(tokenForm, 'confirmPassword', 'Passwords do not match');
+			return fail(400, { tokenForm });
+		}
+
+		// Check if token is given
+		if (tokenForm.data.token.length < 1) {
+			setError(tokenForm, 'token', 'Invalid token');
+			return fail(400, { tokenForm });
+		}
+
+		// Try reset password
+		try {
+			const response = await auth.api.resetPassword({
+				body: {
+					token: tokenForm.data.token,
+					newPassword: tokenForm.data.newPassword
+				},
+				headers: request.headers,
+				asResponse: true
+			});
+			if (response.ok === true) {
+				console.log('Password reset successful with token', tokenForm.data.token);
+				return message(tokenForm, {
+					message: 'Password reset successful',
+					type: 'success',
+					reset: true
+				});
+			} else {
+				console.error('Failed to reset password with token', tokenForm.data.token);
+				setError(tokenForm, 'token', 'Failed to reset password. Invalid or expired token.');
+				return fail(400, { tokenForm });
+			}
+		} catch (error) {
+			console.error('Failed to reset password with token', tokenForm.data.token, 'error:', error);
+			return fail(400, { tokenForm });
 		}
 	}
 };

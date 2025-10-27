@@ -1,9 +1,10 @@
 import * as z from 'zod';
 import { zod4 } from 'sveltekit-superforms/adapters';
+import { zodPassword } from '$lib/utils/auth/schemaHelpers';
 
 const basicLoginSchema = z.object({
 	email: z.email(),
-	password: z.string().min(8)
+	password: zodPassword
 });
 
 export const forgotPasswordSchema = z.object({
@@ -15,9 +16,15 @@ export const loginFormSchema = basicLoginSchema.extend({
 	rememberMe: z.boolean().default(false)
 });
 
+export const tokenSchema = z.object({
+	token: z.string(),
+	newPassword: zodPassword,
+	confirmPassword: zodPassword
+});
+
 export const registerFormSchema = basicLoginSchema.extend({
 	displayName: z.string().min(2).max(50),
-	confirmPassword: z.string().min(8),
+	confirmPassword: zodPassword,
 	acceptTerms: z.boolean().default(false),
 	acceptPrivacyPolicy: z.boolean().default(false)
 });
