@@ -323,9 +323,9 @@
 					<Button onclick={newEmptyCard}><Icon icon="mdi:plus" />New Card</Button>
 				{/if}
 
-				<Button variant="link" class="mobileOnly" href="#editor"
-					><Icon icon="mdi:arrow-down" />Editor</Button
-				>
+				<div class="mobileOnly">
+					<Button variant="link" href="#editor"><Icon icon="mdi:arrow-down" />Editor</Button>
+				</div>
 			</div>
 			<div id="cardArea">
 				<Gamecard {card} />
@@ -356,7 +356,7 @@
 
 	/* Changed layout for mobile */
 	.mobileOnly {
-		display: none;
+		display: none !important;
 	}
 
 	@media screen and (max-width: 920px) {
@@ -368,7 +368,7 @@
 		}
 
 		.mobileOnly {
-			display: initial;
+			display: initial !important;
 		}
 	}
 
