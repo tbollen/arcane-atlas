@@ -15,6 +15,9 @@
 	// Spinner Store
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 
+	// Toasts
+	import { toast } from 'svelte-sonner';
+
 	// Partials
 	import UnderConstruction from '$lib/components/partials/UnderConstruction.svelte';
 
@@ -30,6 +33,7 @@
 	import { authClient } from '$lib/utils/auth/auth-client';
 	import { onMount } from 'svelte';
 	import CARD_API from '$lib/utils/api/cards_api.js';
+	import USER_API from '$lib/utils/api/users_api';
 	import type { CardID } from '$lib/domain/cards/cardStore.svelte';
 	import type { UserID } from '$lib/domain/users/user';
 
@@ -37,11 +41,39 @@
 	import { enhance } from '$app/forms';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { changePasswordSchema } from './formSchema';
-	import { Field } from 'formsnap';
+	import { changePasswordSchema, updateAccountInfoSchema } from './formSchema';
 
 	let { data } = $props();
 	let user = $derived(data.user) as PrismaUser;
+
+	// Update account info
+	const form_updateAccountInfo = superForm(data?.updateAccountInfoForm, {
+		validators: zod4Client(updateAccountInfoSchema),
+		delayMs: 500,
+		timeoutMs: 8000
+	});
+	const {
+		form: updateAccountInfoForm,
+		errors: updateAccountInfoErrors,
+		enhance: updateAccountInfoEnhance,
+		message: updateAccountInfoMessage,
+		delayed: updateAccountInfoDelayed,
+		submitting: updateAccountInfoSubmitting
+	} = form_updateAccountInfo;
+
+	let updateInfoDialogOpen: boolean = $state(false);
+
+	$effect(() => {
+		const msg = $updateAccountInfoMessage;
+		if (msg && msg.success) {
+			toast.success('Account info updated successfully!');
+			invalidateAll();
+			closeDialog();
+			updateAccountInfoMessage.set(null);
+		} else if (msg && msg.error) {
+			toast.error(`Error updating account info: ${msg.error}`);
+		}
+	});
 
 	// Change Password form
 	const form_changePassword = superForm(data?.changePasswordForm, {
@@ -62,14 +94,20 @@
 
 	$effect(() => {
 		const msg = $changePasswordMessage;
-		if (msg && msg.success) closeDialog();
-		changePasswordMessage.set(null);
+		if (msg && msg.success) {
+			toast.success('Password changed successfully!');
+			closeDialog();
+			changePasswordMessage.set(null);
+		} else if (msg && msg.error) {
+			toast.error(`Error changing password: ${msg.error}`);
+		}
 	});
 
 	async function closeDialog() {
 		spinner.complete();
 		await new Promise((resolve) => setTimeout(resolve, 800));
 		changePasswordDialogOpen = false;
+		updateInfoDialogOpen = false;
 	}
 
 	////////////////////
@@ -231,7 +269,7 @@
 					</div>
 				</Card.Title>
 				<Card.Action>
-					<Button variant="blossom" disabled onclick={() => {}}>
+					<Button variant="blossom" onclick={() => (updateInfoDialogOpen = true)}>
 						<Icon icon="mdi:pencil" />Edit Account
 					</Button>
 					<Button variant="destructive" disabled={spinner.id === 'logOut'} onclick={logOut}>
@@ -452,105 +490,6 @@
 								<Icon icon="mdi:lock-reset" />Reset Password
 							{/if}
 						</Button>
-						<!-- Change Password DIALOG -->
-						<Dialog.Root bind:open={changePasswordDialogOpen}>
-							<Dialog.Content class="sm:max-w-[425px]">
-								<Dialog.Header>
-									<Dialog.Title>Change Password</Dialog.Title>
-								</Dialog.Header>
-								<form
-									method="POST"
-									action="?/changePassword"
-									use:changePasswordEnhance
-									class="flex flex-col gap-2"
-								>
-									<Form.Field form={form_changePassword} name="email" class="w-full">
-										<Form.Control>
-											{#snippet children({ props })}
-												<Form.Label>Email (for verification)</Form.Label>
-												<Input {...props} bind:value={$changePasswordForm.email} />
-											{/snippet}
-										</Form.Control>
-									</Form.Field>
-									<Form.Field form={form_changePassword} name="current-password" class="w-full">
-										<Form.Control>
-											{#snippet children({ props })}
-												<Form.Label>Current Password</Form.Label>
-												<Password.Root>
-													<Password.Input
-														bind:value={$changePasswordForm['current-password']}
-														{...props}
-														autocomplete="current-password"
-													>
-														<Password.ToggleVisibility />
-													</Password.Input>
-												</Password.Root>
-												<!-- <Input
-													type="password"
-													{...props}
-													autocomplete="current-password"
-													bind:value={$changePasswordForm['current-password']}
-												/> -->
-											{/snippet}
-										</Form.Control>
-										<Form.FieldErrors />
-									</Form.Field>
-									<hr class="my-4" />
-									<Form.Field form={form_changePassword} name="new-password" class="w-full">
-										<Form.Control>
-											{#snippet children({ props })}
-												<Form.Label>New Password</Form.Label>
-												<Password.Root>
-													<Password.Input
-														bind:value={$changePasswordForm['new-password']}
-														{...props}
-														autocomplete="new-password"
-													>
-														<Password.ToggleVisibility />
-													</Password.Input>
-													<Password.Strength />
-												</Password.Root>
-											{/snippet}
-										</Form.Control>
-										<Form.FieldErrors />
-									</Form.Field>
-									<Form.Field form={form_changePassword} name="confirm-password" class="w-full">
-										<Form.Control>
-											{#snippet children({ props })}
-												<Form.Label>Confirm Password</Form.Label>
-												<Password.Root>
-													<Password.Input
-														bind:value={$changePasswordForm['confirm-password']}
-														{...props}
-														autocomplete="new-password"
-													>
-														<Password.ToggleVisibility />
-													</Password.Input>
-												</Password.Root>
-											{/snippet}
-										</Form.Control>
-										<Form.FieldErrors />
-									</Form.Field>
-									<!-- Submit -->
-									<Form.Button
-										type="submit"
-										variant="bold"
-										disabled={$changePasswordSubmitting ||
-											!$changePasswordForm['confirm-password'] ||
-											!$changePasswordForm.email ||
-											!$changePasswordForm['new-password'] ||
-											!$changePasswordForm['current-password']}
-										class="w-full"
-									>
-										{#if $changePasswordSubmitting}
-											<Spinner />
-										{:else if $changePasswordMessage?.success}
-											<Icon icon="mdi:check-circle" class="text-success-500" /> Password Changed!
-										{:else}Change Password{/if}
-									</Form.Button>
-								</form>
-							</Dialog.Content>
-						</Dialog.Root>
 					</div>
 					<hr class="my-4" />
 					<div class="flex flex-row items-center gap-2">
@@ -594,6 +533,166 @@
 	{:catch error}
 		<p>Error: {error.message}</p>
 	{/await}
+	<!-- DIALOGS -->
+	<!-- Change Password DIALOG -->
+	<Dialog.Root bind:open={changePasswordDialogOpen}>
+		<Dialog.Content class="sm:max-w-[425px]">
+			<Dialog.Header>
+				<Dialog.Title>Change Password</Dialog.Title>
+			</Dialog.Header>
+			<form
+				method="POST"
+				action="?/changePassword"
+				use:changePasswordEnhance
+				class="flex flex-col gap-2"
+			>
+				<Form.Field form={form_changePassword} name="email" class="w-full">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Email (for verification)</Form.Label>
+							<Input {...props} bind:value={$changePasswordForm.email} />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+				<Form.Field form={form_changePassword} name="current-password" class="w-full">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Current Password</Form.Label>
+							<Password.Root>
+								<Password.Input
+									bind:value={$changePasswordForm['current-password']}
+									{...props}
+									autocomplete="current-password"
+								>
+									<Password.ToggleVisibility />
+								</Password.Input>
+							</Password.Root>
+							<!-- <Input
+													type="password"
+													{...props}
+													autocomplete="current-password"
+													bind:value={$changePasswordForm['current-password']}
+												/> -->
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+				<hr class="my-4" />
+				<Form.Field form={form_changePassword} name="new-password" class="w-full">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>New Password</Form.Label>
+							<Password.Root>
+								<Password.Input
+									bind:value={$changePasswordForm['new-password']}
+									{...props}
+									autocomplete="new-password"
+								>
+									<Password.ToggleVisibility />
+								</Password.Input>
+								<Password.Strength />
+							</Password.Root>
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+				<Form.Field form={form_changePassword} name="confirm-password" class="w-full">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Confirm Password</Form.Label>
+							<Password.Root>
+								<Password.Input
+									bind:value={$changePasswordForm['confirm-password']}
+									{...props}
+									autocomplete="new-password"
+								>
+									<Password.ToggleVisibility />
+								</Password.Input>
+							</Password.Root>
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+				<!-- Submit -->
+				<Form.Button
+					type="submit"
+					variant="bold"
+					disabled={$changePasswordSubmitting ||
+						!$changePasswordForm['confirm-password'] ||
+						!$changePasswordForm.email ||
+						!$changePasswordForm['new-password'] ||
+						!$changePasswordForm['current-password']}
+					class="w-full"
+				>
+					{#if $changePasswordSubmitting}
+						<Spinner />
+					{:else if $changePasswordMessage?.success}
+						<Icon icon="mdi:check-circle" class="text-success-500" /> Password Changed!
+					{:else}Change Password{/if}
+				</Form.Button>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
+	<!-- Update Info DIALOG -->
+	<Dialog.Root bind:open={updateInfoDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>Edit Account Info</Dialog.Title>
+				<Dialog.Description>Fields that remain empty will not be updated</Dialog.Description>
+			</Dialog.Header>
+			<form
+				method="POST"
+				action="?/updateAccountInfo"
+				use:updateAccountInfoEnhance
+				class="flex flex-col gap-2"
+			>
+				<!-- NAME -->
+				<Form.Field form={form_updateAccountInfo} name="name" class="w-full">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Edit Name</Form.Label>
+							<Input {...props} bind:value={$updateAccountInfoForm.name} />
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+				<!-- IMAGE -->
+				<div class="flex flex-row items-start gap-4">
+					<Form.Field form={form_updateAccountInfo} name="imageUrl" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Edit Image URL</Form.Label>
+								<p class="text-xs text-muted-foreground">
+									Please provide the URL to an image to use as your avatar
+								</p>
+								<Input {...props} bind:value={$updateAccountInfoForm.imageUrl} />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<img
+						src={$updateAccountInfoForm?.imageUrl ?? user.image}
+						alt="Preview"
+						class="mt-2 aspect-square h-24 w-24 rounded-md border border-muted-foreground object-cover"
+					/>
+				</div>
+				<p class="text-sm text-muted-foreground">More to come...</p>
+				<!-- Submit -->
+				<Form.Button
+					type="submit"
+					variant="bold"
+					disabled={$updateAccountInfoSubmitting}
+					class="w-full"
+				>
+					{#if $updateAccountInfoSubmitting}
+						<Spinner />
+					{:else if $updateAccountInfoMessage?.success}
+						<Icon icon="mdi:check-circle" class="text-success-500" /> Info Updated!
+					{:else}Update Info{/if}
+				</Form.Button>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 </main>
 
 <style>

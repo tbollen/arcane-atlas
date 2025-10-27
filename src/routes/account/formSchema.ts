@@ -8,4 +8,11 @@ export const changePasswordSchema = z.object({
 	'confirm-password': z.string().min(8)
 });
 
+export const updateAccountInfoSchema = z.object({
+	name: z.string().min(3).max(20).optional(),
+	imageUrl: z.url().optional()
+});
+
 export type ChangePasswordSchema = typeof changePasswordSchema;
+
+export type UpdateAccountInfoSchema = typeof updateAccountInfoSchema;
