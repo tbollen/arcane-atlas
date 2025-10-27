@@ -1,10 +1,16 @@
 <script lang="ts">
 	// UI Component
-	import { Button } from '$lib/components/ui/button';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Spinner } from '$lib/components/ui/spinner';
 	import * as Card from '$lib/components/ui/card';
 	import * as Avatar from '$lib/components/ui/avatar';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Form from '$lib/components/ui/form/';
+	import { Input } from '$lib/components/ui/input/';
+	import { Label } from '$lib/components/ui/label/';
+	import Icon from '@iconify/svelte';
+	import * as Password from '$lib/components/ui/password';
 
 	// Spinner Store
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
@@ -22,15 +28,53 @@
 	import { type User as PrismaUser } from '@prisma/client';
 
 	import { authClient } from '$lib/utils/auth/auth-client';
-	import Icon from '@iconify/svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import { onMount } from 'svelte';
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import type { CardID } from '$lib/domain/cards/cardStore.svelte';
 	import type { UserID } from '$lib/domain/users/user';
 
+	// Form stuff
+	import { enhance } from '$app/forms';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { changePasswordSchema } from './formSchema';
+	import { Field } from 'formsnap';
+
 	let { data } = $props();
 	let user = $derived(data.user) as PrismaUser;
+
+	// Change Password form
+	const form_changePassword = superForm(data?.changePasswordForm, {
+		validators: zod4Client(changePasswordSchema),
+		delayMs: 500,
+		timeoutMs: 8000
+	});
+	const {
+		form: changePasswordForm,
+		errors: changePasswordErrors,
+		enhance: changePasswordEnhance,
+		message: changePasswordMessage,
+		delayed: changePasswordDelayed,
+		submitting: changePasswordSubmitting
+	} = form_changePassword;
+
+	let changePasswordDialogOpen: boolean = $state(false);
+
+	$effect(() => {
+		const msg = $changePasswordMessage;
+		if (msg && msg.success) closeDialog();
+		changePasswordMessage.set(null);
+	});
+
+	async function closeDialog() {
+		spinner.complete();
+		await new Promise((resolve) => setTimeout(resolve, 800));
+		changePasswordDialogOpen = false;
+	}
+
+	////////////////////
+	// PAGE FUNCTIONS //
+	////////////////////
 
 	async function logOut() {
 		spinner.set('logOut', 'Logging out...');
@@ -59,7 +103,36 @@
 			alert(e);
 		}
 	}
-	// Helper for showing spinner when sending
+
+	async function requestPasswordReset() {
+		// Check if user has email
+		if (!user.email) {
+			alert('No email associated with this account');
+			throw new Error('No email associated with this account');
+		}
+		// Check if email is verified
+		if (!user.emailVerified) {
+			alert('Email not verified!');
+			throw new Error('Email not verified');
+		}
+		// Confirm window
+		const confirm = window.confirm(
+			'Are you sure you want to request a password reset? An email will be sent to your registered email address.'
+		);
+		if (!confirm) return;
+		//PROCESS
+		spinner.set('requestPasswordReset', 'Sending email...');
+		setTimeout(() => spinner.complete(), 2000);
+		try {
+			const { data, error } = await authClient.requestPasswordReset({ email: user.email });
+			if (error) {
+				alert(error.message);
+				throw error;
+			}
+		} catch (e) {
+			alert(e);
+		}
+	}
 
 	// DELETE ACCOUNT
 	async function deleteAccount() {
@@ -359,6 +432,127 @@
 
 					<!-- Account Control -->
 					<Header variant="h2" class="mt-4 mb-2">Account Control</Header>
+					<div class="flex flex-row items-center gap-2">
+						<Button
+							variant="bold"
+							onclick={() => {
+								changePasswordDialogOpen = true;
+							}}
+						>
+							<Icon icon="mdi:key" />Change Password
+						</Button>
+						<Button
+							variant="bold"
+							disabled={spinner.id === 'requestPasswordReset'}
+							onclick={requestPasswordReset}
+						>
+							{#if spinner.id === 'requestPasswordReset'}
+								<Spinner />{spinner.message}
+							{:else}
+								<Icon icon="mdi:lock-reset" />Reset Password
+							{/if}
+						</Button>
+						<!-- Change Password DIALOG -->
+						<Dialog.Root bind:open={changePasswordDialogOpen}>
+							<Dialog.Content class="sm:max-w-[425px]">
+								<Dialog.Header>
+									<Dialog.Title>Change Password</Dialog.Title>
+								</Dialog.Header>
+								<form
+									method="POST"
+									action="?/changePassword"
+									use:changePasswordEnhance
+									class="flex flex-col gap-2"
+								>
+									<Form.Field form={form_changePassword} name="email" class="w-full">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Email (for verification)</Form.Label>
+												<Input {...props} bind:value={$changePasswordForm.email} />
+											{/snippet}
+										</Form.Control>
+									</Form.Field>
+									<Form.Field form={form_changePassword} name="current-password" class="w-full">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Current Password</Form.Label>
+												<Password.Root>
+													<Password.Input
+														bind:value={$changePasswordForm['current-password']}
+														{...props}
+														autocomplete="current-password"
+													>
+														<Password.ToggleVisibility />
+													</Password.Input>
+												</Password.Root>
+												<!-- <Input
+													type="password"
+													{...props}
+													autocomplete="current-password"
+													bind:value={$changePasswordForm['current-password']}
+												/> -->
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+									<hr class="my-4" />
+									<Form.Field form={form_changePassword} name="new-password" class="w-full">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>New Password</Form.Label>
+												<Password.Root>
+													<Password.Input
+														bind:value={$changePasswordForm['new-password']}
+														{...props}
+														autocomplete="new-password"
+													>
+														<Password.ToggleVisibility />
+													</Password.Input>
+													<Password.Strength />
+												</Password.Root>
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+									<Form.Field form={form_changePassword} name="confirm-password" class="w-full">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Confirm Password</Form.Label>
+												<Password.Root>
+													<Password.Input
+														bind:value={$changePasswordForm['confirm-password']}
+														{...props}
+														autocomplete="new-password"
+													>
+														<Password.ToggleVisibility />
+													</Password.Input>
+												</Password.Root>
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+									<!-- Submit -->
+									<Form.Button
+										type="submit"
+										variant="bold"
+										disabled={$changePasswordSubmitting ||
+											!$changePasswordForm['confirm-password'] ||
+											!$changePasswordForm.email ||
+											!$changePasswordForm['new-password'] ||
+											!$changePasswordForm['current-password']}
+										class="w-full"
+									>
+										{#if $changePasswordSubmitting}
+											<Spinner />
+										{:else if $changePasswordMessage?.success}
+											<Icon icon="mdi:check-circle" class="text-success-500" /> Password Changed!
+										{:else}Change Password{/if}
+									</Form.Button>
+								</form>
+							</Dialog.Content>
+						</Dialog.Root>
+					</div>
+					<hr class="my-4" />
 					<div class="flex flex-row items-center gap-2">
 						<Button
 							variant="destructive"
