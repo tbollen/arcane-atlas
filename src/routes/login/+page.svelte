@@ -16,11 +16,13 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card/';
 	import * as Form from '$lib/components/ui/form/';
+	import * as Password from '$lib/components/ui/password/';
 
 	// Superform stuff
-	import { loginFormSchema, registerFormSchema } from './formSchema';
-	import { superForm } from 'sveltekit-superforms';
+	import { loginFormSchema, registerFormSchema, forgotPasswordSchema } from './formSchema';
+	import { setError, superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 
 	// Auth stuff (for SSO)
 
@@ -31,7 +33,7 @@
 	// SUPERFORM FORMS STUFF //
 	///////////////////////////
 	// REGISTER
-	const form_register = superForm(data?.registerForm, {
+	const form_register = superForm(data.registerForm, {
 		validators: zod4Client(registerFormSchema),
 		resetForm: true,
 		delayMs: 500,
@@ -47,7 +49,7 @@
 	} = form_register;
 
 	// LOGIN
-	const form_login = superForm(data?.loginForm, {
+	const form_login = superForm(data.loginForm, {
 		validators: zod4Client(loginFormSchema),
 		resetForm: true,
 		delayMs: 500,
@@ -62,12 +64,27 @@
 		submitting: loginSubmitting
 	} = form_login;
 
+	// FORGOT
+	const form_forgot = superForm(data.forgotPasswordForm, {
+		validators: zod4Client(forgotPasswordSchema),
+		delayMs: 500,
+		timeoutMs: 8000
+	});
+	const {
+		form: forgotForm,
+		errors: forgotErrors,
+		enhance: forgotEnhance,
+		message: forgotMessage,
+		delayed: forgotDelayed,
+		submitting: forgotSubmitting
+	} = form_forgot;
+
 	///////////////////////
 	// END OF FORM STUFF //
 	///////////////////////
 
 	// Page param for registering / logging in
-	let showRegister: boolean = $state(false);
+	let formPage: 'login' | 'register' | 'forgot' = $state('login');
 	// State for social provider
 	type validProviders = 'github' | 'discord'; //TODO: dynamically get
 	let provider: validProviders | undefined = $state();
@@ -86,22 +103,28 @@
 	{/if} -->
 	<Card.Root class="w-full max-w-sm">
 		<Card.Header>
-			{#if showRegister}
+			{#if formPage === 'register'}
 				<Card.Title>Register a new account</Card.Title>
 				<Card.Description>Enter your email below to register a new account</Card.Description>
 				<Card.Action>
-					<Button variant="link" onclick={() => (showRegister = false)}>Sign In</Button>
+					<Button variant="link" onclick={() => (formPage = 'login')}>Login</Button>
+				</Card.Action>
+			{:else if formPage === 'forgot'}
+				<Card.Title>Forgot your password?</Card.Title>
+				<Card.Description>Enter your email below to reset your password</Card.Description>
+				<Card.Action>
+					<Button variant="link" onclick={() => (formPage = 'login')}>Login</Button>
 				</Card.Action>
 			{:else}
 				<Card.Title>Login to your account</Card.Title>
 				<Card.Description>Enter your email below to login to your account</Card.Description>
 				<Card.Action>
-					<Button variant="link" onclick={() => (showRegister = true)}>Register</Button>
+					<Button variant="link" onclick={() => (formPage = 'register')}>Register</Button>
 				</Card.Action>
 			{/if}
 		</Card.Header>
 		<Card.Content>
-			{#if showRegister}
+			{#if formPage === 'register'}
 				<!-- REGISTER -->
 				<form method="POST" class="!p-0" action="?/register" use:registerEnhance>
 					<!-- Username -->
@@ -109,7 +132,7 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Username</Form.Label>
-								<Input {...props} bind:value={$registerForm.displayName} />
+								<Input {...props} bind:value={$registerForm.displayName} autocomplete="nickname" />
 							{/snippet}
 						</Form.Control>
 						<Form.Description
@@ -122,7 +145,7 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Email</Form.Label>
-								<Input {...props} bind:value={$registerForm.email} />
+								<Input {...props} bind:value={$registerForm.email} autocomplete="email" />
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />
@@ -133,7 +156,16 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Password</Form.Label>
-								<Input {...props} type="password" bind:value={$registerForm.password} />
+								<Password.Root>
+									<Password.Input
+										bind:value={$registerForm.password}
+										{...props}
+										autocomplete="new-password"
+									>
+										<Password.ToggleVisibility />
+									</Password.Input>
+									<Password.Strength />
+								</Password.Root>
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />
@@ -200,6 +232,39 @@
 						{:else}Register{/if}
 					</Form.Button>
 				</form>
+			{:else if formPage === 'forgot'}
+				<!-- FORGOT PASSWORD -->
+				<form method="POST" class="!p-0" action="?/forgot" use:forgotEnhance>
+					<!-- Email -->
+					<Form.Field form={form_forgot} name="email" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label>Email</Form.Label>
+								<Input {...props} bind:value={$forgotForm.email} autocomplete="email" />
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<Form.Field form={form_forgot} name="confirm" class="w-full">
+						<Form.Control>
+							{#snippet children({ props })}
+								<div class="flex items-center gap-2">
+									<Checkbox {...props} bind:checked={$forgotForm.confirm} />
+									<Form.Label>Confirm reset</Form.Label>
+								</div>
+							{/snippet}
+						</Form.Control>
+						<Form.FieldErrors />
+					</Form.Field>
+					<!-- Submit -->
+					<Button type="submit" disabled={$forgotSubmitting} variant="bold" class="w-full">
+						{#if $forgotSubmitting}
+							<Spinner />
+						{:else}
+							Reset Password
+						{/if}
+					</Button>
+				</form>
 			{:else}
 				<!-- LOGIN -->
 				<form method="POST" class="!p-0" action="?/login" use:loginEnhance>
@@ -218,22 +283,47 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Password</Form.Label>
-								<Input {...props} type="password" bind:value={$loginForm.password} />
+								<Password.Root>
+									<Password.Input
+										bind:value={$loginForm.password}
+										{...props}
+										autocomplete="current-password"
+									>
+										<Password.ToggleVisibility />
+									</Password.Input>
+								</Password.Root>
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />
 					</Form.Field>
-					<!-- Remember Me -->
-					<Form.Field form={form_login} name="rememberMe" class="w-full">
-						<Form.Control>
-							{#snippet children({ props })}
-								<div class="flex items-center gap-2">
-									<Checkbox {...props} bind:checked={$loginForm.rememberMe} />
-									<Form.Label class="font-normal">Remember Me</Form.Label>
-								</div>
-							{/snippet}
-						</Form.Control>
-					</Form.Field>
+					<div class="flex w-full flex-row items-center justify-between">
+						<!-- Remember Me -->
+						<Form.Field form={form_login} name="rememberMe" class="w-full">
+							<Form.Control>
+								{#snippet children({ props })}
+									<div class="flex items-center gap-2">
+										<Checkbox {...props} bind:checked={$loginForm.rememberMe} />
+										<Form.Label class="font-normal">Remember Me</Form.Label>
+									</div>
+								{/snippet}
+							</Form.Control>
+						</Form.Field>
+						<!-- Forgot Password -->
+						<Button
+							variant="link"
+							class="text-xs"
+							disabled={spinner.id === 'forgotPassword'}
+							onclick={() => {
+								formPage = 'forgot';
+							}}
+						>
+							{#if spinner.id === 'forgotPassword'}
+								<Spinner size="sm" />
+							{:else}
+								Forgot Password?
+							{/if}
+						</Button>
+					</div>
 					<!-- Submit -->
 					<Form.Button type="submit" disabled={$loginSubmitting} variant="bold" class="w-full">
 						{#if $loginSubmitting}

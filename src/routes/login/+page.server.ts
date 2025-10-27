@@ -4,7 +4,7 @@ import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 
 // Superform stuff
-import { loginFormSchema, registerFormSchema } from './formSchema';
+import { forgotPasswordSchema, loginFormSchema, registerFormSchema } from './formSchema';
 import { message, superValidate, fail, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
@@ -17,11 +17,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const loginForm = await superValidate(zod4(loginFormSchema));
 	const registerForm = await superValidate(zod4(registerFormSchema));
+	const forgotPasswordForm = await superValidate(zod4(forgotPasswordSchema));
 
 	// Respond superform
 	return {
 		loginForm,
-		registerForm
+		registerForm,
+		forgotPasswordForm
 	};
 };
 
@@ -56,6 +58,48 @@ export const actions: Actions = {
 		} else {
 			message(loginForm, 'Failed to log in');
 			return fail(400, { loginForm });
+		}
+	},
+
+	forgot: async ({ request }) => {
+		const forgotPasswordForm = await superValidate(request, zod4(forgotPasswordSchema));
+
+		if (!forgotPasswordForm.valid) return fail(400, { forgotPasswordForm });
+
+		if (forgotPasswordForm.data.confirm === false) {
+			setError(forgotPasswordForm, 'confirm', 'You must confirm to proceed');
+			return fail(400, { forgotPasswordForm });
+		}
+
+		// Check if user exists
+		try {
+			const userReference = await db.user.findUnique({
+				where: { email: forgotPasswordForm.data.email }
+			});
+			if (!userReference) {
+				setError(forgotPasswordForm, 'email', 'User with this email is not registered');
+				return fail(400, { forgotPasswordForm });
+			}
+		} catch (error) {
+			return fail(400, { forgotPasswordForm });
+		}
+
+		// Try send reset password email
+		try {
+			const response = await auth.api.requestPasswordReset({
+				body: {
+					email: forgotPasswordForm.data.email
+				},
+				asResponse: true
+			});
+			if (response.ok === true) {
+				return message(forgotPasswordForm, 'Password reset email sent');
+			} else {
+				setError(forgotPasswordForm, 'email', 'Failed to send password reset email');
+				return message(forgotPasswordForm, 'Failed to send password reset email');
+			}
+		} catch (error) {
+			return fail(400, { forgotPasswordForm });
 		}
 	},
 
