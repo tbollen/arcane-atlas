@@ -9,10 +9,9 @@
 
 	let { card, nameOnBack = false }: Props = $props();
 
-	let src = $derived(
-		card.image?.url ||
-			'https://64.media.tumblr.com/6d54812f7cd2e4ef1edce4b0f4c2ea2f/d234e2e2d3d0be5b-3d/s1280x1920/7db18f6c90f00e81f45f79ba20a30c464528b85e.jpg'
-	);
+	const fallbackImageUrl = '/images/pixel_sword.png';
+	let src = $derived(card.image?.url || fallbackImageUrl);
+	let alt = $derived(card.name || 'Sword PNGs by Vecteezy');
 </script>
 
 <div
@@ -35,6 +34,13 @@
 				?.x_offset}%);  transform: translate(-50%, -50%) rotate({card.image.rotation}deg);"
 		>
 			<img {src} alt={card.name} />
+			{#if src === fallbackImageUrl}
+				<a
+					target="_blank"
+					class=" absolute right-0 bottom-0 text-[9px] text-muted-foreground hover:underline"
+					href="https://www.vecteezy.com/free-png/sword">Sword PNGs by Vecteezy</a
+				>
+			{/if}
 		</div>
 	</div>
 </div>
