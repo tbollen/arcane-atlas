@@ -5,25 +5,25 @@ import { logTrace } from '../debug/logtrace';
 import type { CardID, CardPermissions } from '$lib/domain/cards/cardStore.svelte';
 
 const CARD_API = {
-	async create(card: PrismaCard): Promise<{ success: boolean }> {
-		logTrace('create');
+	async create(card: PrismaCard): Promise<Response> {
+		// logTrace('create');
 		const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify(card) });
-		return await res.json();
+		return res;
 	},
-	async update(card: PrismaCard): Promise<{ success: boolean }> {
-		logTrace('update');
+	async update(card: PrismaCard): Promise<Response> {
+		// logTrace('update');
 		const res = await fetch(API_BASE, { method: 'PUT', body: JSON.stringify(card) });
-		return await res.json();
+		return res;
 	},
-	async delete(cards: PrismaCard[]): Promise<{ success: boolean }> {
-		logTrace('delete');
+	async delete(cards: PrismaCard[]): Promise<Response> {
+		// logTrace('delete');
 		const res = await fetch(API_BASE, { method: 'DELETE', body: JSON.stringify(cards) });
-		return await res.json();
+		return res;
 	},
-	async get(): Promise<{ success: boolean }> {
-		logTrace('get');
+	async get(): Promise<Response> {
+		// logTrace('get');
 		const res = await fetch(API_BASE, { method: 'GET' });
-		return await res.json();
+		return res;
 	},
 
 	async setPermissions({
