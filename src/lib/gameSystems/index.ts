@@ -5,8 +5,8 @@
 
 // Import mechanics from each system
 import {
-	arcaneRiftMechanics,
-	type ArcaneRiftMechanics
+	arcaneRiftCardMechanics,
+	type ArcaneRiftCardMechanics
 } from '$lib/gameSystems/ArcaneRift/ar_cards';
 // ADD MORE WHEN MORE SYSTEMS ARE ADDED
 
@@ -16,20 +16,30 @@ import {
 export const GENERIC_KEY = 'generic' as const;
 export const AR_KEY = 'arcaneRift' as const;
 
+// CARDS
 export const cardMechanics: {
 	[GENERIC_KEY]: {};
-	[AR_KEY]?: ArcaneRiftMechanics;
+	[AR_KEY]?: ArcaneRiftCardMechanics;
 } = {
 	[GENERIC_KEY]: {},
-	[AR_KEY]: arcaneRiftMechanics
+	[AR_KEY]: arcaneRiftCardMechanics
+};
+
+// CHARACTERS
+export const characterMechanics: {
+	[GENERIC_KEY]: {};
+	[AR_KEY]?: ArcaneRiftCardMechanics;
+} = {
+	[GENERIC_KEY]: {},
+	[AR_KEY]: arcaneRiftCardMechanics
 };
 
 // Populated and generated
-export type Mechanics = typeof cardMechanics;
+export type CardMechanics = typeof cardMechanics;
 
 // List of all system keys from Mechanics
-export type SystemKey = keyof Mechanics;
-export const systemKeys: SystemKey[] = Object.keys({} as Mechanics) as SystemKey[];
+export type SystemKey = keyof CardMechanics;
+export const systemKeys: SystemKey[] = Object.keys({} as CardMechanics) as SystemKey[];
 
 // System-specific keys, make sure to match from Mechanics Type!!
 
