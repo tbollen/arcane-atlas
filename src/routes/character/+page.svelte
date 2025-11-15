@@ -13,8 +13,6 @@
 	import type { UserID } from '$lib/domain/';
 
 	// Stores
-	import { activeCharacter } from '$lib/stores/activeCharacter.svelte.js';
-	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
 
 	const characterStore = getContext<CharacterStore>(ck.characterStore);
 

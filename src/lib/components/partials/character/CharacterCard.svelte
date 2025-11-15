@@ -20,7 +20,7 @@
 
 	var { character }: Props = $props();
 
-	let isActive = $derived(activeCharacter && activeCharacter.id == character.id);
+	let isActive = $derived($activeCharacter && $activeCharacter.id == character.id);
 </script>
 
 <button id="characterCard" class="w-lg shrink-0">
