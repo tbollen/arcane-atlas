@@ -30,7 +30,6 @@ type ClientCharacterPermissions = {
 // RELATIONAL FIELDS for PRISMA
 type PrismaCharacterExtension = {
 	owner: PrismaUser;
-	editors: PrismaUser[];
 	viewers: PrismaUser[];
 	campaigns: PrismaCampaign[];
 	cards: PrismaCard[];
