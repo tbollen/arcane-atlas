@@ -161,13 +161,13 @@ export class CardStore {
 	templates: Card[] = $state(defaultTemplates);
 	private idSet: Set<CardID> = $state(new Set());
 
-	constructor(c: { cards: StoredCard[]; templates?: Card[] }) {
+	constructor(c: { cards: StoredCard[]; templates?: Card[]; ids: CardID[] }) {
 		// Set cards and templates
 		this.cards = c.cards;
 		this.templates = c.templates ?? defaultTemplates;
 
 		// Make the idSet (overwrite whatever was there before)
-		this.idSet = new Set(this.cards.map((card) => card.id));
+		this.idSet = new Set(c.ids);
 		// After init, cache the store
 		this.cache();
 	}
