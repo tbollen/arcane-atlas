@@ -36,6 +36,7 @@ export const characterMechanics: {
 
 // Populated and generated
 export type CardMechanics = typeof cardMechanics;
+export type CharacterMechanics = typeof characterMechanics;
 
 // List of all system keys from Mechanics
 export type SystemKey = keyof CardMechanics;
