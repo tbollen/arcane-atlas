@@ -6,9 +6,7 @@
 
 	// Utils
 	import { lsk, ck } from '$lib/utils/storage/keys';
-	import type { CharacterID } from '$lib/domain/';
 	import { StoredCharacter } from '$lib/domain/characters/character.svelte';
-	import type { PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
 	import type { User as PrismaUser } from '@prisma/client';
 
 	// Import Style
