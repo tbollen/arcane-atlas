@@ -19,7 +19,7 @@ const unsetCampaign = 'unassigned' as const;
 type UnsetCampaign = typeof unsetCampaign;
 
 // Permission types
-type CharacterPermissions = {
+export type CharacterPermissions = {
 	viewers: UserID[];
 };
 
