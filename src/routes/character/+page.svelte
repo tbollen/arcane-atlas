@@ -3,6 +3,7 @@
 	import { Header } from '$lib/components/typography/';
 	import { Button } from '$lib/components/ui/button/';
 	import UnderConstruction from '$lib/components/partials/UnderConstruction.svelte';
+	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
 	import '$lib/styles';
 
 	// Utils
@@ -13,6 +14,7 @@
 
 	// Stores
 	import { activeCharacter } from '$lib/stores/activeCharacter.svelte.js';
+	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
 
 	const characterStore = getContext<CharacterStore>(ck.characterStore);
 
@@ -31,30 +33,16 @@
 		console.log('newCharacter', newCharacter);
 	}
 
-	function setActiveCharacter(character: StoredCharacter) {
-		activeCharacter.set(character.id); // Set active character
-		localStorage.setItem(lsk.activeCharacter, character.id);
-		console.log('Active Character set:', activeCharacter.id);
-	}
-
 	onMount(async () => {
 		// DO LATER
 	});
 </script>
 
-<main class="content">
+<main class="px-4">
 	<Button onclick={() => addNewCharacter()}>Add Character</Button>
-	<div class="mt-4 flex flex-col gap-2">
+	<div class="characterCardGrid">
 		{#each characterStore.characters as character}
-			<Button
-				variant={activeCharacter.id == character.id ? 'blossom' : 'default'}
-				onclick={() => setActiveCharacter(character)}
-			>
-				<p>
-					{character.name} |
-					<code>{character.id}</code>
-				</p>
-			</Button>
+			<CharacterCard {character} />
 		{/each}
 	</div>
 
@@ -82,3 +70,12 @@
 		</ul>
 	</UnderConstruction>
 </main>
+
+<style>
+	.characterCardGrid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(var(--container-lg), min-content));
+		gap: 2rem;
+		justify-content: center;
+	}
+</style>
