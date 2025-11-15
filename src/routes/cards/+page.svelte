@@ -28,12 +28,8 @@
 	import { getContext, setContext } from 'svelte';
 	import cachedTemplate from '$lib/stores/cachedTemplate';
 	import { Card } from '$lib/domain/cards/card.svelte';
-	import {
-		CARD_CONTEXT_KEY,
-		CardStore,
-		StoredCard,
-		type CardID
-	} from '$lib/domain/cards/cardStore.svelte';
+	import { CARD_CONTEXT_KEY, CardStore, StoredCard } from '$lib/domain/cards/cardStore.svelte';
+	import type { CardID } from '$lib/domain/';
 
 	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
 	let cardStore: CardStore = cardStoreContext;
@@ -50,7 +46,7 @@
 	);
 
 	// Get data from server
-	import type { UserID } from '$lib/domain/users/user';
+	import type { UserID } from '$lib/domain/';
 	let { data } = $props();
 
 	// Selected Cards

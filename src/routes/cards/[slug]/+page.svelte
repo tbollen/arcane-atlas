@@ -24,7 +24,7 @@
 	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
 
 	// User info and types
-	import type { UserID } from '$lib/domain/users/user';
+	import type { UserID } from '$lib/domain';
 
 	// Components and Partials
 	import MainLoader from '$lib/components/partials/MainLoader.svelte';
