@@ -13,6 +13,7 @@ export const ssk = {
 // Context keys
 export const ck: Record<string, string> = {
 	cardStore: 'db_cardStore',
+	characterStore: 'db_characterStore',
 	activeCharacter: 'activeCharacter'
 };
 
