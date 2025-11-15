@@ -8,6 +8,12 @@
 	// Utils
 	import { ck } from '$lib/utils/storage/keys.js';
 	import type { UserID, CharacterID } from '$lib/domain/';
+	import { toast } from 'svelte-sonner';
+
+	// UI Components
+	import Icon from '@iconify/svelte';
+	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 
 	// Get page data
 	const characterID = page.params.characterId;
@@ -19,30 +25,42 @@
 	const characterStore = getContext<CharacterStore>(ck.characterStore);
 
 	// Init StoredCharacter instance
-	let character: StoredCharacter;
 	let isNewCharacter: boolean = false;
-
-	onMount(() => {
-		// User not logged in, don't do anything
-		if (!data.user) {
-			alert('You must be logged in to view this page.');
+	let characterPromise: Promise<StoredCharacter> = new Promise((resolve, reject) => {
+		if (!data.user?.id || data.user == null) {
+			reject(new Error('Client not logged in'));
 			throw new Error('Client not logged in');
 		}
-		// If characterID is 'new', create a new character
 		if (characterID == 'new') {
-			character = characterStore.addNew({ userId: data.user.id as UserID });
+			let character = characterStore.addNew({ userId: data.user.id as UserID });
 			isNewCharacter = true;
-		}
-		// If characterID is defined, get the character
-		else {
+			resolve(character);
+		} else {
 			try {
-				character = characterStore.getCharacter(characterID ?? '');
+				let character = characterStore.getCharacter(characterID ?? '');
+				resolve(character);
 			} catch (error) {
-				alert(error);
-				throw error;
+				toast.error(`Error loading character: ${error}`);
+				reject(error);
 			}
 		}
 	});
 </script>
 
-Character ID: {characterID}
+{#await characterPromise}
+	<main class="content grid columns-1 place-items-center">
+		<p class="mb-4 text-2xl">Loading character...</p>
+		<code>ID: {characterID}</code>
+		<Spinner class="size-36" />
+	</main>
+{:then character}
+	<img src={character.imageUrl} alt={character.name} />
+	Character ID: {characterID}
+{:catch error}<main class="content flex flex-col">
+		<h1 class="mb-4 text-2xl font-semibold">Error loading character</h1>
+		<p>{error}</p>
+		<Button class="mx-auto mt-4" variant="destructive" href="/character"
+			><Icon icon="mdi:arrow-left" />Back to Character overview</Button
+		>
+	</main>
+{/await}
