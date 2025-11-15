@@ -1,5 +1,5 @@
 // Utils
-import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
+import { generatePrefixedUUID } from '$lib/utils/uuid';
 import { clone } from '$lib/utils/serializing';
 import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 
@@ -13,10 +13,7 @@ import { Card } from '$lib/domain/cards/card.svelte';
 // Import defaults
 import { defaultTemplates } from '$lib/domain/cards/defaultTemplates';
 
-// Shorthand for prefixed UUIDs
-import type { UserID } from '$lib/domain/users/user';
-import type { CharacterID } from '$lib/domain/characters/character';
-export type CardID = Prefixed_UUID<'card'>;
+import type { UserID, CampaignID, CharacterID, CardID } from '..';
 
 // TODO: Find way to load dynamically
 

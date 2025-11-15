@@ -1,5 +1,5 @@
 // IMPORTS
-import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
+import { generatePrefixedUUID } from '$lib/utils/uuid';
 import {
 	type Character as PrismaCharacter,
 	type User as PrismaUser,
@@ -7,11 +7,9 @@ import {
 	type card as PrismaCard
 } from '@prisma/client';
 import { type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
-import type { CardID } from '../cards/cardStore.svelte';
-import { type UserID } from '../users/user';
 
 // ID Shorthands
-export type CharacterID = Prefixed_UUID<'character'>;
+import type { UserID, CampaignID, CharacterID, CardID } from '..';
 
 // TYPES
 type System = keyof CharacterMechanics;
@@ -72,7 +70,7 @@ export class StoredCharacter extends Character {
 	ownerId: UserID;
 
 	// Relations
-	campaignIds: Prefixed_UUID<'campaign'>[] | UnsetCampaign;
+	campaignIds: CampaignID[] | UnsetCampaign;
 	cardIds: CardID[] = $state([]);
 
 	// Permissions (for client)
@@ -88,7 +86,7 @@ export class StoredCharacter extends Character {
 		data?: Partial<PrismaCharacter>;
 		ownerId: UserID;
 		clientUserId?: UserID;
-		campaignIds?: Prefixed_UUID<'campaign'>[];
+		campaignIds?: CampaignID[];
 		permissions?: CharacterPermissions;
 		public?: boolean;
 	}) {
@@ -125,9 +123,7 @@ export class StoredCharacter extends Character {
 			ownerId: init.character.ownerId as UserID,
 			clientUserId: init.user ? (init.user.id as UserID) : undefined,
 			campaignIds:
-				init.campaigns !== undefined
-					? init.campaigns.map((c) => c.id as Prefixed_UUID<'campaign'>)
-					: [],
+				init.campaigns !== undefined ? init.campaigns.map((c) => c.id as CampaignID) : [],
 			permissions: {
 				viewers: init.character.viewers.map((viewer) => viewer.id as UserID)
 			},

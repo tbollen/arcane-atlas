@@ -14,9 +14,6 @@ import { type card as PrismaCard } from '@prisma/client';
 // Utils
 import { clone } from '$lib/utils/serializing';
 
-// Basic Types
-import { type Prefixed_UUID } from '$lib/utils/uuid';
-
 // Import Mechanics
 import { type CardMechanics } from '$lib/gameSystems';
 
