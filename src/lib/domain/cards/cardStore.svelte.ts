@@ -36,9 +36,6 @@ export type ClientCardPermission = {
 	canView: boolean;
 };
 
-// Context Key
-export const CARD_CONTEXT_KEY: string = 'db_cardStore' as const;
-
 // StoredCard Class (Card with ID)
 export class StoredCard extends Card {
 	// DB Info

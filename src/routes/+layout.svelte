@@ -5,7 +5,7 @@
 	import { onMount, setContext } from 'svelte';
 
 	// Utils
-	import { lsk } from '$lib/utils/storage/keys';
+	import { lsk, ck } from '$lib/utils/storage/keys';
 	import type { CharacterID } from '$lib/domain/';
 	import { StoredCharacter } from '$lib/domain/characters/character.svelte';
 	import type { PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
@@ -44,7 +44,7 @@
 			);
 
 			// Set in Context
-			setContext<StoredCharacter | undefined>('activeCharacter', activeCharacter);
+			setContext<StoredCharacter | undefined>(ck.activeCharacter, activeCharacter);
 		}
 	});
 </script>

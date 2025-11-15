@@ -10,6 +10,12 @@ export const ssk = {
 	currentCard: 'currentCard'
 };
 
+// Context keys
+export const ck: Record<string, string> = {
+	cardStore: 'db_cardStore',
+	activeCharacter: 'activeCharacter'
+};
+
 export async function checkWebStorage(): Promise<boolean> {
 	// Check if we're running in a browser environment and localStorage is available
 	if (typeof window === 'undefined' || !window.localStorage || !window.sessionStorage) {
