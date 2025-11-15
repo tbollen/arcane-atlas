@@ -1,8 +1,9 @@
 import { db } from '$lib/server/db.js';
+import type { Character as PrismaCharacter } from '@prisma/client';
 
 export const load = async ({ locals }) => {
 	// Load user's characters
-	let charactersFromDb;
+	let charactersFromDb: PrismaCharacter[];
 	try {
 		charactersFromDb = await db.character.findMany({
 			where: {
