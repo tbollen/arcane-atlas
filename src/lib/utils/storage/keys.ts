@@ -1,7 +1,8 @@
 // Keys to use for local storage
 export const lsk = {
 	cardStore: 'cardStore',
-	user: 'user'
+	user: 'user',
+	activeCharacter: 'activeCharacter'
 };
 
 // Keys to use for session storage

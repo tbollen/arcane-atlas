@@ -1,10 +1,21 @@
 import { db } from '$lib/server/db.js';
 
 export const load = async ({ locals }) => {
-	const cardsFromDb = await db.card.findMany();
+	// Load user's characters
+	let charactersFromDb;
+	try {
+		charactersFromDb = await db.character.findMany({
+			where: {
+				ownerId: locals.user?.id
+			},
+			include: { owner: true, viewers: true, cards: true, campaigns: true }
+		});
+	} catch (error) {
+		throw error;
+	}
+
 	return {
 		user: locals.user ?? null,
-		character: null,
-		dbCards: cardsFromDb ?? []
+		characters: charactersFromDb
 	};
 };
