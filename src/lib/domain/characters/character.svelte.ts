@@ -40,8 +40,8 @@ export type PrismaCharacterExtended = PrismaCharacter & PrismaCharacterExtension
 class Character {
 	// Basic Info
 	name: string = $state('New Character');
-	subtitle?: string = $state(undefined);
-	description?: string = $state(undefined);
+	subtitle: string = $state('Adventurer');
+	description: string = $state('Character Description');
 	imageUrl: string = $state(`https://robohash.org/${this.name}`);
 
 	// DB info
@@ -54,8 +54,8 @@ class Character {
 
 	constructor(init?: Partial<PrismaCharacter>) {
 		this.name = init?.name ?? this.name;
-		this.subtitle = init?.subtitle;
-		this.description = init?.description;
+		this.subtitle = init?.subtitle ?? this.subtitle;
+		this.description = init?.description ?? this.description;
 		this.imageUrl = init?.image ?? this.imageUrl;
 
 		this.mechanics = (init?.mechanics as CharacterMechanics) ?? { [GENERIC_KEY]: {} };
