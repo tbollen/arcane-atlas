@@ -1,11 +1,4 @@
-import type { CharacterID } from '$lib/domain';
+import { StoredCharacter } from '$lib/domain/characters/character.svelte';
+import { writable, type Writable } from 'svelte/store';
 
-class ActiveCharacter {
-	id?: CharacterID = $state();
-
-	set(id: CharacterID | undefined) {
-		this.id = id;
-	}
-}
-
-export const activeCharacter = new ActiveCharacter();
+export const activeCharacter: Writable<StoredCharacter | undefined> = writable();
