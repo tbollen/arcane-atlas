@@ -25,6 +25,7 @@ export type CharacterPermissions = {
 
 type ClientCharacterPermissions = {
 	canView: boolean;
+	isOwner: boolean;
 };
 
 // RELATIONAL FIELDS for PRISMA
@@ -103,7 +104,8 @@ export class StoredCharacter extends Character {
 			: { viewers: [this.ownerId] };
 		this.clientPermissions = {
 			canView:
-				init.clientUserId !== undefined && this.permissions.viewers.includes(init?.clientUserId)
+				init.clientUserId !== undefined && this.permissions.viewers.includes(init?.clientUserId),
+			isOwner: this.ownerId == init.clientUserId
 		};
 	}
 
@@ -190,7 +192,12 @@ export class CharacterStore {
 		// Create a new, unique ID
 		const newId = this.returnUniqueId();
 		// Instantiate a new character
-		const newCharacter = new StoredCharacter({ id: newId, ownerId: userId, data });
+		const newCharacter = new StoredCharacter({
+			id: newId,
+			ownerId: userId,
+			data,
+			clientUserId: userId
+		});
 		// TODO: add caching (but do we really need this?)
 		// Add the new character to the store
 		this.characters = [...this.characters, newCharacter];
