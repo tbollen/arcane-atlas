@@ -2,6 +2,11 @@
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 	import { type VariantProps, tv } from 'tailwind-variants';
+	import Spinner from '../spinner/spinner.svelte';
+	import {
+		type SpinnerComponent,
+		spinner as spinnerStore
+	} from '$lib/stores/loadingSpinner.svelte';
 
 	export const buttonVariants = tv({
 		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
@@ -43,6 +48,7 @@
 		WithElementRef<HTMLAnchorAttributes> & {
 			variant?: ButtonVariant;
 			size?: ButtonSize;
+			spinner?: SpinnerComponent;
 		};
 </script>
 
@@ -55,9 +61,16 @@
 		href = undefined,
 		type = 'button',
 		disabled,
+		spinner = undefined,
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	// Spinner stuff
+	let isLoading: boolean | undefined = $derived(
+		spinner && spinnerStore.isLoading && spinner.id == spinnerStore.id
+	);
+	let isDisabled: boolean | undefined = $derived(disabled || (isLoading && !spinner?.keepEnabled));
 </script>
 
 {#if href}
@@ -79,10 +92,19 @@
 		data-slot="button"
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
-		{disabled}
+		disabled={isDisabled}
 		{...restProps}
 	>
-		{@render children?.()}
+		{#if isLoading}
+			<Spinner />
+			{#if spinner?.keepMessage}
+				{@render children?.()}
+			{:else}
+				{spinnerStore.message}
+			{/if}
+		{:else}
+			{@render children?.()}
+		{/if}
 	</button>
 {/if}
 
