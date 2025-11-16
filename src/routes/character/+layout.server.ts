@@ -1,12 +1,16 @@
 import { db } from '$lib/server/db';
+import { type Character as PrismaCharacter } from '@prisma/client';
+import { type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
+import { type CharacterID } from '$lib/domain/';
 
 export const load = async ({ locals }) => {
 	// Load user's characters
-	let viewableCharactersFromDb;
-	let viewableCharacters;
-	let allCharacterIds;
+	let viewableCharactersFromDb: PrismaCharacterExtended[];
+	let allCharacterIds: CharacterID[];
 	try {
-		allCharacterIds = await db.character.findMany({ select: { id: true } });
+		allCharacterIds = (await db.character.findMany({ select: { id: true } })).map(
+			(c) => c.id
+		) as CharacterID[];
 		viewableCharactersFromDb = await db.character.findMany({
 			where: {
 				OR: [
