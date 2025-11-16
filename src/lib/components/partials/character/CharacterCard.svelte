@@ -38,7 +38,7 @@
 			<Button
 				class="place-self-center text-inherit"
 				variant="link"
-				href="/character/{character.id}/edit"
+				href="/character/{character.id}?edit=1"
 			>
 				Edit
 				<Icon icon="mdi:pencil" />

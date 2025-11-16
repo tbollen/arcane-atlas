@@ -7,10 +7,9 @@
 	import '$lib/styles';
 
 	// Utils
-	import { onMount, getContext, setContext } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	import { ck, lsk } from '$lib/utils/storage/keys.js';
-	import { CharacterStore, StoredCharacter } from '$lib/domain/characters/character.svelte.js';
-	import type { UserID } from '$lib/domain/';
+	import { CharacterStore } from '$lib/domain/characters/character.svelte.js';
 
 	// Stores
 
@@ -20,24 +19,13 @@
 
 	// FUNCTIONS //
 
-	function addNewCharacter(template?: Partial<StoredCharacter>) {
-		if (!data.user) {
-			alert('You must be logged in to create a character.');
-			throw new Error('Client not logged in');
-		}
-		const userId = data.user.id as UserID;
-
-		const newCharacter = characterStore.addNew({ userId, data: template });
-		console.log('newCharacter', newCharacter);
-	}
-
 	onMount(async () => {
 		// DO LATER
 	});
 </script>
 
 <main class="px-4">
-	<Button onclick={() => addNewCharacter()}>Add Character</Button>
+	<Button href="/character/new">Add Character</Button>
 	<div class="characterCardGrid">
 		{#each characterStore.characters as character}
 			<CharacterCard {character} />
