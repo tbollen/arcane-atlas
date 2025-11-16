@@ -30,8 +30,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			return { character };
 		}
 		// If the user is not the owner or a viewer, redirect to character page
-		throw redirect(302, '/character');
+		return {};
 	} catch (error) {
-		throw redirect(302, '/character');
+		return {};
 	}
 };
