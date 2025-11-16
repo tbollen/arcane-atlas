@@ -154,6 +154,14 @@ export class StoredCharacter extends Character {
 			mechanics: _character.mechanics
 		};
 	}
+
+	static new({ userId, data }: { userId: UserID; data?: Partial<Character> }): StoredCharacter {
+		return new StoredCharacter({
+			id: generatePrefixedUUID('character'),
+			ownerId: userId,
+			data
+		});
+	}
 }
 
 /////////////////////
