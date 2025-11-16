@@ -1,9 +1,9 @@
 import { db } from '$lib/server/db.js';
-import type { Character as PrismaCharacter } from '@prisma/client';
+import { type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
 
 export const load = async ({ locals }) => {
 	// Load user's characters
-	let charactersFromDb: PrismaCharacter[];
+	let charactersFromDb: PrismaCharacterExtended[];
 	try {
 		charactersFromDb = await db.character.findMany({
 			where: {
