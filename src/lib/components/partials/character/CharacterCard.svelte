@@ -9,6 +9,7 @@
 
 	// Utils
 	import type { StoredCharacter } from '$lib/domain/characters/character.svelte.js';
+	import { lsk } from '$lib/utils/storage/keys';
 
 	// Active Character Store
 	import { activeCharacter } from '$lib/stores/activeCharacter.svelte';
@@ -21,6 +22,12 @@
 	var { character }: Props = $props();
 
 	let isActive = $derived($activeCharacter && $activeCharacter.id == character.id);
+
+	// FUNCTIONS
+	function setActiveCharacter(character: StoredCharacter) {
+		$activeCharacter = character;
+		localStorage.setItem(lsk.activeCharacter, character.id);
+	}
 </script>
 
 <button id="characterCard" class="w-lg shrink-0">
@@ -51,20 +58,20 @@
 			{character.description}
 		</p>
 	</div>
-	<footer
-		id="footer"
-		class="flex flex-row flex-wrap items-center bg-obsidian-500/5 px-1 py-2 text-start"
-	>
-		{#each character.systems as system}
-			<Badge variant="bold" class="h-min">{system}</Badge>
-		{/each}
-		<Button
-			class="ml-auto"
-			variant="ghost"
-			onclick={() => {
-				$activeCharacter = character;
-			}}>Set Active</Button
-		>
+	<footer id="footer" class=" flex flex-col gap-0.5 bg-obsidian-500/5 px-1 py-2 text-start">
+		<div id="badgeRow" class="flex flex-row flex-wrap items-center">
+			{#each character.systems as system}
+				<Badge variant="bold" class="h-min">{system}</Badge>
+			{/each}
+			<Button
+				class="ml-auto"
+				variant="ghost"
+				onclick={() => {
+					setActiveCharacter(character);
+				}}>Set Active</Button
+			>
+		</div>
+		<code id="characterID" class="text-xs text-muted-foreground">{character.id}</code>
 	</footer>
 </button>
 
