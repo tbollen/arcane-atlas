@@ -1,11 +1,22 @@
 import { db } from '$lib/server/db.js';
-import { CardStore } from '$lib/domain/cards/cardStore.svelte.js';
+import type { Character as PrismaCharacter } from '@prisma/client';
 
 export const load = async ({ locals }) => {
-	const cardsFromDb = await db.card.findMany();
+	// Load user's characters
+	let charactersFromDb: PrismaCharacter[];
+	try {
+		charactersFromDb = await db.character.findMany({
+			where: {
+				ownerId: locals.user?.id
+			},
+			include: { owner: true, viewers: true, cards: true, campaigns: true }
+		});
+	} catch (error) {
+		throw error;
+	}
+
 	return {
 		user: locals.user ?? null,
-		character: null,
-		dbCards: cardsFromDb ?? []
+		characters: charactersFromDb
 	};
 };

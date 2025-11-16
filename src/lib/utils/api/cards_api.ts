@@ -2,7 +2,8 @@
 const API_BASE = '/api/cards';
 import type { card as PrismaCard } from '@prisma/client';
 import { logTrace } from '../debug/logtrace';
-import type { CardID, CardPermissions } from '$lib/domain/cards/cardStore.svelte';
+import type { CardPermissions } from '$lib/domain/cards/cardStore.svelte';
+import type { CardID } from '$lib/domain';
 
 const CARD_API = {
 	async create(card: PrismaCard): Promise<Response> {

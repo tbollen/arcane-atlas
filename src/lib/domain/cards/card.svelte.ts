@@ -14,20 +14,17 @@ import { type card as PrismaCard } from '@prisma/client';
 // Utils
 import { clone } from '$lib/utils/serializing';
 
-// Basic Types
-import { type Prefixed_UUID } from '$lib/utils/uuid';
-
 // Import Mechanics
-import { type Mechanics } from '$lib/gameSystems';
+import { type CardMechanics } from '$lib/gameSystems';
 
-type System = keyof Mechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
+type System = keyof CardMechanics; // e.g., 'arcane-rift', 'dnd5e', etc.
 
 // Basic Card fields
 export type CardFields = {
 	name?: string;
 	description?: string;
 };
-const mechanics: Mechanics = { generic: {} };
+const mechanics: CardMechanics = { generic: {} };
 const system: System[] = ['generic'];
 
 export const fallbackCardInfo: Partial<Card> = {
@@ -75,7 +72,7 @@ export class Card {
 	style: CardStyleOptions = $state(defaultCardStyle);
 	// Mechanics
 	systems: System[] = $state([]); // Can have 0, 1 or more compatible systems
-	mechanics: Mechanics = $state({ [GENERIC_KEY]: {} }); // Object containing mechanics per available system
+	mechanics: CardMechanics = $state({ [GENERIC_KEY]: {} }); // Object containing mechanics per available system
 
 	// Constructor to initialize the card with default values
 	constructor(_card?: Partial<Card> | PrismaCard) {

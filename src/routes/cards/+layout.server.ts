@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	// First get all cards including editors and viewers
+	const allCardsIds = await db.card.findMany({ select: { id: true } });
 	const cards = await db.card.findMany({
 		include: { editors: true, viewers: true, characters: true }, //Include all relational properties
 		where: {
@@ -18,6 +19,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		user: locals.user ?? null,
 		session: locals.session ?? null,
-		db_cards: cards
+		db_cards: cards,
+		db_cards_ids: allCardsIds.map((card) => card.id)
 	};
 };
