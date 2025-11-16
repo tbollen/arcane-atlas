@@ -34,8 +34,7 @@
 	import { onMount } from 'svelte';
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import USER_API from '$lib/utils/api/users_api';
-	import type { CardID } from '$lib/domain/cards/cardStore.svelte';
-	import type { UserID } from '$lib/domain/users/user';
+	import type { CardID, UserID } from '$lib/domain/';
 
 	// Form stuff
 	import { enhance } from '$app/forms';

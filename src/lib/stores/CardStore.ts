@@ -23,4 +23,4 @@ const json = localStorage_CardStore || undefined;
  * @typedef {CardStore} cardStore
  * @property {CardStore} cardStore - Singleton of the CardStore class.
  */
-export const cardStore = new CardStore({ json: json });
+// export const cardStore = new CardStore({ json: json });

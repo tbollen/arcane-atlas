@@ -26,16 +26,13 @@
 
 	// INIT CARDSTORE
 	import { getContext, setContext } from 'svelte';
+	import { ck } from '$lib/utils/storage/keys';
 	import cachedTemplate from '$lib/stores/cachedTemplate';
 	import { Card } from '$lib/domain/cards/card.svelte';
-	import {
-		CARD_CONTEXT_KEY,
-		CardStore,
-		StoredCard,
-		type CardID
-	} from '$lib/domain/cards/cardStore.svelte';
+	import { CardStore, StoredCard } from '$lib/domain/cards/cardStore.svelte';
+	import type { CardID } from '$lib/domain/';
 
-	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
+	const cardStoreContext = getContext<CardStore>(ck.cardStore);
 	let cardStore: CardStore = cardStoreContext;
 	let renderedCards = $state(cardStore.cards); // Cards to render
 	let renderedCards_sorted = $derived(
@@ -50,7 +47,7 @@
 	);
 
 	// Get data from server
-	import type { UserID } from '$lib/domain/users/user';
+	import type { UserID } from '$lib/domain/';
 	let { data } = $props();
 
 	// Selected Cards

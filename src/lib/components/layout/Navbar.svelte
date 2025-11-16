@@ -1,4 +1,10 @@
 <script lang="ts">
+	// Types
+	import type { Character as PrismaCharacter } from '@prisma/client';
+	// Stores
+	import { activeCharacter } from '$lib/stores/activeCharacter.svelte';
+	import type { StoredCharacter } from '$lib/domain/characters/character.svelte';
+	// UI Components
 	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
 	// Set Routes
 	import { base } from '$app/paths';
@@ -70,11 +76,6 @@
 		}
 	];
 
-	const character = {
-		name: 'Neovald',
-		id: 'neovald',
-		image: 'https://robohash.org/Neovald'
-	};
 	let currentRoute: string = $derived(page.url.pathname);
 
 	// Imports
@@ -83,6 +84,18 @@
 
 	// Accept and handle server data
 	let { data } = $props();
+	let dataCharacters = $derived(data.characters) as PrismaCharacter[];
+
+	// Get active character from store and match from DB for Avatar
+	let character: PrismaCharacter | undefined = $derived(
+		data.user && $activeCharacter && $activeCharacter.ownerId == data.user.id
+			? dataCharacters.find((c) => c.id.toString() == $activeCharacter.id.toString())
+			: undefined
+	);
+
+	$effect(() => {
+		console.log('Active Character:', character);
+	});
 </script>
 
 <section id="navigation" class="navbar border-b-2 border-threat-500 bg-obsidian-50">
@@ -125,7 +138,7 @@
 		<!-- <a class="badge" href="https://github.com/tbollen/Game_Card_Builder" target="_blank">
 			<Icon icon="mdi:github" />
 		</a> -->
-		<CharacterAvatar user={data.user} character={data.character} />
+		<CharacterAvatar user={data.user} {character} />
 	</div>
 </section>
 

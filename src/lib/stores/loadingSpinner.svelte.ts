@@ -16,3 +16,9 @@ class Spinner {
 	}
 }
 export const spinner = new Spinner();
+
+export type SpinnerComponent = {
+	id: string;
+	keepMessage?: boolean;
+	keepEnabled?: boolean;
+};

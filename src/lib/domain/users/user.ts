@@ -1,10 +1,10 @@
 // IMPORTS
-import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
+import { generatePrefixedUUID } from '$lib/utils/uuid';
 
 // USER ROLE TYPE
 export type UserRole = 'admin' | 'plus_user' | 'basic_user' | 'guest';
 
-export type UserID = Prefixed_UUID<'user'>;
+import type { UserID, CampaignID, CharacterID, CardID } from '..';
 
 // Username validation and Type
 export type Username = string & { __brand: 'username' };
@@ -23,8 +23,8 @@ export class User {
 	id: UserID = generatePrefixedUUID('user');
 	username: Username;
 	nickname: string = 'New User';
-	characterIds: Prefixed_UUID<'character'>[] = [];
-	campaignIds: Prefixed_UUID<'campaign'>[] = [];
+	characterIds: CharacterID[] = [];
+	campaignIds: CampaignID[] = [];
 	role: UserRole = 'basic_user';
 
 	constructor(username: Username, nickname?: string) {
