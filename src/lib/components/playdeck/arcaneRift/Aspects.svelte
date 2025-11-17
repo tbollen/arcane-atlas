@@ -16,10 +16,11 @@
 				<div>No aspects</div>
 			{:else}
 				{#each character.mechanics[AR_KEY]?.aspects as aspect}
-					<div>{aspect.short}</div>
-					<div>{aspect.description}</div>
+					<div>{aspect}</div>
 				{/each}
 			{/if}
 		</div>
 	{/if}
+{:else}
+	BLUH
 {/if}
