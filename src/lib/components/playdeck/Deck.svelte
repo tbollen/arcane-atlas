@@ -50,6 +50,9 @@
 
 	let { deck, character, edit = false }: Props = $props();
 
+	// Wrapper styling
+	const twStyles = edit ? 'border-2 border-blossom-500' : '';
+
 	// Create combined component map with all keys
 	const DeckDict = deck?.system
 		? {
@@ -67,5 +70,7 @@
 </script>
 
 {#each ComponentArray as Component}
-	<Component bind:character {edit} />
+	<div class={twStyles}>
+		<Component bind:character bind:edit />
+	</div>
 {/each}

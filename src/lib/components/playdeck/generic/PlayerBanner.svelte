@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type DeckProps } from '../types';
 
-	let { character = $bindable(), edit }: DeckProps = $props();
+	let { character = $bindable(), edit = $bindable() }: DeckProps = $props();
 </script>
 
 {#if edit}
