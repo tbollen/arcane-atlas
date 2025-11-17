@@ -1,12 +1,16 @@
-import Aspects from './Aspects.svelte';
-import { type DeckComponent } from '../types';
+import { defineDeckMap } from '../modules';
+import { AR_KEY } from '$lib/gameSystems';
 
-// Lay out all available options for the deck (manual)
-type ArcaneRiftDeckOptions = 'aspects';
-// Create a map of all Arcane Rift Components and their keys
-export const ArcaneRiftComponentMap: Record<ArcaneRiftDeckOptions, DeckComponent> = {
-	['aspects']: Aspects
-} as const;
+// SVELTE COMPONENTS
+import Aspects from './Aspects.svelte';
+
+// DeckMap
+export const ArcaneRiftComponentMap = defineDeckMap(AR_KEY, {
+	['aspects']: {
+		component: Aspects,
+		name: 'Aspects'
+	}
+});
 
 // Export dict of the components themselves
 export default { Aspects };

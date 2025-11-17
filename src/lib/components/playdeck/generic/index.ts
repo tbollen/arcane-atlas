@@ -1,12 +1,16 @@
-import PlayerBanner from './PlayerBanner.svelte';
-import { type DeckComponent } from '../types';
+import { defineDeckMap } from '../modules';
+import { GENERIC_KEY } from '$lib/gameSystems';
 
-// Lay out all available options for the deck (manual)
-type GenericDeckOptions = 'banner';
-// Create a map of all generic component and their keys
-export const GenericComponentMap: Record<GenericDeckOptions, DeckComponent> = {
-	['banner']: PlayerBanner
-} as const;
+// SVELTE COMPONENTS
+import PlayerBanner from './PlayerBanner.svelte';
+
+// DeckMap
+export const GenericDeckMap = defineDeckMap(GENERIC_KEY, {
+	['banner']: {
+		component: PlayerBanner,
+		name: 'Banner'
+	}
+});
 
 // Export dict of the components themselves
 export default { PlayerBanner };

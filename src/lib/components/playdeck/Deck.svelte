@@ -1,81 +1,47 @@
-<script lang="ts" module>
-	////////////////////////////////////////////////////////////////////
-	// Import component maps and their keys for all available systems //
-	////////////////////////////////////////////////////////////////////
-	// KEYS
-	// NOTE: it is important to do this separate, as not every system automatically has components yet
-	import { GENERIC_KEY, AR_KEY } from '$lib/gameSystems';
-
-	// GENERIC
-	import { GenericComponentMap } from '$lib/components/playdeck/generic';
-
-	// ARCANE RIFT
-	import { ArcaneRiftComponentMap } from '$lib/components/playdeck/arcaneRift';
-
-	// Put all imported components in 1 big Component (dict)
-	// Keep generic separate, generic components may always be used!
-	const ComponentDict = {
-		[AR_KEY]: ArcaneRiftComponentMap
-	} as const;
-	// Generic components are ALWAYS supported, as they do not require the "mechanics" property
-	const GenericDict = {
-		[GENERIC_KEY]: GenericComponentMap
-	} as const;
-
-	// Compiled types
-	// All supported systems for the Playdeck
-	export type DeckSystems = keyof typeof ComponentDict;
-
-	// All supported components for the Playdeck, requires a system as key
-	type DeckConfig = {
-		[S in DeckSystems]: {
-			system?: S;
-			config: Array<
-				keyof (typeof ComponentDict)[S] | keyof (typeof GenericDict)[typeof GENERIC_KEY]
-			>;
-		};
-	}[DeckSystems];
-</script>
-
 <script lang="ts">
+	// Import UI components
+	import Icon from '@iconify/svelte';
+
+	// Import partials
+	import GameSystemSelector from './GameSystemSelector.svelte';
+
 	// Import necessary types and utils
-	import { type StoredCharacter } from '$lib/domain/characters/character.svelte';
-	import { type DeckComponent } from './types';
+	import { type DeckComponent, type DeckProps, DeckMap } from './';
+	import { GENERIC_KEY } from '$lib/gameSystems';
 
-	type Props = {
-		deck: DeckConfig;
-		character: StoredCharacter;
-		edit?: boolean;
-	};
-
-	let { deck, character, edit = false }: Props = $props();
+	let {
+		deck = $bindable(),
+		character,
+		system = $bindable(GENERIC_KEY),
+		edit = $bindable(false)
+	}: DeckProps = $props();
 
 	// Wrapper styling
-	const editStyle = $derived(edit ? '' : '');
-	const wrapperStyle = $derived(`flex flex-col ${editStyle}`);
+	const editStyle = $derived(edit ? 'outline-1 outline-threat-500 rounded-lg overflow-hidden' : '');
+	const wrapperStyle = $derived(` ${editStyle} relative`);
 
-	// Create combined component map with all keys. Filter out system-specific component if character does not have that system
-	const DeckDict =
-		deck?.system && character.systems.includes(deck.system)
-			? {
-					...ComponentDict[deck.system],
-					...GenericDict[GENERIC_KEY]
-				}
-			: ({ ...GenericDict[GENERIC_KEY] } as const);
-
-	// Create array of components to be rendered
-	// Filter out keys that are not in the component map (used when no System is given)
-	const filteredDeckConfig = deck.config.filter((key) => Object.keys(DeckDict).includes(key));
 	// Create an array of Components from the filtered keys
-	const ComponentArray: DeckComponent[] = filteredDeckConfig.map(
-		(key) => DeckDict[key as keyof typeof DeckDict]
-	);
+	const ComponentArray: DeckComponent[] = $derived(deck.map((comp) => DeckMap[comp].component));
 </script>
 
-<div id="Deck">
+{#if edit}
+	<GameSystemSelector bind:character bind:edit bind:system />
+{/if}
+<div id="Deck" class="flex flex-row flex-wrap">
 	{#each ComponentArray as Component}
 		<!-- Component in wrapper -->
 		<div class={wrapperStyle}>
+			{#if edit}
+				<div
+					id="editHandle"
+					class=" absolute top-0 right-0 z-20 h-6 w-fit rounded-lg bg-obsidian-500/20"
+				>
+					<button id="dragHandle" class="flex cursor-pointer flex-row gap-1 pl-1">
+						<span class="text-sm text-muted-foreground">drag</span>
+						<Icon icon="mdi:drag" class="text-xl" />
+					</button>
+				</div>
+			{/if}
 			<Component bind:character bind:edit />
 		</div>
 	{/each}
