@@ -6,22 +6,25 @@
 	import { Header } from '$lib/components/typography';
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from 'svelte-sonner';
+	import Icon from '@iconify/svelte';
 	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
 
 	// Import classes
-	import { CharacterStore, StoredCharacter } from '$lib/domain/characters/character.svelte.js';
+	import { StoredCharacter } from '$lib/domain/characters/character.svelte.js';
 
 	// DECK stuff
 	import Deck from '$lib/components/playdeck/Deck.svelte';
+	import { type DeckConfig } from '$lib/components/playdeck';
 
 	// Utils
 	import { lsk } from '$lib/utils/storage/keys.js';
 	import { getContext } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { AR_KEY, GENERIC_KEY } from '$lib/gameSystems/index.js';
+	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
 
-	// Init deck
-	const deck = ['character', 'system', 'deck'];
+	// API
+	import CHARACTER_API from '$lib/utils/api/characters_api.js';
 
 	// Init character
 	let { data } = $props();
@@ -30,8 +33,8 @@
 	);
 
 	// Retrieve active character
-	let character: Promise<StoredCharacter> = $derived(
-		new Promise((resolve, reject) => {
+	function promiseCharacter(): Promise<StoredCharacter> {
+		return new Promise((resolve, reject) => {
 			// If user is not logged in
 			if (!data.user?.id || data.user == null) {
 				toast.error('Please log in to see your playdeck');
@@ -63,37 +66,94 @@
 				toast.success('Character loaded');
 				resolve(character);
 			}
-		})
-	);
+		});
+	}
+	let character: Promise<StoredCharacter> = $state(promiseCharacter());
+
 	// FUNCTIONS
 	function setActiveCharacter(characterID: string) {
 		localStorage.setItem(lsk.activeCharacter, characterID);
-		invalidateAll();
+		character = promiseCharacter();
+	}
+
+	function saveChanges() {
+		spinner.set('save', 'Saving...');
+		// Check character promise
+		character
+			.then((character) => {
+				// If character exists, try to update through API
+				CHARACTER_API.update(character.toPrisma())
+					.then(() => {
+						toast.success('Character saved');
+						console.log('Character saved', character.systems);
+					})
+					.catch((error) => {
+						toast.error(`Error saving character: ${error}`);
+					});
+			})
+			// If character does not exist anymore, notify user
+			.catch((error) => {
+				toast.error(`Error saving character: ${error}`);
+			})
+			// Close spinner
+			.finally(() => {
+				setTimeout(() => {
+					spinner.complete();
+				}, 500);
+			});
 	}
 
 	function unsetActiveCharacter() {
 		localStorage.removeItem(lsk.activeCharacter);
-		invalidateAll();
+		character = promiseCharacter();
 	}
+
+	// EDIT MODE
+	let edit = $state(false);
+	function toggleEdit() {
+		edit = !edit;
+	}
+
+	// DECK VARS
+	let deck: DeckConfig = $state(['generic:banner']);
 </script>
 
-{#await character}
-	<p>Loading character...</p>
-{:then character}
-	<Deck {character} deck={{ system: AR_KEY, config: ['banner', 'aspects'] }} />
-	<Button onclick={unsetActiveCharacter} variant="destructive">Select different character</Button>
-{:catch}
-	<!-- Any errors encountered will redirect the client, except when no "Active Character" is set -->
-	<!-- In this case, the client will be shown a menu to select a character -->
-	<Header variant="h2">Select Character</Header>
-	{#each dataCharactersAsStored as character}
-		<button
-			class="cursor-pointer rounded-md hover:outline-2 hover:outline-blossom-500"
-			onclick={() => {
-				setActiveCharacter(character.id);
-			}}
-		>
-			<CharacterCard {character} />
-		</button>
-	{/each}
-{/await}
+<main>
+	{#await character}
+		<p>Loading character...</p>
+	{:then character}
+		<div id="Actions" class="my-4 flex flex-row items-center gap-2">
+			{#if edit}
+				<Button onclick={toggleEdit} variant="secondary"><Icon icon="mdi:eye" />View</Button>
+				<Button onclick={saveChanges} variant="success" spinner={{ id: 'save' }}
+					><Icon icon="mdi:floppy" />Save</Button
+				>
+			{:else}
+				<Button onclick={toggleEdit} variant="advanced"><Icon icon="mdi:pencil" />Edit</Button>
+			{/if}
+			<Button onclick={unsetActiveCharacter} variant="destructive"
+				>Select different character</Button
+			>
+			<Button
+				onclick={() => {
+					console.log(character.mechanics);
+				}}>Log</Button
+			>
+		</div>
+		<Deck {character} bind:edit {deck} />
+	{:catch}
+		<!-- Any errors encountered will redirect the client, except when no "Active Character" is set -->
+		<!-- In this case, the client will be shown a menu to select a character -->
+		<Header variant="h2">Select Character</Header>
+		{#each dataCharactersAsStored as character}
+			<button
+				class="cursor-pointer rounded-md hover:outline-2 hover:outline-blossom-500"
+				onclick={() => {
+					setActiveCharacter(character.id);
+				}}
+			>
+				<CharacterCard {character} />
+			</button>
+		{/each}
+	{/await}
+</main>
