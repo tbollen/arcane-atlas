@@ -47,19 +47,63 @@ export const ArcaneRiftDefaultCharacterRules: ArcaneRiftCharacterRules = {
 	}
 };
 
+type SkillValueMap = {
+	[Characteristic in keyof typeof skillList]: {
+		[Skill in (typeof skillList)[Characteristic][number]]: number;
+	};
+};
+
+type CharacteristicValueMap = {
+	[Characteristic in keyof typeof skillList]: number;
+};
+
+function populateEmptySkillValueMap(): SkillValueMap {
+	return Object.fromEntries(
+		Object.entries(skillList).map(([char, skills]) => [
+			char,
+			Object.fromEntries(skills.map((s) => [s, 0]))
+		])
+	) as SkillValueMap;
+}
+
+function populateDefaultCharacteristics(): CharacteristicValueMap {
+	return Object.fromEntries(characteristics.map((c) => [c, 0])) as CharacteristicValueMap;
+}
+
 export type ArcaneRiftCharacterMechanics = {
 	stats: {
-		characteristitcs: Record<keyof typeof skillList, number>;
-		skills: Record<(typeof characteristics)[number], number>;
+		characteristics: CharacteristicValueMap;
+		skills: SkillValueMap;
 	};
 	aspects: string[];
 	shortlist: string[];
+	stressTracks: {
+		type: string;
+		value: number;
+		max: number;
+	}[];
+	consequences: Array<{ checked: boolean; variant: ConsequenceVariant }>;
+};
+
+// Defaults for AR character
+export const arcaneRiftCharacterMechanics: ArcaneRiftCharacterMechanics = {
+	stats: {
+		characteristics: populateDefaultCharacteristics(),
+		skills: populateEmptySkillValueMap()
+	},
+	aspects: [],
+	shortlist: [],
 	stressTracks: [
 		{
-			type: string;
-			value: number;
-			max: number;
+			type: 'Physical',
+			value: 0,
+			max: 3
+		},
+		{
+			type: 'Mental',
+			value: 0,
+			max: 3
 		}
-	];
-	consequences: Array<{ checked: boolean; variant: ConsequenceVariant }>;
+	],
+	consequences: []
 };
