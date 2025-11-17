@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { type DeckProps } from '../types';
 
-	let { character, edit }: DeckProps = $props();
+	let { character = $bindable(), edit }: DeckProps = $props();
 </script>
 
-<div>
-	<img src={character.imageUrl} alt={character.name} />
-	<div>{character.name}</div>
-</div>
+{#if edit}
+	EDIT MODE?
+{:else}
+	<div>
+		<img src={character.imageUrl} alt={character.name} />
+		<div>{character.name}</div>
+	</div>
+{/if}

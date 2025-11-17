@@ -67,5 +67,5 @@
 </script>
 
 {#each ComponentArray as Component}
-	<Component {character} {edit} />
+	<Component bind:character {edit} />
 {/each}
