@@ -51,26 +51,32 @@
 	let { deck, character, edit = false }: Props = $props();
 
 	// Wrapper styling
-	const twStyles = edit ? 'border-2 border-blossom-500' : '';
+	const editStyle = $derived(edit ? '' : '');
+	const wrapperStyle = $derived(`flex flex-col ${editStyle}`);
 
-	// Create combined component map with all keys
-	const DeckDict = deck?.system
-		? {
-				...ComponentDict[deck.system],
-				...GenericDict[GENERIC_KEY]
-			}
-		: ({ ...GenericDict[GENERIC_KEY] } as const);
+	// Create combined component map with all keys. Filter out system-specific component if character does not have that system
+	const DeckDict =
+		deck?.system && character.systems.includes(deck.system)
+			? {
+					...ComponentDict[deck.system],
+					...GenericDict[GENERIC_KEY]
+				}
+			: ({ ...GenericDict[GENERIC_KEY] } as const);
 
 	// Create array of components to be rendered
-	const ComponentArray: DeckComponent[] = deck.config
-		// Filter out keys that are not in the component map (used when no System is given)
-		.filter((key) => Object.keys(DeckDict).includes(key))
-		// Create an array of Components from the filtered keys
-		.map((key) => DeckDict[key as keyof typeof DeckDict]);
+	// Filter out keys that are not in the component map (used when no System is given)
+	const filteredDeckConfig = deck.config.filter((key) => Object.keys(DeckDict).includes(key));
+	// Create an array of Components from the filtered keys
+	const ComponentArray: DeckComponent[] = filteredDeckConfig.map(
+		(key) => DeckDict[key as keyof typeof DeckDict]
+	);
 </script>
 
-{#each ComponentArray as Component}
-	<div class={twStyles}>
-		<Component bind:character bind:edit />
-	</div>
-{/each}
+<div id="Deck">
+	{#each ComponentArray as Component}
+		<!-- Component in wrapper -->
+		<div class={wrapperStyle}>
+			<Component bind:character bind:edit />
+		</div>
+	{/each}
+</div>
