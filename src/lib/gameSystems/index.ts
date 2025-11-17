@@ -39,9 +39,18 @@ export const characterMechanics: {
 	[AR_KEY]: arcaneRiftCharacterMechanics
 };
 
-// Populated and generated
+///////////////////////////////////
+// Populated and generated types //
+///////////////////////////////////
+// CARDS
 export type CardMechanics = typeof cardMechanics;
+export type CardSystems = keyof CardMechanics;
+
+// CHARACTER
 export type CharacterMechanics = typeof characterMechanics;
+export type CharacterSystems = keyof CharacterMechanics;
+
+///////////////////////////////////
 
 // List of all system keys from Mechanics
 export type SystemKey = keyof CardMechanics;
