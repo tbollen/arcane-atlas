@@ -11,7 +11,8 @@ import { type StoredCharacter } from '$lib/domain/characters/character.svelte';
 // Deck Config
 
 // The Svelte component Type
-export type DeckComponent = Component<DeckItemProps>;
+// TODO: 'any' is not great, but works as long as all components have the correct types and use DeckProps.
+export type DeckComponent = Component<any>;
 
 // NOTE: DeckItemProps describes the properties necessary on each deck component
 export type DeckItemProps = {
