@@ -6,7 +6,9 @@ import {
 	type Campaign as PrismaCampaign,
 	type card as PrismaCard
 } from '@prisma/client';
-import { type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
+
+// Game system stuff
+import { characterMechanics, type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
 
 // ID Shorthands
 import type { UserID, CampaignID, CharacterID, CardID } from '..';
@@ -153,6 +155,15 @@ export class StoredCharacter extends Character {
 			image: _character.imageUrl,
 			mechanics: _character.mechanics
 		};
+	}
+
+	public addSystem(system: System): StoredCharacter {
+		if (this.systems.includes(system)) {
+			throw new Error('System already exists');
+		}
+		this.systems = [...this.systems, system];
+		this.mechanics = { ...this.mechanics, [system]: characterMechanics[system] };
+		return this;
 	}
 
 	static new({ userId, data }: { userId: UserID; data?: Partial<Character> }): StoredCharacter {

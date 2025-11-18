@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { AR_KEY } from '$lib/gameSystems';
-	import { type DeckProps } from '../types';
+	import { type DeckProps } from '../.';
 
 	let { character = $bindable(), edit = $bindable() }: DeckProps = $props();
 </script>

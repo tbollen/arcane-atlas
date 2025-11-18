@@ -9,17 +9,20 @@
 	import Icon from '@iconify/svelte';
 	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
 
+	// Import Dialogs
+	import AddWidgetDialog from './AddWidgetDialog.svelte';
+
 	// Import classes
 	import { StoredCharacter } from '$lib/domain/characters/character.svelte.js';
 
 	// DECK stuff
 	import Deck from '$lib/components/playdeck/Deck.svelte';
-	import { type DeckConfig } from '$lib/components/playdeck';
+	import { type DeckConfig, type ValidDeckComponent } from '$lib/components/playdeck';
 
 	// Utils
 	import { lsk } from '$lib/utils/storage/keys.js';
-	import { getContext } from 'svelte';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { getContext, onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { AR_KEY, GENERIC_KEY } from '$lib/gameSystems/index.js';
 	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
 
@@ -32,81 +35,21 @@
 		StoredCharacter.fromPrisma({ character, user: data.user as PrismaUser })
 	);
 
-	// Retrieve active character
-	function promiseCharacter(): Promise<StoredCharacter> {
-		return new Promise((resolve, reject) => {
-			// If user is not logged in
-			if (!data.user?.id || data.user == null) {
-				toast.error('Please log in to see your playdeck');
-				reject(new Error('Error: Client not logged in, redirecting to login page'));
-				goto(`/login`);
-				return;
-			}
-
-			// If user has no characters
-			if (!data.characters) {
-				toast.error('No characters found in database');
-				reject(new Error('Error: No characters found in database, redirecting to character page'));
-				goto(`/character`);
-				return;
-			}
-
-			// If localStorage has no active character set, or the character set does not exist
-			const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
-			const activeCharacter = data.characters.find((c) => c.id === activeCharacterID);
-			if (!activeCharacterID || activeCharacter == undefined) {
-				reject(new Error('Please select your character'));
-				return;
-			} else {
-				// If all checks pass, resolve with active character
-				let character = StoredCharacter.fromPrisma({
-					character: activeCharacter,
-					user: data.user as PrismaUser
-				});
-				toast.success('Character loaded');
-				resolve(character);
-			}
-		});
-	}
-	let character: Promise<StoredCharacter> = $state(promiseCharacter());
-
-	// FUNCTIONS
-	function setActiveCharacter(characterID: string) {
-		localStorage.setItem(lsk.activeCharacter, characterID);
-		character = promiseCharacter();
+	// Functions
+	function setActiveCharacterFromID(id: string | null): StoredCharacter | undefined {
+		const foundCharacter = dataCharactersAsStored.find((c) => c.id === id);
+		if (!foundCharacter) {
+			toast.error('No character found with ID ' + id);
+			return undefined;
+		}
+		return foundCharacter;
 	}
 
-	function saveChanges() {
-		spinner.set('save', 'Saving...');
-		// Check character promise
-		character
-			.then((character) => {
-				// If character exists, try to update through API
-				CHARACTER_API.update(character.toPrisma())
-					.then(() => {
-						toast.success('Character saved');
-						console.log('Character saved', character.systems);
-					})
-					.catch((error) => {
-						toast.error(`Error saving character: ${error}`);
-					});
-			})
-			// If character does not exist anymore, notify user
-			.catch((error) => {
-				toast.error(`Error saving character: ${error}`);
-			})
-			// Close spinner
-			.finally(() => {
-				setTimeout(() => {
-					spinner.complete();
-				}, 500);
-			});
-	}
+	// Init characters
+	let character: StoredCharacter | undefined = $state();
 
-	function unsetActiveCharacter() {
-		localStorage.removeItem(lsk.activeCharacter);
-		character = promiseCharacter();
-	}
+	// Init deck
+	let deck: DeckConfig = $state([]);
 
 	// EDIT MODE
 	let edit = $state(false);
@@ -114,19 +57,96 @@
 		edit = !edit;
 	}
 
-	// DECK VARS
-	let deck: DeckConfig = $state(['generic:banner']);
+	// Dialog vars
+	let addWidgetDialog: boolean = $state(false);
+	let selectedWidgets: ValidDeckComponent[] = $state([]);
+
+	//////////////////////////
+	// DECK FUNCTIONS
+
+	// Save changes to the deck
+	function saveDeck() {
+		if (!character) return console.error('No character selected');
+		if (!deck) return console.error('No deck found');
+		if (typeof window === 'undefined' || !window.localStorage)
+			return console.error('Localstorage not ready');
+
+		const deckJSON = JSON.stringify(deck);
+		localStorage.setItem(lsk.deck, deckJSON);
+		console.log('Deck saved to localstorage', deckJSON);
+	}
+
+	function unsetActiveCharacter() {
+		alert('TODO: Unset active character');
+	}
+
+	function setActiveCharacter(character: StoredCharacter) {
+		alert(`TODO: Set active character to ${character.name}`);
+	}
+
+	function addWidgets(widgets: ValidDeckComponent[]) {
+		deck = [...deck, ...widgets];
+	}
+
+	function removeWidgets(indexes: number[]) {
+		const newDeck = deck.filter((_, i) => !indexes.includes(i));
+		console.log('New deck', newDeck);
+	}
+
+	//////////////////
+	// Mount
+
+	onMount(() => {
+		// REDIRECTS
+		if (!data.user) {
+			toast.info('Please log in to access your playdeck');
+			goto('/login');
+		} else {
+			// DO MOUNT
+			character = getActiveCharacterFromLS() ?? character;
+			deck = getDeckFromLS();
+		}
+	});
+
+	// MOUNTING FUNCTIONS
+	function getActiveCharacterFromLS(): StoredCharacter | undefined {
+		if (typeof window === 'undefined' || !window.localStorage) return undefined;
+		const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
+		return setActiveCharacterFromID(activeCharacterID);
+	}
+
+	function getDeckFromLS(): DeckConfig {
+		if (typeof window === 'undefined' || !window.localStorage) return [];
+		const deck = localStorage.getItem(lsk.deck);
+		return deck ? JSON.parse(deck) : [];
+	}
 </script>
 
 <main>
-	{#await character}
-		<p>Loading character...</p>
-	{:then character}
+	{#if !data?.characters || dataCharactersAsStored.length === 0}
+		<p>No characters found</p>
+	{:else if !character}
+		<Header variant="h2">Select Character</Header>
+		{#each dataCharactersAsStored as character}
+			<button
+				class="cursor-pointer rounded-md hover:outline-2 hover:outline-blossom-500"
+				onclick={() => {
+					setActiveCharacter(character);
+				}}
+			>
+				<CharacterCard {character} />
+			</button>
+		{/each}
+	{:else}
 		<div id="Actions" class="my-4 flex flex-row items-center gap-2">
+			<Header variant="h2" class="mr-4">{character.name}</Header>
 			{#if edit}
 				<Button onclick={toggleEdit} variant="secondary"><Icon icon="mdi:eye" />View</Button>
-				<Button onclick={saveChanges} variant="success" spinner={{ id: 'save' }}
+				<Button onclick={saveDeck} variant="success" spinner={{ id: 'save' }}
 					><Icon icon="mdi:floppy" />Save</Button
+				>
+				<Button onclick={() => (addWidgetDialog = true)} variant="success"
+					><Icon icon="mdi:plus" />Add Widget</Button
 				>
 			{:else}
 				<Button onclick={toggleEdit} variant="advanced"><Icon icon="mdi:pencil" />Edit</Button>
@@ -134,26 +154,18 @@
 			<Button onclick={unsetActiveCharacter} variant="destructive"
 				>Select different character</Button
 			>
-			<Button
-				onclick={() => {
-					console.log(character.mechanics);
-				}}>Log</Button
-			>
-		</div>
-		<Deck {character} bind:edit {deck} />
-	{:catch}
-		<!-- Any errors encountered will redirect the client, except when no "Active Character" is set -->
-		<!-- In this case, the client will be shown a menu to select a character -->
-		<Header variant="h2">Select Character</Header>
-		{#each dataCharactersAsStored as character}
-			<button
-				class="cursor-pointer rounded-md hover:outline-2 hover:outline-blossom-500"
-				onclick={() => {
-					setActiveCharacter(character.id);
+			<AddWidgetDialog
+				onAdd={(widgets) => {
+					addWidgets(widgets);
 				}}
-			>
-				<CharacterCard {character} />
-			</button>
-		{/each}
-	{/await}
+				{character}
+				bind:open={addWidgetDialog}
+			/>
+		</div>
+		{#if deck.length !== 0}
+			<Deck {character} bind:edit {deck} />
+		{:else}
+			TODO
+		{/if}
+	{/if}
 </main>

@@ -28,7 +28,8 @@
 	<GameSystemSelector bind:character bind:edit bind:system />
 {/if}
 <div id="Deck" class="flex flex-row flex-wrap">
-	{#each ComponentArray as Component}
+	{#each deck as widget}
+		{@const Component = DeckMap[widget].component}
 		<!-- Component in wrapper -->
 		<div class={wrapperStyle}>
 			{#if edit}
