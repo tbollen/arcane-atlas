@@ -11,9 +11,6 @@ import gridHelp from 'svelte-grid/build/helper/index.mjs';
 
 //////////////////////////////////////
 // Gridstack
-
-export const GRIDSTACK_KEY = 'gridstack' as const;
-
 /**
  * WidgetGridStackProps
  * @description Describes all necessary input information a Widget can have to define its GridStack properties
@@ -51,51 +48,68 @@ export type GridStackItemProps = {
 	customResizer: Boolean;
 };
 
-//////////////////////////////////////
-// Deck widgets
+export type WidgetColumnsSettings = Record<number, GridStackItemProps>;
 
-export type WidgetProps = {
+//////////////////////////////////////
+// Widget Components
+
+export type WidgetComponentProps = {
 	character: StoredCharacter;
 	edit: boolean;
 };
-type DeckWidget = Component<WidgetProps>;
+export type DeckWidgetComponent = Component<WidgetComponentProps>;
 
 //////////////////////////////////////
 // Widget Maps
-export type MappedWidget = {
-	[GRIDSTACK_KEY]: WidgetGridStackProps;
+
+export type SystemWidget = {
+	initialLayout: WidgetGridStackProps;
 	name: string;
-	component: DeckWidget;
-	system: CharacterSystems;
+	component: DeckWidgetComponent;
 };
 
 /**
- * StoredMappedWidget
- * @description Describes the necessary information a Widget needs to contain to be able to be rendered by Gridstack.
- export */
-export type StoredMappedWidget = {
-	id: string;
-	name: string;
-	component: DeckWidget;
+ * MappedWidget
+ * @description Describes the information a widget must have in the full WidgetMap. Includes necessary information for Gridstack rendering.
+ * @see [readme](./readme.md)
+ * */
+export type MappedWidget = SystemWidget & {
 	system: CharacterSystems;
-} & Record<number, GridStackItemProps>;
+};
 
+export type SystemWidgetMap = Record<string, SystemWidget>;
 export type WidgetMap = Record<string, MappedWidget>;
 
 /**
- * Prepare an array of MappedWidgets as items for Gridstack rendering.
- * @param widgets {MappedWidget[]} The array of MappedWidgets to prepare
- * @param cols {number} The number of columns in the Gridstack
- * @returns {StoredMappedWidget[]} The array of StoredMappedWidgets
+ * @name DeckWidget
+ * @description Describes the information a widget must have in the full WidgetMap. Includes an id which is required for Gridstack rendering.
  */
-export function prepareDeckWidgets(widgets: MappedWidget[], cols: number): StoredMappedWidget[] {
-	return widgets.map((widget, index) => {
-		return {
-			id: `${widget.system}:${widget.name}:${index}`,
-			name: widget.name,
-			component: widget.component,
-			system: widget.system,
-			[cols]: gridHelp.item(widget[GRIDSTACK_KEY])
-		};
-	});
+export type DeckWidget = WidgetColumnsSettings &
+	MappedWidget & {
+		id: string;
+	};
+
+////////////////////////
+// Functions
+
+/**
+ * @name recalculateWidgetColumns
+ * @description Recalculates the GridStack properties of a widget based on the given number of columns.
+ * Checks if the widget has gridStack data for neighbouring amount of columns, and populates it with new gridstack props derived from other column amounts otherwise.
+ * This is required to make sure the widgets render correctly when the amount of columns changes.
+ * @param {DeckWidget} widget The widget to recalculate the GridStack properties for.
+ * @param {number} columns The number of columns in the Gridstack.
+ * @returns {DeckWidget} The widget with the recalculated GridStack properties.
+ */
+export function recalculateWidgetColumns(widget: DeckWidget, columns: number): DeckWidget {
+	// Check if the widget has gridStack data for neighbouring amount of columns
+	const largerLayout = widget.hasOwnProperty(columns + 1) ? widget[columns + 1] : undefined;
+	const smallerLayout = widget.hasOwnProperty(columns - 1) ? widget[columns - 1] : undefined;
+	// Populate the gridstack props
+	const returnWidget: DeckWidget = {
+		...widget,
+		// Populate the gridstack props, check if the widget has gridStack data for neighbouring amount of columns, otherwise set to initial
+		[columns]: largerLayout ?? smallerLayout ?? gridHelp.item(widget.initialLayout)
+	};
+	return returnWidget;
 }
