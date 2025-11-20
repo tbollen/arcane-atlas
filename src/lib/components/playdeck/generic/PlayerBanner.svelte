@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type DeckProps } from '../.';
+	import { type WidgetComponentProps } from '../widget';
 
 	// Import UI components
 	import { Input } from '$lib/components/ui/input';
@@ -8,7 +8,7 @@
 	import Icon from '@iconify/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 
-	let { character = $bindable(), edit = $bindable() }: DeckProps = $props();
+	let { character = $bindable(), edit = $bindable() }: WidgetComponentProps = $props();
 
 	// Dialog
 	let openEditDialog: boolean = $state(false);
@@ -17,7 +17,7 @@
 {#snippet banner()}
 	<div
 		id="banner"
-		class="flex h-24 w-lg max-w-full min-w-fit flex-row items-center gap-4 bg-obsidian-500/5 px-4 py-2 text-start"
+		class="flex h-full w-full flex-row items-center gap-4 bg-obsidian-500/5 px-4 py-2 text-start"
 	>
 		<div id="nameBlock" class="flex flex-col">
 			<p class="displayText text-3xl">{character.name}</p>
@@ -27,7 +27,7 @@
 	</div>
 {/snippet}
 
-<div id="playerBanner" class=" relative">
+<div id="playerBanner" class=" relative h-full w-full">
 	{#if edit}
 		<button
 			id="overlay"

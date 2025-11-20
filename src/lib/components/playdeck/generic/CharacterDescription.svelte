@@ -1,28 +1,29 @@
 <script lang="ts">
-	import { type DeckProps } from '../.';
+	import { type WidgetComponentProps } from '../widget';
 
 	// Import UI components
-	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Header } from '$lib/components/typography';
 	import Icon from '@iconify/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 
-	let { character = $bindable(), edit = $bindable() }: DeckProps = $props();
+	let { character = $bindable(), edit = $bindable() }: WidgetComponentProps = $props();
 
 	// Dialog
 	let openEditDialog: boolean = $state(false);
 </script>
 
 {#snippet banner()}
-	<div id="banner" class="w-lg max-w-full min-w-fit gap-4 bg-obsidian-500/5 px-4 py-2 text-start">
+	<div
+		class="flex h-full w-full flex-col gap-4 overflow-auto bg-obsidian-500/5 px-4 py-2 text-start"
+	>
 		<Header variant="h3">Description</Header>
-		<p>{character.description}</p>
+		<p class="overflow-auto text-muted-foreground">{character.description}</p>
 	</div>
 {/snippet}
 
-<div id="playerBanner" class=" relative">
+<div id="description" class="relative h-full w-full">
 	{#if edit}
 		<button
 			id="overlay"
