@@ -17,11 +17,19 @@
 
 	// DECK stuff
 	import Deck from '$lib/components/playdeck/Deck.svelte';
-	import { type DeckConfig, type ValidDeckComponent } from '$lib/components/playdeck';
+	import {
+		type StoredDeck,
+		checkDeckValidity,
+		fallbackDeck,
+		getWidget,
+		widgetIDs
+	} from '$lib/components/playdeck';
+	//@ts-ignore
+	import gridHelp from 'svelte-grid/build/helper/index.mjs';
 
 	// Utils
 	import { lsk } from '$lib/utils/storage/keys.js';
-	import { getContext, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { AR_KEY, GENERIC_KEY } from '$lib/gameSystems/index.js';
 	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
@@ -49,17 +57,26 @@
 	let character: StoredCharacter | undefined = $state();
 
 	// Init deck
-	let deck: DeckConfig = $state([]);
+	let DeckComponent: Deck;
+	let deck: StoredDeck = $state([
+		{ componentID: 'generic:banner', 6: gridHelp.item({ x: 0, y: 0, w: 6, h: 2 }) },
+		{ componentID: 'generic:description', 6: gridHelp.item({ x: 0, y: 2, w: 4, h: 2 }) }
+	]);
 
-	// EDIT MODE
-	let edit = $state(false);
-	function toggleEdit() {
-		edit = !edit;
+	// EDIT MODES
+	type EditMode = 'view' | 'editItems' | 'editDeck';
+	function toggleEditMode(mode: EditMode = 'view') {
+		editDeck = mode === 'editDeck';
+		editItems = mode === 'editItems';
+		// Also set edit mode in component
+		DeckComponent.toggleEditMode(mode);
 	}
+	let editDeck: boolean = $state(false);
+	let editItems: boolean = $state(false);
 
 	// Dialog vars
 	let addWidgetDialog: boolean = $state(false);
-	let selectedWidgets: ValidDeckComponent[] = $state([]);
+	let selectedWidgets: string[] = $state([]);
 
 	//////////////////////////
 	// DECK FUNCTIONS
@@ -71,6 +88,7 @@
 		if (typeof window === 'undefined' || !window.localStorage)
 			return console.error('Localstorage not ready');
 
+		console.log('Deck: ', $state.snapshot(deck));
 		const deckJSON = JSON.stringify(deck);
 		localStorage.setItem(lsk.deck, deckJSON);
 		console.log('Deck saved to localstorage', deckJSON);
@@ -81,16 +99,19 @@
 	}
 
 	function setActiveCharacter(character: StoredCharacter) {
-		alert(`TODO: Set active character to ${character.name}`);
+		localStorage.setItem(lsk.activeCharacter, character.id);
+		character = character;
 	}
 
-	function addWidgets(widgets: ValidDeckComponent[]) {
-		deck = [...deck, ...widgets];
+	function addWidgets(widgets: string[]) {
+		if (widgets.length === 0) return;
+		// Pass updates to deck
+		DeckComponent.addToDeck(widgets);
 	}
 
 	function removeWidgets(indexes: number[]) {
-		const newDeck = deck.filter((_, i) => !indexes.includes(i));
-		console.log('New deck', newDeck);
+		// const newDeck = deck.filter((_, i) => !indexes.includes(i));
+		// console.log('New deck', newDeck);
 	}
 
 	//////////////////
@@ -105,6 +126,7 @@
 			// DO MOUNT
 			character = getActiveCharacterFromLS() ?? character;
 			deck = getDeckFromLS();
+			saveDeckToLS();
 		}
 	});
 
@@ -115,10 +137,36 @@
 		return setActiveCharacterFromID(activeCharacterID);
 	}
 
-	function getDeckFromLS(): DeckConfig {
-		if (typeof window === 'undefined' || !window.localStorage) return [];
-		const deck = localStorage.getItem(lsk.deck);
-		return deck ? JSON.parse(deck) : [];
+	function getDeckFromLS(): StoredDeck {
+		try {
+			// Check if localStorage is available
+			if (typeof window === 'undefined' || !window.localStorage)
+				throw new Error('Localstorage not available');
+			// Try to get deck from localstorage
+			const localStorageDeck = localStorage.getItem(lsk.deck);
+			if (!localStorageDeck) throw new Error('No deck found in localstorage');
+			// Parse deck and check if formatting is correct
+			const parsedDeck = JSON.parse(localStorageDeck);
+			if (!checkDeckValidity(parsedDeck)) throw new Error('Invalid deck format');
+			// Return deck
+			console.debug('Deck loaded from localstorage', parsedDeck);
+			return parsedDeck;
+		} catch (error) {
+			console.error(error);
+			return fallbackDeck;
+		}
+	}
+
+	function saveDeckToLS(): void {
+		try {
+			if (typeof window === 'undefined' || !window.localStorage)
+				throw new Error('Localstorage not available');
+			const deckJSON = JSON.stringify(deck);
+			localStorage.setItem(lsk.deck, deckJSON);
+			console.debug('Deck saved to localstorage', deckJSON);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 </script>
 
@@ -140,8 +188,10 @@
 	{:else}
 		<div id="Actions" class="my-4 flex flex-row items-center gap-2">
 			<Header variant="h2" class="mr-4">{character.name}</Header>
-			{#if edit}
-				<Button onclick={toggleEdit} variant="secondary"><Icon icon="mdi:eye" />View</Button>
+			{#if editDeck}
+				<Button onclick={() => toggleEditMode('view')} variant="secondary"
+					><Icon icon="mdi:eye" />View</Button
+				>
 				<Button onclick={saveDeck} variant="success" spinner={{ id: 'save' }}
 					><Icon icon="mdi:floppy" />Save</Button
 				>
@@ -149,21 +199,26 @@
 					><Icon icon="mdi:plus" />Add Widget</Button
 				>
 			{:else}
-				<Button onclick={toggleEdit} variant="advanced"><Icon icon="mdi:pencil" />Edit</Button>
+				<Button onclick={() => toggleEditMode('editDeck')} variant="advanced"
+					><Icon icon="mdi:pencil" />Edit Deck</Button
+				>
+				<Button onclick={() => toggleEditMode('editItems')} variant="advanced"
+					><Icon icon="mdi:pencil" />Edit Content</Button
+				>
 			{/if}
 			<Button onclick={unsetActiveCharacter} variant="destructive"
 				>Select different character</Button
 			>
 			<AddWidgetDialog
 				onAdd={(widgets) => {
-					addWidgets(widgets);
+					DeckComponent.addToDeck(widgets);
 				}}
 				{character}
 				bind:open={addWidgetDialog}
 			/>
 		</div>
-		{#if deck.length !== 0}
-			<Deck {character} bind:edit {deck} />
+		{#if Object.values(deck).length > 0}
+			<Deck system={GENERIC_KEY} bind:this={DeckComponent} {character} bind:deck />
 		{:else}
 			TODO
 		{/if}
