@@ -2,7 +2,7 @@
 	// Import UI components
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
-	import Dummy from './Dummy.svelte';
+	import EditDialog from './EditDialog.svelte';
 
 	// Import partials
 	import GameSystemSelector from './GameSystemSelector.svelte';
@@ -53,6 +53,17 @@
 	// Edit Modes
 	let editDeck: boolean = $state(false);
 	let editItems: boolean = $state(false);
+
+	// Edit params
+	let edit: {
+		componentID: string;
+		editableProperties: string[];
+		open: boolean;
+	} = $state({
+		componentID: '',
+		editableProperties: [],
+		open: false
+	});
 
 	export function toggleEditMode(mode: 'view' | 'editItems' | 'editDeck' = 'view') {
 		editDeck = mode === 'editDeck';
@@ -205,10 +216,19 @@
 	});
 </script>
 
+<!-- DEBUG info -->
 {#if editDeck}
 	<GameSystemSelector bind:character bind:edit={editDeck} bind:system />
 {/if}
 Columns: {columns} // Width: {containerWidth}
+<!-- Dynamic Edit Dialog -->
+<EditDialog
+	bind:open={edit.open}
+	editableProperties={edit.editableProperties}
+	componentID={edit.componentID}
+	bind:character
+/>
+<!-- Deck -->
 <div
 	id="Deck"
 	bind:this={container}
@@ -234,12 +254,13 @@ Columns: {columns} // Width: {containerWidth}
 					bg-transparent text-3xl text-transparent transition-colors
 					hover:bg-foreground/50 hover:text-background"
 					onclick={() => {
-						alert(`TODO: Item with ID ${dataItem.id} has been selected`);
-						console.clear();
-						console.log('dataItem:', $state.snapshot(dataItem));
-						console.log('item:', $state.snapshot(item));
-						console.log('Cellsize:', CELLSIZE);
-						console.log('Item Size:', `W:${item.w * CELLSIZE}px / H:${item.h * CELLSIZE}px`);
+						console.log('Data item', dataItem);
+						edit = {
+							open: true,
+							componentID: dataItem.componentID,
+							editableProperties: ['*']
+						};
+						edit = edit;
 					}}
 					title="Open edit dialog"
 				>
