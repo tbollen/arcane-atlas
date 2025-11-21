@@ -1,3 +1,5 @@
+import { AR_KEY } from '$lib/gameSystems';
+
 // Widget stuff
 import { type SystemWidgetMap } from '../widget';
 
@@ -9,6 +11,7 @@ export const arcaneRiftWidgetMap: SystemWidgetMap = {
 	['aspects']: {
 		component: Aspects,
 		name: 'Aspects',
-		initialLayout: { w: 3, h: 2 }
+		initialLayout: { w: 3, h: 2 },
+		characterProperties: { [AR_KEY]: ['aspects'] }
 	}
 };

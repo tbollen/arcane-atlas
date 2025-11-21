@@ -1,8 +1,11 @@
 // Import svelte types
-import { type Component, type ComponentProps } from 'svelte';
+import { type Component } from 'svelte';
 
 // Import class specific types
-import { type StoredCharacter } from '$lib/domain/characters/character.svelte';
+import {
+	type StoredCharacter,
+	type CharacterProperties
+} from '$lib/domain/characters/character.svelte';
 import { type CharacterSystems } from '$lib/gameSystems';
 
 // Import Gridstack (svelte-grid) helpers
@@ -66,6 +69,7 @@ export type SystemWidget = {
 	initialLayout: WidgetGridStackProps;
 	name: string;
 	component: DeckWidgetComponent;
+	characterProperties?: CharacterProperties;
 };
 
 /**

@@ -8,7 +8,7 @@ import {
 } from '@prisma/client';
 
 // Game system stuff
-import { characterMechanics, type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
+import { AR_KEY, characterMechanics, type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
 
 // ID Shorthands
 import type { UserID, CampaignID, CharacterID, CardID } from '..';
@@ -65,6 +65,31 @@ class Character {
 		this.systems = Object.keys(this.mechanics) as System[];
 	}
 }
+/**
+ * @name CharacterProperties
+ * @description Helper type that describes the properties of a character that can be updated.
+ * "Default" propeties, such as name, are stored under the [GENERIC_KEY].
+ * Other, system-specific properties are stored under their System Key.
+ * 
+ * The objects contains only the 'keys' as strings in an array under their system key.
+ * @example
+ * ```ts
+ * {
+	 [GENERIC_KEY]: ['name', 'subtitle', 'description', ...],
+	 ...
+ }
+ */
+export type CharacterProperties = {
+	[GENERIC_KEY]?: GenericProperty[];
+} & SystemProperties<CharacterMechanics>;
+
+type GenericProperty = Exclude<
+	keyof Omit<Character, 'systems' | 'mechanics' | 'createdAt' | 'updatedAt'>,
+	undefined
+>;
+type SystemProperties<T extends Character['mechanics']> = {
+	[K in Exclude<keyof T, typeof GENERIC_KEY>]?: Array<keyof NonNullable<T[K]>>;
+};
 
 export class StoredCharacter extends Character {
 	// Datastore info
