@@ -79,12 +79,19 @@ export function setWidgetsEditMode(widgets: DeckWidget[], edit: boolean): DeckWi
 	return widgets.map((widget) => {
 		// Go through each property
 		// If the property is a number (breakpoint data), then set it's property 'fixed' to match (edit===true), otherwise, do nothing
-		const updatedWidget = Object.entries(widget).map(([key, value]) => [
-			key,
-			typeof key === 'number' && typeof value === 'object' ? { ...value, fixed: edit } : value
-		]);
+		const updatedWidget = Object.entries(widget).map(([key, value]) => {
+			const keyIsNumber = parseInt(key) > 0;
+			const valueIsObject = typeof value === 'object';
+			return [
+				key,
+				keyIsNumber && valueIsObject
+					? { ...value, fixed: !edit, draggable: edit, resizable: edit }
+					: value
+			];
+		});
 		// Return the updated widget
-		return Object.fromEntries(updatedWidget);
+		const newWidget = Object.fromEntries(updatedWidget);
+		return newWidget;
 	});
 }
 
@@ -129,7 +136,7 @@ export function recalculateDeckColumns(widgets: DeckWidget[], columns: number): 
  * @property {string} componentID The ID of the component associated with the widget
  * @property {number} [number] GridStack information by column amount (placement & size)
  */
-export type StoredDeckWidget = Pick<DeckWidget, number> & { componentID: string };
+export type StoredDeckWidget = Pick<DeckWidget, number | 'componentID'>;
 export type StoredDeck = StoredDeckWidget[];
 
 /**
@@ -138,6 +145,20 @@ export type StoredDeck = StoredDeckWidget[];
  * @description A starting deck for a new game. Used when the character of localStorage does not have a deck. Contains only a player banner.
  */
 export const fallbackDeck: StoredDeck = [{ componentID: 'generic:banner' }];
+
+export function itemsToDeck(items: DeckWidget[]): StoredDeck {
+	const response: StoredDeck = items.map((item) => {
+		// Get all valid keys
+		const gridOptions = Object.fromEntries(
+			Object.entries(item).filter(([key]) => !isNaN(Number(key)))
+		);
+		return { ...gridOptions, componentID: item.componentID };
+	});
+	return response;
+}
+
+///////////////////////////////////
+// VALIDATION
 
 export function checkDeckValidity(deck: any): deck is StoredDeck {
 	if (!deck) throw new Error('No deck provided');

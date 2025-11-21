@@ -87,6 +87,7 @@ export type WidgetMap = Record<string, MappedWidget>;
 export type DeckWidget = WidgetColumnsSettings &
 	MappedWidget & {
 		id: string;
+		componentID: string;
 	};
 
 ////////////////////////
