@@ -234,15 +234,6 @@ export class StoredCharacter extends Character {
 		};
 	}
 
-	public addSystem(system: System): StoredCharacter {
-		if (this.systems.includes(system)) {
-			throw new Error('System already exists');
-		}
-		this.systems = [...this.systems, system];
-		this.mechanics = { ...this.mechanics, [system]: characterMechanics[system] };
-		return this;
-	}
-
 	static new({ userId, data }: { userId: UserID; data?: Partial<Character> }): StoredCharacter {
 		return new StoredCharacter({
 			id: generatePrefixedUUID('character'),

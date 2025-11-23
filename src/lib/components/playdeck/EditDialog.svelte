@@ -87,8 +87,19 @@
 	);
 
 	///////////////////////////////////
+	// HELPER FUNCTIONS FOR UI & FEEDBACK
+
+	function attempt<T>(fn: () => T, fallback = 'Something went wrong.'): T | undefined {
+		try {
+			return fn();
+		} catch (e) {
+			toast.error((e as Error).message ?? fallback);
+		}
+	}
+
+	///////////////////////////////////
 	// VARS FOR INPUTS
-	let newAspectInput: string = $state('');
+	let newAspectInput = $state({ short: '', description: '' });
 </script>
 
 <Dialog.Root
@@ -153,11 +164,11 @@
 			{/if}
 			<!-- Arcane Rift -->
 			{#if editSystemTab == AR_KEY}
-				{#if !hasMechanics(AR_KEY)}
+				{#if !hasMechanics(AR_KEY) || !character.mechanics[AR_KEY] || !character.fn[AR_KEY]}
 					Character does not have Arcane Rift mechanics
 					<Button
 						onclick={() => {
-							character.mechanics[AR_KEY] = arcaneRiftCharacterMechanics;
+							character.addSystem(AR_KEY);
 						}}
 					>
 						Add Arcane Rift
@@ -165,27 +176,51 @@
 				{:else if isProperty('aspects', AR_KEY)}
 					<!-- ASPECTS -->
 					{#if character.mechanics[AR_KEY]?.aspects && character.mechanics[AR_KEY]?.aspects?.length > 0}
-						{#each character.mechanics[AR_KEY]?.aspects || [] as aspect}
-							{aspect}
-						{/each}
+						<div id="aspects" class="flex flex-col gap-0">
+							{#each character.mechanics[AR_KEY]?.aspects || [] as aspect, index}
+								<div
+									class="flex flex-row items-center gap-4 border-obsidian-500 py-2 [:not(:first-child)]:border-t-2"
+								>
+									<div class="flex grow flex-col justify-center gap-1">
+										<p class="font-bold">{aspect.short}</p>
+										<p>{aspect.description}</p>
+									</div>
+
+									<Button
+										size="icon"
+										disabled={index == 0}
+										onclick={() =>
+											attempt(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
+									>
+										<Icon icon="mdi:arrow-up" /></Button
+									>
+									<Button
+										size="icon"
+										disabled={index == character.mechanics[AR_KEY]?.aspects?.length - 1}
+										onclick={() =>
+											attempt(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
+									>
+										<Icon icon="mdi:arrow-down" /></Button
+									>
+									<Button
+										size="icon"
+										onclick={() => attempt(() => character.fn[AR_KEY]!.removeAspect(index))}
+										><Icon icon="mdi:close" /></Button
+									>
+								</div>
+							{/each}
+						</div>
 					{/if}
-					<div id="addAspect" class="flex flex-row gap-2 p-2">
-						<Input
-							placeholder="Add new aspect..."
-							bind:value={newAspectInput}
-							onkeydown={(e) => {
-								if (e.key === 'Enter') {
-									alert('TODO: Add new aspect');
-									newAspectInput = '';
-								}
-							}}
-						/>
+					<div id="addAspect" class="flex flex-col gap-2 p-2">
+						<Input placeholder="Short name..." bind:value={newAspectInput.short} />
+						<Textarea placeholder="Aspect Description..." bind:value={newAspectInput.description} />
 						<Button
-							type="submit"
 							onclick={() => {
-								alert('TODO: Add new aspect');
-								newAspectInput = '';
-							}}><Icon icon="mdi:plus" /></Button
+								attempt(() => {
+									character.fn[AR_KEY]!.addAspect(newAspectInput);
+									newAspectInput = { short: '', description: '' };
+								});
+							}}><Icon icon="mdi:plus" /> Add</Button
 						>
 					</div>
 				{/if}
