@@ -36,6 +36,7 @@
 
 	// Svelte
 	import { onMount } from 'svelte';
+	import Dummy from './Dummy.svelte';
 
 	let {
 		deck = $bindable(),
@@ -53,6 +54,8 @@
 	// Edit Modes
 	let editDeck: boolean = $state(false);
 	let editItems: boolean = $state(false);
+	const itemTailwindTargeter = '[&_.svlt-grid-item]';
+	const editItemsStyler = `${itemTailwindTargeter}:outline-2 ${itemTailwindTargeter}:outline-dashed ${itemTailwindTargeter}:outline-blossom-500`;
 
 	// Edit params
 	let edit: {
@@ -222,17 +225,15 @@
 {/if}
 Columns: {columns} // Width: {containerWidth}
 <!-- Dynamic Edit Dialog -->
-<EditDialog
-	bind:open={edit.open}
-	editableProperties={edit.editableProperties}
-	componentID={edit.componentID}
-	bind:character
-/>
+<EditDialog bind:open={edit.open} componentID={edit.componentID} bind:character />
 <!-- Deck -->
 <div
 	id="Deck"
 	bind:this={container}
-	class="flex flex-row flex-wrap outline-1 outline-threat-500"
+	class="outline-obisidian-500 flex flex-row flex-wrap rounded-2xl outline-1
+	{editItems ? editItemsStyler : ''}
+	[&_.svlt-grid-item]:overflow-hidden [&_.svlt-grid-item]:rounded-lg [&_.svlt-grid-item]:outline-blossom-500
+	"
 	style="width: {containerWidth}px !important;"
 >
 	{#if items.length !== 0}
@@ -258,7 +259,7 @@ Columns: {columns} // Width: {containerWidth}
 						edit = {
 							open: true,
 							componentID: dataItem.componentID,
-							editableProperties: ['*']
+							editableProperties: dataItem.editableProperties
 						};
 						edit = edit;
 					}}
@@ -271,3 +272,10 @@ Columns: {columns} // Width: {containerWidth}
 		</Grid>
 	{/if}
 </div>
+
+<style lang="postcss">
+	:global(.svlt-grid-shadow) {
+		background: var(--blossom, #81b6c8) !important;
+		opacity: 0.25 !important;
+	}
+</style>
