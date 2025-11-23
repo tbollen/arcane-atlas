@@ -1,45 +1,80 @@
 <script lang="ts">
-	import Button from '$lib/components/ui/button/button.svelte';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
+	import { Button } from '$lib/components/ui/button';
 
-	import { cardStore } from '$lib/stores/CardStore';
-	let cardCount = $derived(cardStore.cards.length);
+	class NestedClass {
+		text: string = 'this is a nested string';
+
+		setString(str: string) {
+			this.text = str;
+		}
+	}
+
+	class Test {
+		name: string = $state('test');
+		nest = $state(new NestedClass());
+		test: string = $state('');
+		serialized: string = $state('');
+		updatedTimestamp: Date = new Date();
+
+		serialize() {
+			const _serialized = {
+				...this
+			};
+			this.serialized = JSON.stringify(_serialized);
+			return _serialized;
+		}
+
+		setTest(str: string) {
+			this.test = str;
+		}
+
+		update() {
+			this.updatedTimestamp = new Date();
+			this.serialize();
+		}
+
+		constructor() {
+			this.serialize();
+		}
+	}
+
+	let test = new Test();
+
+	let serialized: string = $state('');
+
+	let derivedClassInstance = $derived(test);
+	let derivedString = $derived(derivedClassInstance.nest.text);
 </script>
 
-<Button href="/">Back</Button>
+<h1 class="text-3xl">This is my TEST</h1>
+<p>Test name: {test.name}</p>
+<hr class="my-4" />
+<p>Nested string: {test.nest.text}</p>
 <Button
-	variant="advanced"
 	onclick={() => {
-		console.log(cardStore.serialize());
-	}}>Serialize {cardCount} cards</Button
+		test.nest.setString(Math.random().toString());
+	}}>Set Nested String (random number)</Button
 >
 <Button
-	variant="advanced"
 	onclick={() => {
-		cardStore.addNew();
-	}}>Add Card</Button
+		test.nest.text = 'Override';
+	}}>Override Nested String</Button
 >
+<hr class="my-4" />
+{#if false}
+	<p>Top-level string: {test.test}</p>
+{/if}
 <Button
-	variant="success"
 	onclick={() => {
-		cardStore.cache();
-	}}>Save to Cache</Button
+		test.setTest(Math.random().toString());
+	}}>Set Top-level String (random number)</Button
 >
-<hr class="my-8 h-px border-0 bg-gray-200 dark:bg-gray-700" />
-
-<h1>Button variants</h1>
-<div class="flex gap-4">
-	<Button>Default</Button>
-	<Button variant="blossom">Blossom</Button>
-	<Button variant="bold">Bold</Button>
-	<Button variant="advanced">Advanced</Button>
-	<Button variant="outline">Outline</Button>
-	<Button variant="secondary">Secondary</Button>
-	<Button variant="ghost">Ghost</Button>
-	<Button variant="link">Link</Button>
-</div>
-
-<Label for="text">Text</Label>
-<Input type="text" name="text" />
-<p class="text-sm text-muted-foreground">Enter your email address.</p>
+<hr class="my-4" />
+<Button variant="advanced" onclick={() => test.update()}>Update</Button>
+<hr class="my-4" />
+<Button
+	onclick={() => {
+		console.log(test.serialize());
+	}}>Serialize</Button
+>
+<p>Serialized: {test.updatedTimestamp}</p>

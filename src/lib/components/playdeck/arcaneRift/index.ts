@@ -1,16 +1,17 @@
-import { defineDeckMap } from '../modules';
 import { AR_KEY } from '$lib/gameSystems';
+
+// Widget stuff
+import { type SystemWidgetMap } from '../widget';
 
 // SVELTE COMPONENTS
 import Aspects from './Aspects.svelte';
 
-// DeckMap
-export const ArcaneRiftComponentMap = defineDeckMap(AR_KEY, {
+// WidgetMap
+export const arcaneRiftWidgetMap: SystemWidgetMap = {
 	['aspects']: {
 		component: Aspects,
-		name: 'Aspects'
+		name: 'Aspects',
+		initialLayout: { w: 3, h: 2 },
+		characterProperties: { [AR_KEY]: ['aspects'] }
 	}
-});
-
-// Export dict of the components themselves
-export default { Aspects };
+};

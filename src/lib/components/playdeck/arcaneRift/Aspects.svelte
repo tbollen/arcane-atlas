@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { AR_KEY } from '$lib/gameSystems';
-	import { type DeckProps } from '../.';
+	import { type WidgetComponentProps } from '../widget';
 
-	let { character = $bindable(), edit = $bindable() }: DeckProps = $props();
+	let { character = $bindable(), edit = $bindable() }: WidgetComponentProps = $props();
 </script>
 
 <!-- Safeguard to make sure the character has Arcane Rift mechanics -->
