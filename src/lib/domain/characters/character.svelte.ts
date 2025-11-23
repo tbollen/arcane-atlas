@@ -8,7 +8,15 @@ import {
 } from '@prisma/client';
 
 // Game system stuff
-import { AR_KEY, characterMechanics, type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
+import {
+	AR_KEY,
+	CharacterController,
+	characterMechanics,
+	type CharacterMechanics,
+	characterRules,
+	type CharacterRules,
+	GENERIC_KEY
+} from '$lib/gameSystems';
 
 // ID Shorthands
 import type { UserID, CampaignID, CharacterID, CardID } from '..';
@@ -55,6 +63,13 @@ class Character {
 	systems: System[] = $state([]);
 	mechanics: CharacterMechanics = $state({ [GENERIC_KEY]: {} });
 
+	// Controllers
+	rules: CharacterRules;
+	fn: CharacterController = new CharacterController(
+		() => this.mechanics,
+		(m: CharacterMechanics) => (this.mechanics = m)
+	);
+
 	constructor(init?: Partial<PrismaCharacter>) {
 		this.name = init?.name ?? this.name;
 		this.subtitle = init?.subtitle ?? this.subtitle;
@@ -63,6 +78,43 @@ class Character {
 
 		this.mechanics = (init?.mechanics as CharacterMechanics) ?? { [GENERIC_KEY]: {} };
 		this.systems = Object.keys(this.mechanics) as System[];
+
+		// SET UP RULES (TODO: Make this more dynamic) -> currently immutable
+		this.rules = this.systems.reduce(
+			(acc, system) => ({ ...acc, [system]: characterRules[system] }),
+			{ [GENERIC_KEY]: {} }
+		);
+
+		// SET UP CONTROLLERS
+		this.fn = new CharacterController(
+			() => this.mechanics,
+			(m: CharacterMechanics) => (this.mechanics = m),
+			this.rules
+		);
+	}
+
+	addSystem(system: string) {
+		if (!Object.keys(characterMechanics).includes(system)) {
+			console.error(`System "${system}" does not exist`);
+			throw new Error('System does not exist');
+		}
+		console.log('Adding system to character', system);
+		// Treat _system as a valid System
+		const _system = system as System;
+		// Add mechanics
+		this.mechanics = { ...this.mechanics, [_system]: characterMechanics[_system] };
+		// Derive systems from mechanics
+		this.systems = Object.keys(this.mechanics) as System[];
+
+		// Add rules
+		this.rules = { ...this.rules, [_system]: characterRules[_system] };
+
+		// Set up controller (auto adds availabel functions based on mechanics[KEY])
+		this.fn = new CharacterController(
+			() => this.mechanics,
+			(m: CharacterMechanics) => (this.mechanics = m),
+			this.rules
+		);
 	}
 }
 /**
@@ -180,15 +232,6 @@ export class StoredCharacter extends Character {
 			image: _character.imageUrl,
 			mechanics: _character.mechanics
 		};
-	}
-
-	public addSystem(system: System): StoredCharacter {
-		if (this.systems.includes(system)) {
-			throw new Error('System already exists');
-		}
-		this.systems = [...this.systems, system];
-		this.mechanics = { ...this.mechanics, [system]: characterMechanics[system] };
-		return this;
 	}
 
 	static new({ userId, data }: { userId: UserID; data?: Partial<Character> }): StoredCharacter {

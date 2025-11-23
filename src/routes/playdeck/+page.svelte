@@ -103,17 +103,6 @@
 		character = character;
 	}
 
-	function addWidgets(widgets: string[]) {
-		if (widgets.length === 0) return;
-		// Pass updates to deck
-		DeckComponent.addToDeck(widgets);
-	}
-
-	function removeWidgets(indexes: number[]) {
-		// const newDeck = deck.filter((_, i) => !indexes.includes(i));
-		// console.log('New deck', newDeck);
-	}
-
 	//////////////////
 	// Mount
 
@@ -206,6 +195,13 @@
 					><Icon icon="mdi:pencil" />Edit Content</Button
 				>
 			{/if}
+			<Button
+				onclick={() => {
+					const characterClone = JSON.parse(JSON.stringify(character));
+					console.log('SERIALIZED CHARACTER', Object.getPrototypeOf(character));
+				}}
+				variant="secondary">DEBUG</Button
+			>
 			<Button onclick={unsetActiveCharacter} variant="destructive"
 				>Select different character</Button
 			>
