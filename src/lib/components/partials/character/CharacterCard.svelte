@@ -30,7 +30,7 @@
 	}
 </script>
 
-<button id="characterCard" class="w-lg shrink-0">
+<div id="characterCard" class="w-lg shrink-0">
 	<header
 		id="banner"
 		class="relative mt-16 flex h-16 items-end-safe border-b-2 border-threat-500 pr-2 text-white
@@ -73,7 +73,7 @@
 		</div>
 		<code id="characterID" class="text-xs text-muted-foreground">{character.id}</code>
 	</footer>
-</button>
+</div>
 
 <style>
 	.characterCard {

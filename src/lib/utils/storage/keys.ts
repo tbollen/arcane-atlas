@@ -2,7 +2,8 @@
 export const lsk = {
 	cardStore: 'cardStore',
 	user: 'user',
-	activeCharacter: 'activeCharacter'
+	activeCharacter: 'activeCharacter',
+	deck: 'deck'
 };
 
 // Keys to use for session storage

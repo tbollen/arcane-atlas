@@ -21,7 +21,7 @@
 	);
 	let characterStore: CharacterStore = new CharacterStore({
 		characters: storedCharacters,
-		ids: data.allCharacterIds.map((c) => c.id as CharacterID)
+		ids: data.allCharacterIds
 	});
 
 	// Set store in context

@@ -4,10 +4,15 @@
 // Add and import system information HERE!!
 
 // Import mechanics from each system
+// Arcane Rift //
 import {
 	arcaneRiftCardMechanics,
 	type ArcaneRiftCardMechanics
 } from '$lib/gameSystems/ArcaneRift/ar_cards';
+import {
+	arcaneRiftCharacterMechanics,
+	type ArcaneRiftCharacterMechanics
+} from './ArcaneRift/ar_characters';
 // ADD MORE WHEN MORE SYSTEMS ARE ADDED
 
 // TYPE AND CONST DEFINITIONS
@@ -28,15 +33,24 @@ export const cardMechanics: {
 // CHARACTERS
 export const characterMechanics: {
 	[GENERIC_KEY]: {};
-	[AR_KEY]?: ArcaneRiftCardMechanics;
+	[AR_KEY]?: ArcaneRiftCharacterMechanics;
 } = {
 	[GENERIC_KEY]: {},
-	[AR_KEY]: arcaneRiftCardMechanics
+	[AR_KEY]: arcaneRiftCharacterMechanics
 };
 
-// Populated and generated
+///////////////////////////////////
+// Populated and generated types //
+///////////////////////////////////
+// CARDS
 export type CardMechanics = typeof cardMechanics;
+export type CardSystems = keyof CardMechanics;
+
+// CHARACTER
 export type CharacterMechanics = typeof characterMechanics;
+export type CharacterSystems = keyof CharacterMechanics;
+
+///////////////////////////////////
 
 // List of all system keys from Mechanics
 export type SystemKey = keyof CardMechanics;
