@@ -69,7 +69,7 @@ export type SystemWidget = {
 	initialLayout: WidgetGridStackProps;
 	name: string;
 	component: DeckWidgetComponent;
-	characterProperties?: CharacterProperties;
+	characterProperties: CharacterProperties;
 };
 
 /**
