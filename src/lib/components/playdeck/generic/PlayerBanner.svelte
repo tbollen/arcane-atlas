@@ -8,7 +8,7 @@
 	import Icon from '@iconify/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 
-	let { character = $bindable(), edit = $bindable() }: WidgetComponentProps = $props();
+	let { character = $bindable() }: WidgetComponentProps = $props();
 
 	// Dialog
 	let openEditDialog: boolean = $state(false);
@@ -28,18 +28,6 @@
 {/snippet}
 
 <div id="playerBanner" class=" relative h-full w-full">
-	{#if edit}
-		<button
-			id="overlay"
-			class="absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-transparent text-3xl text-transparent transition-colors hover:bg-foreground/50 hover:text-background"
-			onclick={() => {
-				openEditDialog = true;
-			}}
-		>
-			<Icon icon="mdi:pencil" />
-		</button>
-	{/if}
-
 	{@render banner()}
 </div>
 
