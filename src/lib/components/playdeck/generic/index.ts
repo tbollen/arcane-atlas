@@ -12,7 +12,7 @@ export const genericWidgetMap: SystemWidgetMap = {
 	['banner']: {
 		component: PlayerBanner,
 		name: 'Banner',
-		initialLayout: { w: 3, h: 1, max: { w: 12, h: 2 }, min: { w: 3, h: 1 } },
+		initialLayout: { w: 3, h: 1, max: { w: 12, h: 3 }, min: { w: 2, h: 1 } },
 		characterProperties: { [GENERIC_KEY]: ['name', 'subtitle', 'imageUrl'] }
 	},
 	['description']: {
