@@ -58,7 +58,6 @@ export type WidgetColumnsSettings = Record<number, GridStackItemProps>;
 
 export type WidgetComponentProps = {
 	character: StoredCharacter;
-	edit: boolean;
 };
 export type DeckWidgetComponent = Component<WidgetComponentProps>;
 

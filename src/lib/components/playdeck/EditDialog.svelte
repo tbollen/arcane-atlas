@@ -233,7 +233,7 @@
 					class="max-h-[600px] max-w-[450px]"
 					style="aspect-ratio: {widget.initialLayout.w}/{widget.initialLayout.h}"
 				>
-					<widget.component bind:character edit={false} />
+					<widget.component bind:character />
 				</div>
 			{/if}
 		</div>
