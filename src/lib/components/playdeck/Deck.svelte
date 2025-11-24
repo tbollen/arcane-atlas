@@ -36,16 +36,14 @@
 
 	// Svelte
 	import { onMount } from 'svelte';
-	import Dummy from './Dummy.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		deck = $bindable(),
-		character,
-		system = $bindable(GENERIC_KEY)
+		character
 	}: {
 		deck: StoredDeck;
 		character: StoredCharacter;
-		system: DeckSystem;
 	} = $props();
 
 	////////////////////////////////
@@ -85,8 +83,16 @@
 			.map((widget) => {
 				try {
 					// May throw error
-					return createWidget(widget);
+					const widgetComponent = createWidget(widget);
+					// Check if character has correct systems for widget
+					if (!character.systems.includes(widgetComponent.system))
+						throw new Error(
+							`Character does not have required system (${widgetComponent.system}) for widget`
+						);
+
+					return widgetComponent;
 				} catch (error) {
+					toast.error(`Error adding widget: ${(error as Error).message}`);
 					return null;
 				}
 			})
@@ -127,12 +133,6 @@
 	//////////////////////////////////////////
 	// GRIDSTACK
 
-	// INITIALIZE DUMMY DECK
-	const dummyDeck: StoredDeck = [
-		{ componentID: 'generic:banner', 6: gridHelp.item({ x: 0, y: 0, w: 6, h: 2 }) },
-		{ componentID: 'generic:description', 6: gridHelp.item({ x: 0, y: 2, w: 4, h: 2 }) }
-	];
-
 	// GRID CONSTANTS
 	const FONT_SIZE = 16; //Default 16px
 	const CELLSIZE = 6 * FONT_SIZE; //cellsize in pixels
@@ -142,13 +142,13 @@
 	var container: HTMLDivElement;
 	let containerWidth = $state(CELLSIZE); //container width in pixels, initialize to cellsize
 	let columns = $state(1); //number of columns, initialize to 1
-	let cols = $state([[1000, columns]]);
+	let cols = $derived([[1000, columns]]);
 
 	/////////////////////////////////
 	// DECK CONFIG
 
 	function initDeck(_deck: StoredDeck, adjust?: boolean): DeckWidget[] {
-		const loadedDeck = loadDeck(_deck, system);
+		const loadedDeck = loadDeck(_deck);
 		const calculatedDeck = recalculateDeckColumns(loadedDeck, columns);
 		if (adjust) return gridHelp.adjust(calculatedDeck, columns) as DeckWidget[];
 		return calculatedDeck;
@@ -205,10 +205,9 @@
 		}
 	}
 
-	////////////////////////////
-	// EFFECTS
-
-	$effect(() => {});
+	$effect(() => {
+		console.log('Deck:', $state.snapshot(deck));
+	});
 
 	onMount(() => {
 		recalculateGrid();
@@ -221,7 +220,8 @@
 
 <!-- DEBUG info -->
 {#if editDeck}
-	<GameSystemSelector bind:character bind:edit={editDeck} bind:system />
+	<!-- TODO: FIX -->
+	<!-- <GameSystemSelector bind:character bind:edit={editDeck} bind:system /> -->
 {/if}
 Columns: {columns} // Width: {containerWidth}
 <!-- Dynamic Edit Dialog -->
@@ -233,20 +233,39 @@ Columns: {columns} // Width: {containerWidth}
 	class="outline-obisidian-500 flex flex-row flex-wrap rounded-2xl outline-1
 	{editItems ? editItemsStyler : ''}
 	[&_.svlt-grid-item]:overflow-hidden [&_.svlt-grid-item]:rounded-lg [&_.svlt-grid-item]:outline-blossom-500
-	"
+	[&_.svlt-grid-resizer]:z-20 [&_.svlt-grid-resizer::after]:h-4! [&_.svlt-grid-resizer::after]:w-4! [&_.svlt-grid-resizer::after]:border-obsidian-50!"
 	style="width: {containerWidth}px !important;"
 >
 	{#if items.length !== 0}
 		<Grid {items} on:change={handleGridChange} rowHeight={CELLSIZE} let:item let:dataItem {cols}>
+			{@const Component = dataItem.component as DeckWidget['component']}
 			{#if editDeck}
+				<!-- Drag handle overlay -->
+				<div
+					id="overlay"
+					class="absolute inset-0 z-10 flex
+ 					cursor-move items-center
+					justify-center bg-foreground/20
+					text-3xl text-background transition-colors"
+					title="Drag"
+				>
+					<Icon icon="mdi:drag" class="text-6xl" />
+				</div>
+				<!-- Delete button -->
 				<Button
 					onclick={() => removeItem(dataItem.id)}
 					size="icon"
-					variant="ghost"
-					class="absolute top-1 right-1 z-30 hover:text-threat-500"
+					variant="default"
+					class="text:threat-500 absolute top-1 right-1 z-30  text-threat-500 hover:bg-threat-500 hover:text-white"
 				>
 					<Icon icon="mdi:delete" />
 				</Button>
+				<!-- System Badge -->
+				<!-- Resizer Icon -->
+				<Icon
+					icon="mdi:arrow-expand"
+					class="absolute right-1 bottom-1 z-[11] scale-x-[-1] text-xl text-obsidian-50"
+				/>
 			{:else if editItems}
 				<button
 					id="overlay"
@@ -268,7 +287,7 @@ Columns: {columns} // Width: {containerWidth}
 					<Icon icon="mdi:pencil" />
 				</button>
 			{/if}
-			<dataItem.component bind:character edit={false} />
+			<Component bind:character />
 		</Grid>
 	{/if}
 </div>
