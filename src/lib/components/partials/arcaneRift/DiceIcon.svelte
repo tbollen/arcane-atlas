@@ -34,19 +34,45 @@
 
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 
 	let {
 		class: className,
 		symbol,
-		richColor
+		richColor,
+		tooltip = true
 	}: {
 		class?: HTMLAttributes<HTMLDivElement>['class'];
 		symbol: GenesysDiceSymbol;
 		richColor?: boolean;
+		tooltip?: string | boolean;
 	} = $props();
+
+	function captialize(str: string) {
+		return str.charAt(0).toUpperCase() + str.slice(1);
+	}
 </script>
 
-<span class="{className} genesys {richColor ? symbol : ''}">{genesysDiceSymbolsMap[symbol]}</span>
+{#if tooltip}
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{@render icon()}
+			</Tooltip.Trigger>
+			<Tooltip.Content
+				><p>
+					{(typeof tooltip === 'string' && tooltip) || captialize(String(symbol))}
+				</p></Tooltip.Content
+			>
+		</Tooltip.Root>
+	</Tooltip.Provider>
+{:else}
+	{@render icon()}
+{/if}
+
+{#snippet icon()}
+	<span class="{className} genesys {richColor ? symbol : ''}">{genesysDiceSymbolsMap[symbol]}</span>
+{/snippet}
 
 <style lang="postcss">
 	/*****
