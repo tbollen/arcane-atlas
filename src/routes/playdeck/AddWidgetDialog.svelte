@@ -6,6 +6,7 @@
 	import Icon from '@iconify/svelte';
 	import * as Select from '$lib/components/ui/select';
 	import { Badge } from '$lib/components/ui/badge';
+	import SystemBadge from '$lib/components/ui/badge/systemBadge.svelte';
 
 	// Deck types and consts
 	import { widgetMap } from '$lib/components/playdeck';
@@ -16,7 +17,7 @@
 
 	let {
 		open = $bindable(false),
-		character,
+		character = $bindable(),
 		onAdd
 	}: {
 		open: boolean;
@@ -59,34 +60,39 @@
 				class="columns-1 gap-6 space-y-6 overflow-y-auto p-4 text-center md:columns-2"
 			>
 				{#each Object.entries(widgetMap) as [key, value]}
-					{@const Component = value.component}
-					{@const selected = selectedWidgets.includes(key as string)}
-					{@const aspectRatio = `${value.initialLayout.w}/${value.initialLayout.h}`}
-					<button
-						id="widget"
-						style="break-inside: avoid;"
-						class="
+					{#if value.system in character.mechanics}
+						{@const Component = value.component}
+						{@const selected = selectedWidgets.includes(key as string)}
+						{@const aspectRatio = `${value.initialLayout.w}/${value.initialLayout.h}`}
+						<button
+							id="widget"
+							disabled={!(value.system in character.mechanics)}
+							style="break-inside: avoid;"
+							class="
 					w-full
 					max-w-[450px]
 					cursor-pointer
 					rounded-lg
 					{selected
-							? 'shadow-lg outline-2 outline-threat-500'
-							: 'shadow-none outline-1 outline-obsidian-500/50'}"
-						onclick={() => {
-							toggleWidget(key);
-						}}
-					>
-						<div id="component:{key}" style="aspect-ratio: {aspectRatio}" class="flex flex-col">
-							<Component bind:character edit={false} />
-						</div>
-						<div
-							class=" flex h-12 w-full flex-row items-center gap-2 overflow-hidden border-t-2 border-threat-500 px-4 py-2"
+								? 'shadow-lg outline-2 outline-threat-500'
+								: 'shadow-none outline-1 outline-obsidian-500/50'}"
+							onclick={() => {
+								toggleWidget(key);
+							}}
 						>
-							<span class="text-sm">{value.name}</span>
-							<Badge variant="default" class="ml-auto">{gameSystems[value.system].name}</Badge>
-						</div>
-					</button>
+							<div id="component:{key}" style="aspect-ratio: {aspectRatio}" class="flex flex-col">
+								<Component bind:character />
+							</div>
+							<div
+								class=" flex h-12 w-full flex-row items-center gap-2 overflow-hidden border-t-2 border-threat-500 px-4 py-2"
+							>
+								<span class="text-sm">{value.name}</span>
+								<SystemBadge gameSystem={value.system} class="ml-auto"
+									>{gameSystems[value.system].name}</SystemBadge
+								>
+							</div>
+						</button>
+					{/if}
 				{/each}
 			</div>
 		</div>
