@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { AR_KEY } from '$lib/gameSystems';
 	import { type WidgetComponentProps } from '../widget';
-	import type { Aspect } from '$lib/gameSystems/ArcaneRift/ar_characters';
 
 	// UI components
 	import { Button } from '$lib/components/ui/button';
@@ -16,7 +15,10 @@
 
 	let borderBoxSize: ResizeObserverSize[] = $state([]);
 
-	let containerHeight: number = $derived(borderBoxSize?.[0]?.blockSize ?? Infinity);
+	let containerHeight: number = $derived(borderBoxSize?.[0]?.blockSize ?? 0);
+
+	let compactList = $derived(containerHeight < 300);
+
 	const shortOnlyRowHeight = 'h-[2.5em]';
 	const fullRowHeight = 'h-[4em]';
 
@@ -31,18 +33,22 @@
 			<!-- {#if character.mechanics[AR_KEY]?.aspects?.length == 0} -->
 			{#each maxAspects as _, i}
 				{@const aspect = character.mechanics[AR_KEY]?.aspects[i]}
-				<div
-					id="aspect-{i}"
-					class="w-full
+				{#if compactList && !aspect}
+					<br />
+				{:else}
+					<div
+						id="aspect-{i}"
+						class="w-full
 					{aspect && aspect.description.length > 0 ? fullRowHeight : shortOnlyRowHeight}"
-				>
-					{#if !aspect}
-						<div class={shortOnlyRowHeight}>. . .</div>
-					{:else}
-						<p class="font-semibold">{aspect.short}</p>
-						<p>{aspect.description}</p>
-					{/if}
-				</div>
+					>
+						{#if aspect}
+							<p class="font-semibold">{aspect.short}</p>
+							<p>{aspect.description}</p>
+						{:else}
+							<div class={shortOnlyRowHeight}>. . .</div>
+						{/if}
+					</div>
+				{/if}
 			{/each}
 			<br class="flex-grow" />
 		</Block.Listcontent>

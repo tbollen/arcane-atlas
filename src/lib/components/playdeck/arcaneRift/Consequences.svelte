@@ -34,6 +34,15 @@
 		)
 	);
 
+	// SIZE & STYLE
+	let borderBoxSize: ResizeObserverSize[] = $state([]);
+
+	let height: number = $derived(borderBoxSize?.[0]?.blockSize ?? 0);
+	let width: number = $derived(borderBoxSize?.[0]?.inlineSize ?? 0);
+
+	let limitedList = $derived(height < 200);
+	let compactList = $derived(height < 300);
+
 	// DIALOG VARS
 	let openAddDialog = $state(false);
 
@@ -45,7 +54,7 @@
 
 <!-- Safeguard to make sure the character has Arcane Rift mechanics -->
 {#if character.mechanics.hasOwnProperty(AR_KEY)}
-	<Block.Root>
+	<Block.Root bind:borderBoxSize>
 		<Block.Title title="Consequences">
 			<Button variant="ghost" onclick={() => (openAddDialog = true)}>
 				<Icon icon="mdi:plus" /> Add
@@ -53,60 +62,69 @@
 		</Block.Title>
 		<Block.Listcontent>
 			<!-- {#if character.mechanics[AR_KEY]?.aspects?.length == 0} -->
-			{#each characterConsequences as consequence, i}
-				{@const rule = rules[i]}
-				{@const isNotEmpty = consequence.text.length > 0}
-				<div
-					id="consequence-{i}"
-					class=" relative grid w-full grid-cols-[auto_1fr] grid-rows-2 gap-x-4"
-				>
-					<div
-						id="editHandle-{i}"
-						class="row-span-2 w-2 overflow-hidden rounded-lg transition-all {isNotEmpty
-							? 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
-							: 'bg-muted-foreground/20'}
-                        "
-					>
-						{#if isNotEmpty}
-							<Button
-								class="h-full w-full bg-inherit! text-inherit!"
-								onclick={() => {
-									const accept = window.confirm(
-										'Are you sure you want to remove this consequence?'
-									);
-									if (!accept) return;
-									try {
-										character.fn?.[AR_KEY]?.removeConsequence(i);
-										toast.success('Consequence removed');
-									} catch (error) {
-										const e = error as Error;
-										toast.error(e.message);
-									}
-								}}><Icon icon="mdi:delete" /></Button
-							>
-						{/if}
-					</div>
+			{#each characterConsequences as _consequence, i}
+				<!-- Reverse order when limitedList (very low height) -->
+				{@const index = limitedList || compactList ? characterConsequences.length - 1 - i : i}
+				{@const consequence = characterConsequences[index]}
+				{@const rule = rules[index]}
 
-					<div id="consequence-{i}-text">
-						{#if consequence.text.length == 0}
-							<p class="text-muted-foreground">. . .</p>
-						{:else}
-							<p class="font-semibold">{consequence.text}</p>
-							<!-- <p>{aspect.description}</p> -->
+				{@const isNotEmpty = consequence.text.length > 0}
+				{#if isNotEmpty || !limitedList}
+					<div
+						id="consequence-{i}"
+						class=" relative grid w-full grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-4"
+					>
+						<!-- HANDLE -->
+						<div
+							id="editHandle-{i}"
+							class="row-span-2 w-2 overflow-hidden rounded-lg transition-all {isNotEmpty
+								? 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
+								: 'bg-muted-foreground/20'}
+                        "
+						>
+							{#if isNotEmpty}
+								<Button
+									class="h-full w-full bg-inherit! text-inherit!"
+									onclick={() => {
+										const accept = window.confirm(
+											'Are you sure you want to remove this consequence?'
+										);
+										if (!accept) return;
+										try {
+											character.fn?.[AR_KEY]?.removeConsequence(i);
+											toast.success('Consequence removed');
+										} catch (error) {
+											const e = error as Error;
+											toast.error(e.message);
+										}
+									}}><Icon icon="mdi:delete" /></Button
+								>
+							{/if}
+						</div>
+
+						<!-- If compact list and consequence is empty, show a different view -->
+						{#if isNotEmpty || !compactList}
+							<div id="consequence-{i}-text">
+								{#if isNotEmpty}
+									<p class="font-semibold">{consequence.text}</p>
+								{:else}
+									<p class="text-muted-foreground/25">. . .</p>
+								{/if}
+							</div>
 						{/if}
+						<p class="text-xs text-muted-foreground/50">{rule.variant}</p>
+						<!-- ROLL -->
+						<div class="absolute right-1 bottom-1 text-end text-muted-foreground/50">
+							{#if rule.roll === 'Despair'}
+								<DiceIcon symbol="despair" />
+							{:else if typeof rule.roll === 'number'}
+								{#each { length: rule.roll } as x}
+									<DiceIcon symbol="failure" />
+								{/each}
+							{/if}
+						</div>
 					</div>
-					<p class="text-xs text-muted-foreground/50">{rule.variant}</p>
-					<!-- ROLL -->
-					<div class="absolute right-1 bottom-1 text-end text-muted-foreground/50">
-						{#if rule.roll === 'Despair'}
-							<DiceIcon symbol="despair" />
-						{:else if typeof rule.roll === 'number'}
-							{#each { length: rule.roll } as x}
-								<DiceIcon symbol="failure" />
-							{/each}
-						{/if}
-					</div>
-				</div>
+				{/if}
 			{/each}
 			<br class="flex-grow" />
 		</Block.Listcontent>
