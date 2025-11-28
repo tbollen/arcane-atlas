@@ -238,6 +238,7 @@ Columns: {columns} // Width: {containerWidth}
 >
 	{#if items.length !== 0}
 		<Grid {items} on:change={handleGridChange} rowHeight={CELLSIZE} let:item let:dataItem {cols}>
+			{@const widget = dataItem as DeckWidget}
 			{@const Component = dataItem.component as DeckWidget['component']}
 			{#if editDeck}
 				<!-- Drag handle overlay -->
@@ -253,7 +254,7 @@ Columns: {columns} // Width: {containerWidth}
 				</div>
 				<!-- Delete button -->
 				<Button
-					onclick={() => removeItem(dataItem.id)}
+					onclick={() => removeItem(widget.id)}
 					size="icon"
 					variant="default"
 					class="text:threat-500 absolute top-1 right-1 z-30  text-threat-500 hover:bg-threat-500 hover:text-white"
@@ -269,6 +270,7 @@ Columns: {columns} // Width: {containerWidth}
 			{:else if editItems}
 				<button
 					id="overlay"
+					hidden={Object.keys(widget.characterProperties).length === 0}
 					class="absolute inset-0 z-10 flex
 					cursor-pointer items-center justify-center
 					bg-transparent text-3xl text-transparent transition-colors
