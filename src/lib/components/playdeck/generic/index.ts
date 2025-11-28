@@ -6,6 +6,7 @@ import { type SystemWidgetMap } from '../widget';
 // SVELTE COMPONENTS
 import PlayerBanner from './PlayerBanner.svelte';
 import CharacterDescription from './CharacterDescription.svelte';
+import DeckCards from './DeckCards.svelte';
 
 // WidgetMap
 export const genericWidgetMap: SystemWidgetMap = {
@@ -20,5 +21,11 @@ export const genericWidgetMap: SystemWidgetMap = {
 		name: 'Description',
 		initialLayout: { w: 3, h: 2 },
 		characterProperties: { [GENERIC_KEY]: ['name', 'description'] }
+	},
+	['cards']: {
+		component: DeckCards,
+		name: 'Deck Cards',
+		initialLayout: { w: 3, h: 3 },
+		characterProperties: {}
 	}
 };
