@@ -261,6 +261,12 @@ export class ArcaneRiftCharacterController {
 		// Set shorthands
 		let text = consequence.text;
 		let roll = consequence.roll;
+
+		// Check if input is valid
+		if (text.length == 0) throw new Error('Consequence text cannot be empty');
+		if (typeof roll === 'number' && roll < 1)
+			throw new Error('Consequence roll must be at least 1');
+
 		let variant =
 			this.rules.consequences.find((c) => c.roll == roll)?.variant ?? // Find consequence with matching roll
 			this.rules.consequences[0].variant; // else, return first variant
@@ -290,6 +296,7 @@ export class ArcaneRiftCharacterController {
 		// Get index from target
 		const index =
 			typeof target == 'number' ? target : m.consequences.findIndex((c) => c?.text == target.text);
+
 		// Update Mechanics
 		m = {
 			...m,
