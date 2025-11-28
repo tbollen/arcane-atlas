@@ -58,7 +58,9 @@ export function verbose<T>(fn: () => T, options: Partial<VerboseOptions> = {}): 
 		return result;
 	} catch (error) {
 		const errorMsg = error instanceof Error ? error.message : String(error);
-		const fullErrorMessage = options?.errorMessage ?? errorMsg;
+		const fullErrorMessage = options?.errorMessage
+			? `${options.errorMessage}: ${errorMsg}`
+			: errorMsg;
 
 		// Toasts an error message if enabled
 		if (options?.showError) {
