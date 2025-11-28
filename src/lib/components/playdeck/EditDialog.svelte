@@ -26,6 +26,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from 'svelte-sonner';
 	import { arcaneRiftCharacterMechanics } from '$lib/gameSystems/ArcaneRift/ar_characters';
+	import InfoTooltip from '../partials/InfoTooltip.svelte';
 
 	let {
 		character = $bindable(),
@@ -114,7 +115,7 @@
 	}}
 >
 	<Dialog.Content
-		class="grid h-[calc(100vh-2rem)] min-w-fit grid-rows-[max-content_1fr_max-content]"
+		class="grid h-[calc(100vh-2rem)] w-full max-w-4xl! min-w-fit grid-rows-[max-content_1fr_max-content]"
 	>
 		<Dialog.Header>
 			<Dialog.Title><Header variant="h2">Edit {widget?.name}</Header></Dialog.Title>
@@ -173,56 +174,129 @@
 					>
 						Add Arcane Rift
 					</Button>
-				{:else if isProperty('aspects', AR_KEY)}
-					<!-- ASPECTS -->
-					{#if character.mechanics[AR_KEY]?.aspects && character.mechanics[AR_KEY]?.aspects?.length > 0}
-						<div id="aspects" class="flex flex-col gap-0">
-							{#each character.mechanics[AR_KEY]?.aspects || [] as aspect, index}
-								<div
-									class="flex flex-row items-center gap-4 border-obsidian-500 py-2 [:not(:first-child)]:border-t-2"
-								>
-									<div class="flex grow flex-col justify-center gap-1">
-										<p class="font-bold">{aspect.short}</p>
-										<p>{aspect.description}</p>
-									</div>
+				{:else}
+					{#if isProperty('aspects', AR_KEY)}
+						<!-- ASPECTS -->
+						<Header variant="h3">Aspects</Header>
+						{#if character.mechanics[AR_KEY]?.aspects && character.mechanics[AR_KEY]?.aspects?.length > 0}
+							<div id="aspects" class="flex flex-col gap-0">
+								{#each character.mechanics[AR_KEY]?.aspects || [] as aspect, index}
+									<div
+										class="flex flex-row items-center gap-4 border-obsidian-500 py-2 [:not(:first-child)]:border-t-2"
+									>
+										<div class="flex grow flex-col justify-center gap-1">
+											<p class="font-bold">{aspect.short}</p>
+											<p>{aspect.description}</p>
+										</div>
 
-									<Button
-										size="icon"
-										disabled={index == 0}
-										onclick={() =>
-											attempt(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
-									>
-										<Icon icon="mdi:arrow-up" /></Button
-									>
-									<Button
-										size="icon"
-										disabled={index == character.mechanics[AR_KEY]?.aspects?.length - 1}
-										onclick={() =>
-											attempt(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
-									>
-										<Icon icon="mdi:arrow-down" /></Button
-									>
-									<Button
-										size="icon"
-										onclick={() => attempt(() => character.fn[AR_KEY]!.removeAspect(index))}
-										><Icon icon="mdi:close" /></Button
-									>
-								</div>
-							{/each}
+										<Button
+											size="icon"
+											disabled={index == 0}
+											onclick={() =>
+												attempt(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
+										>
+											<Icon icon="mdi:arrow-up" /></Button
+										>
+										<Button
+											size="icon"
+											disabled={index == character.mechanics[AR_KEY]?.aspects?.length - 1}
+											onclick={() =>
+												attempt(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
+										>
+											<Icon icon="mdi:arrow-down" /></Button
+										>
+										<Button
+											size="icon"
+											onclick={() => attempt(() => character.fn[AR_KEY]!.removeAspect(index))}
+											><Icon icon="mdi:close" /></Button
+										>
+									</div>
+								{/each}
+							</div>
+						{/if}
+						<div id="addAspect" class="flex flex-col gap-2 p-2">
+							<Input placeholder="Short name..." bind:value={newAspectInput.short} />
+							<Textarea
+								placeholder="Aspect Description..."
+								bind:value={newAspectInput.description}
+							/>
+							<Button
+								onclick={() => {
+									attempt(() => {
+										character.fn[AR_KEY]!.addAspect(newAspectInput);
+										newAspectInput = { short: '', description: '' };
+									});
+								}}><Icon icon="mdi:plus" /> Add</Button
+							>
 						</div>
 					{/if}
-					<div id="addAspect" class="flex flex-col gap-2 p-2">
-						<Input placeholder="Short name..." bind:value={newAspectInput.short} />
-						<Textarea placeholder="Aspect Description..." bind:value={newAspectInput.description} />
-						<Button
-							onclick={() => {
-								attempt(() => {
-									character.fn[AR_KEY]!.addAspect(newAspectInput);
-									newAspectInput = { short: '', description: '' };
-								});
-							}}><Icon icon="mdi:plus" /> Add</Button
-						>
-					</div>
+					{#if isProperty('consequences', AR_KEY)}
+						<!-- CONSEQUENCES -->
+						<Header variant="h3">Consequences</Header>
+						<p class="text-sm text-muted-foreground">
+							Consequences are added and removed on the go. You can edit them in the widget itself
+						</p>
+					{/if}
+					{#if isProperty('stats', AR_KEY)}
+						<!-- STATS -->
+						<Header variant="h3">Stats</Header>
+						<Header variant="h4">Characteristics</Header>
+						{#if character.mechanics[AR_KEY]}
+							<!-- SUM INDICATOR -->
+							<p class="text-sm text-muted-foreground">
+								Total sum: {Object.values(character.mechanics[AR_KEY].stats.characteristics)
+									.map((c) => c.value)
+									.reduce((sum, val) => sum + val, 0)} /
+								{character.mechanics[AR_KEY].rules.characteristics.maxSum}
+							</p>
+							<!-- CHARACTERISTICS -->
+							<div class="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-8">
+								{#each Object.values(character.mechanics[AR_KEY].stats.characteristics) as char, index}
+									{@const rules = character.mechanics[AR_KEY].rules.characteristics}
+									{@const maxSumReached =
+										Object.values(character.mechanics[AR_KEY].stats.characteristics)
+											.map((c) => c.value)
+											.reduce((sum, val) => sum + val, 0) >= rules.maxSum}
+									<div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
+										<p
+											id="char-{char.name}"
+											class=" col-span-full text-center font-semibold uppercase"
+										>
+											{char.name}
+										</p>
+										<div
+											id="char-{char.name}-value"
+											class=" col-span-full rounded-lg bg-obsidian-200 py-3 text-center text-xl"
+										>
+											{char.value}
+										</div>
+										<Button
+											variant={char.value <= rules.minValue ? 'ghost' : 'secondary'}
+											disabled={char.value <= rules.minValue}
+											onclick={() =>
+												attempt(() =>
+													character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value - 1)
+												)}
+										>
+											<Icon icon="mdi:minus" />
+										</Button>
+										<Button
+											variant={char.value >= rules.maxValue || maxSumReached
+												? 'ghost'
+												: 'secondary'}
+											disabled={char.value >= rules.maxValue || maxSumReached}
+											onclick={() =>
+												attempt(() =>
+													character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value + 1)
+												)}
+										>
+											<Icon icon="mdi:plus" />
+										</Button>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					{/if}
 				{/if}
 			{/if}
 			<!-- WIDGET -->
