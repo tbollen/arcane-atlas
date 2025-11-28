@@ -1,6 +1,9 @@
 // Import available mechanics from the class
 import { AR_KEY, GENERIC_KEY, type CharacterSystems } from '$lib/gameSystems';
 
+// Import placeholder widget
+import PlaceholderWidget from '$lib/components/playdeck/PlaceholderWidget.svelte';
+
 import {
 	type MappedWidget,
 	type WidgetMap,
@@ -95,6 +98,14 @@ export function setWidgetsEditMode(widgets: DeckWidget[], edit: boolean): DeckWi
 	});
 }
 
+const placeholderWidget: MappedWidget = {
+	system: GENERIC_KEY,
+	name: 'Undefined Widget',
+	component: PlaceholderWidget,
+	initialLayout: { w: 3, h: 2, min: { w: 2, h: 2 }, max: { w: 2, h: 2 } },
+	characterProperties: {}
+};
+
 // Load deck
 /**
  * Converts a StoredDeck from @type StoredDeck to @type StoredDeckWidget
@@ -103,20 +114,22 @@ export function setWidgetsEditMode(widgets: DeckWidget[], edit: boolean): DeckWi
  * @returns {DeckWidgets} The converted deck to be used and rendered
  */
 export function loadDeck(input: StoredDeck, system?: DeckSystem): DeckWidget[] {
-	const widgets = input
-		.map((item, index) => {
-			try {
-				const widget = getWidget(item.componentID);
-				// Add widget information (component). Also add a UNIQUE id to each widget, which is required for Gridstack
-				const deckWidget: DeckWidget = { ...item, ...widget, id: `${item.componentID}-${index}` };
-				return deckWidget;
-			} catch (e) {
-				console.warn(e);
-				return null; //Return null (because .map() requires a return value)
-			}
-		})
-		.filter((item) => item !== null); //Filter out null values
+	let widget: MappedWidget;
+	const widgets = input.map((item, index) => {
+		try {
+			// Get widget information from map
+			widget = getWidget(item.componentID);
+			const deckWidget: DeckWidget = { ...item, ...widget, id: `${item.componentID}-${index}` };
+			return deckWidget;
+		} catch (e) {
+			// If widget is not found, log warning and add placeholder (for missing/deleted widgets)
+			console.warn(e, 'adding placeholder');
+			return { ...placeholderWidget, id: `placeholder-${index}`, componentID: 'placeholder' };
+		}
+	});
+	// If system is provided, filter by system
 	if (system) return filterWidgetsBySystem(widgets, system);
+	// Otherwise, return all widgets
 	return widgets;
 }
 
