@@ -124,7 +124,12 @@ export function loadDeck(input: StoredDeck, system?: DeckSystem): DeckWidget[] {
 		} catch (e) {
 			// If widget is not found, log warning and add placeholder (for missing/deleted widgets)
 			console.warn(e, 'adding placeholder');
-			return { ...placeholderWidget, id: `placeholder-${index}`, componentID: 'placeholder' };
+			return {
+				...placeholderWidget,
+				id: `placeholder-${index}`,
+				componentID: 'placeholder',
+				name: item.componentID
+			};
 		}
 	});
 	// If system is provided, filter by system
