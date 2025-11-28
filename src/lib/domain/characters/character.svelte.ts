@@ -6,7 +6,17 @@ import {
 	type Campaign as PrismaCampaign,
 	type card as PrismaCard
 } from '@prisma/client';
-import { type CharacterMechanics, GENERIC_KEY } from '$lib/gameSystems';
+
+// Game system stuff
+import {
+	AR_KEY,
+	CharacterController,
+	characterMechanics,
+	type CharacterMechanics,
+	characterRules,
+	type CharacterRules,
+	GENERIC_KEY
+} from '$lib/gameSystems';
 
 // ID Shorthands
 import type { UserID, CampaignID, CharacterID, CardID } from '..';
@@ -53,6 +63,13 @@ class Character {
 	systems: System[] = $state([]);
 	mechanics: CharacterMechanics = $state({ [GENERIC_KEY]: {} });
 
+	// Controllers
+	rules: CharacterRules;
+	fn: CharacterController = new CharacterController(
+		() => this.mechanics,
+		(m: CharacterMechanics) => (this.mechanics = m)
+	);
+
 	constructor(init?: Partial<PrismaCharacter>) {
 		this.name = init?.name ?? this.name;
 		this.subtitle = init?.subtitle ?? this.subtitle;
@@ -61,8 +78,70 @@ class Character {
 
 		this.mechanics = (init?.mechanics as CharacterMechanics) ?? { [GENERIC_KEY]: {} };
 		this.systems = Object.keys(this.mechanics) as System[];
+
+		// SET UP RULES (TODO: Make this more dynamic) -> currently immutable
+		this.rules = this.systems.reduce(
+			(acc, system) => ({ ...acc, [system]: characterRules[system] }),
+			{ [GENERIC_KEY]: {} }
+		);
+
+		// SET UP CONTROLLERS
+		this.fn = new CharacterController(
+			() => this.mechanics,
+			(m: CharacterMechanics) => (this.mechanics = m),
+			this.rules
+		);
+	}
+
+	addSystem(system: string) {
+		if (!Object.keys(characterMechanics).includes(system)) {
+			console.error(`System "${system}" does not exist`);
+			throw new Error('System does not exist');
+		}
+		console.log('Adding system to character', system);
+		// Treat _system as a valid System
+		const _system = system as System;
+		// Add mechanics
+		this.mechanics = { ...this.mechanics, [_system]: characterMechanics[_system] };
+		// Derive systems from mechanics
+		this.systems = Object.keys(this.mechanics) as System[];
+
+		// Add rules
+		this.rules = { ...this.rules, [_system]: characterRules[_system] };
+
+		// Set up controller (auto adds availabel functions based on mechanics[KEY])
+		this.fn = new CharacterController(
+			() => this.mechanics,
+			(m: CharacterMechanics) => (this.mechanics = m),
+			this.rules
+		);
 	}
 }
+/**
+ * @name CharacterProperties
+ * @description Helper type that describes the properties of a character that can be updated.
+ * "Default" propeties, such as name, are stored under the [GENERIC_KEY].
+ * Other, system-specific properties are stored under their System Key.
+ * 
+ * The objects contains only the 'keys' as strings in an array under their system key.
+ * @example
+ * ```ts
+ * {
+	 [GENERIC_KEY]: ['name', 'subtitle', 'description', ...],
+	 ...
+ }
+ */
+export type CharacterProperties = {
+	[GENERIC_KEY]?: GenericProperty[];
+} & SystemProperties<CharacterMechanics>;
+
+type GenericProperty = Exclude<
+	keyof Omit<Character, 'systems' | 'mechanics' | 'createdAt' | 'updatedAt'>,
+	undefined
+>;
+type SystemProperties<T extends Character['mechanics']> = {
+	[K in Exclude<keyof T, typeof GENERIC_KEY>]?: Array<keyof NonNullable<T[K]>>;
+};
 
 export class StoredCharacter extends Character {
 	// Datastore info

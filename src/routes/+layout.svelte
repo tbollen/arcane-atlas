@@ -25,25 +25,26 @@
 	onMount(() => {
 		spinner.complete(); // Always remove loading spinner when page mounts
 
-		// Set active character in Context
-		// If user is logged in
-		if (data.user) {
-			const user = data.user as PrismaUser;
-			// Format all user's characters
-			const clientCharacters: StoredCharacter[] = data.characters.map((c) =>
-				StoredCharacter.fromPrisma({ character: c, user })
-			);
-			// Get active character from localStorage (perisitent)
-			const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
+		// // Set active character in Context
+		// // If user is logged in
+		// if (data.user) {
+		// 	const user = data.user as PrismaUser;
+		// 	// Format all user's characters
+		// 	const clientCharacters: StoredCharacter[] = data.characters.map((c) =>
+		// 		StoredCharacter.fromPrisma({ character: c, user })
+		// 	);
+		// 	// Get active character from localStorage (perisitent)
+		// 	const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
 
-			// Set active character
-			const activeCharacter: StoredCharacter | undefined = clientCharacters.find(
-				(c) => c.id === activeCharacterID
-			);
+		// 	// Set active character
+		// 	const activeCharacter: StoredCharacter | undefined = clientCharacters.find(
+		// 		(c) => c.id === activeCharacterID
+		// 	);
 
-			// Set in Context
-			setContext<StoredCharacter | undefined>(ck.activeCharacter, activeCharacter);
-		}
+		// 	// Set in Context
+		// 	setContext<StoredCharacter | undefined>(ck.activeCharacter, activeCharacter);
+		// 	console.log('Active Character:', activeCharacter);
+		// }
 	});
 </script>
 

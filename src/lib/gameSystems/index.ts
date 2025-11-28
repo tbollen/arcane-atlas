@@ -4,10 +4,25 @@
 // Add and import system information HERE!!
 
 // Import mechanics from each system
+
+/////////////////////////////
+// Arcane Rift //
+/////////////////////////////
+
+// Arcane Rift; CARDS
 import {
 	arcaneRiftCardMechanics,
 	type ArcaneRiftCardMechanics
 } from '$lib/gameSystems/ArcaneRift/ar_cards';
+// Arcane Rift; CHARACTERS
+import {
+	arcaneRiftCharacterMechanics,
+	type ArcaneRiftCharacterMechanics,
+	arcaneRiftDefaultCharacterRules,
+	type ArcaneRiftCharacterRules
+} from './ArcaneRift/ar_characters';
+import { ArcaneRiftCharacterController } from './ArcaneRift/controllers/characterController';
+
 // ADD MORE WHEN MORE SYSTEMS ARE ADDED
 
 // TYPE AND CONST DEFINITIONS
@@ -28,15 +43,55 @@ export const cardMechanics: {
 // CHARACTERS
 export const characterMechanics: {
 	[GENERIC_KEY]: {};
-	[AR_KEY]?: ArcaneRiftCardMechanics;
+	[AR_KEY]?: ArcaneRiftCharacterMechanics;
 } = {
 	[GENERIC_KEY]: {},
-	[AR_KEY]: arcaneRiftCardMechanics
+	[AR_KEY]: arcaneRiftCharacterMechanics
 };
 
-// Populated and generated
+export const characterRules: {
+	[GENERIC_KEY]: {};
+	[AR_KEY]?: ArcaneRiftCharacterRules;
+} = {
+	[GENERIC_KEY]: {},
+	[AR_KEY]: arcaneRiftDefaultCharacterRules
+};
+
+// CHARACTER CONTROLLERS
+export class CharacterController {
+	[GENERIC_KEY]: {} = {};
+	[AR_KEY]?: ArcaneRiftCharacterController;
+
+	constructor(
+		getMechanics: () => CharacterMechanics,
+		setMechanics: (mechanics: CharacterMechanics) => void,
+		rules?: CharacterRules
+	) {
+		const mechanics = getMechanics();
+		// SET UP ARCANE RIFT
+		if (mechanics[AR_KEY]) {
+			this[AR_KEY] = new ArcaneRiftCharacterController(
+				() => getMechanics()[AR_KEY]!,
+				(m: ArcaneRiftCharacterMechanics) => setMechanics({ ...mechanics, [AR_KEY]: m }),
+				rules?.[AR_KEY] || arcaneRiftDefaultCharacterRules
+			);
+		}
+	}
+}
+
+///////////////////////////////////
+// Populated and generated types //
+///////////////////////////////////
+// CARDS
 export type CardMechanics = typeof cardMechanics;
+export type CardSystems = keyof CardMechanics;
+
+// CHARACTER
 export type CharacterMechanics = typeof characterMechanics;
+export type CharacterSystems = keyof CharacterMechanics;
+export type CharacterRules = typeof characterRules;
+
+///////////////////////////////////
 
 // List of all system keys from Mechanics
 export type SystemKey = keyof CardMechanics;
