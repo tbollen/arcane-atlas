@@ -52,7 +52,7 @@ export type DeckSystem = Extract<CharacterSystems, (typeof deckSystems)[number]>
  * @throws {Error} If the widget ID is invalid
  */
 export function getWidget(widgetID: string): MappedWidget {
-	if (!Object.keys(widgetMap).includes(widgetID)) throw new Error('Invalid Widget ID');
+	if (!Object.keys(widgetMap).includes(widgetID)) throw new Error(`Invalid Widget ID: ${widgetID}`);
 	const lookupID = widgetID as keyof typeof widgetMap;
 	return widgetMap[lookupID];
 }
@@ -103,12 +103,19 @@ export function setWidgetsEditMode(widgets: DeckWidget[], edit: boolean): DeckWi
  * @returns {DeckWidgets} The converted deck to be used and rendered
  */
 export function loadDeck(input: StoredDeck, system?: DeckSystem): DeckWidget[] {
-	const widgets = input.map((item, index) => {
-		const widget = getWidget(item.componentID);
-		// Add widget information (component). Also add a UNIQUE id to each widget, which is required for Gridstack
-		const deckWidget: DeckWidget = { ...item, ...widget, id: `${item.componentID}-${index}` };
-		return deckWidget;
-	});
+	const widgets = input
+		.map((item, index) => {
+			try {
+				const widget = getWidget(item.componentID);
+				// Add widget information (component). Also add a UNIQUE id to each widget, which is required for Gridstack
+				const deckWidget: DeckWidget = { ...item, ...widget, id: `${item.componentID}-${index}` };
+				return deckWidget;
+			} catch (e) {
+				console.warn(e);
+				return null; //Return null (because .map() requires a return value)
+			}
+		})
+		.filter((item) => item !== null); //Filter out null values
 	if (system) return filterWidgetsBySystem(widgets, system);
 	return widgets;
 }
