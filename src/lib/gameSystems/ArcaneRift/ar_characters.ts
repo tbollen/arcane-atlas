@@ -82,32 +82,96 @@ export const arcaneRiftDefaultCharacterRules: ArcaneRiftCharacterRules = {
 	},
 	stats: {
 		characteristics: [
-			{ name: 'Brawn', description: '' },
-			{ name: 'Agility', description: '' },
-			{ name: 'Intellect', description: '' },
-			{ name: 'Cunning', description: '' },
-			{ name: 'Willpower', description: '' },
-			{ name: 'Presence', description: '' }
+			{ name: 'Brawn', description: 'Raw physical strength and toughness' },
+			{ name: 'Agility', description: 'Speed, nimbleness and accuracy of movements' },
+			{ name: 'Intellect', description: 'Wits and knowledge of the world' },
+			{ name: 'Cunning', description: 'Intuitive knowledge and creativity' },
+			{ name: 'Willpower', description: 'Mental sharpness and resilience' },
+			{ name: 'Presence', description: 'Charisma and social skills' }
 		],
 		skills: [
-			{ name: 'Muscle', description: '', characteristic: 'Brawn' },
-			{ name: 'Toughness', description: '', characteristic: 'Brawn' },
-			{ name: 'Athletics', description: '', characteristic: 'Brawn' },
-			{ name: 'Precision', description: '', characteristic: 'Agility' },
-			{ name: 'Reflex', description: '', characteristic: 'Agility' },
-			{ name: 'Coordination', description: '', characteristic: 'Agility' },
-			{ name: 'Arcana', description: '', characteristic: 'Intellect' },
-			{ name: 'Lore', description: '', characteristic: 'Intellect' },
-			{ name: 'Medicine', description: '', characteristic: 'Intellect' },
-			{ name: 'Investigation', description: '', characteristic: 'Cunning' },
-			{ name: 'Stealth', description: '', characteristic: 'Cunning' },
-			{ name: 'Ingenuity', description: '', characteristic: 'Cunning' },
-			{ name: 'Intution', description: '', characteristic: 'Willpower' },
-			{ name: 'Composure', description: '', characteristic: 'Willpower' },
-			{ name: 'Vigilance', description: '', characteristic: 'Willpower' },
-			{ name: 'Charm', description: '', characteristic: 'Presence' },
-			{ name: 'Insight', description: '', characteristic: 'Presence' },
-			{ name: 'Persuasion', description: '', characteristic: 'Presence' }
+			{ name: 'Muscle', description: 'Physical strength and power', characteristic: 'Brawn' },
+			{
+				name: 'Toughness',
+				description: 'Physical resilience and endurance',
+				characteristic: 'Brawn'
+			},
+			{
+				name: 'Athletics',
+				description: 'Effectiveness of physical strength',
+				characteristic: 'Brawn'
+			},
+			{
+				name: 'Precision',
+				description: 'Precision of finesse movements',
+				characteristic: 'Agility'
+			},
+			{ name: 'Reflex', description: 'Ability to react quickly', characteristic: 'Agility' },
+			{
+				name: 'Coordination',
+				description: 'Control over physical movement',
+				characteristic: 'Agility'
+			},
+			{
+				name: 'Arcana',
+				description: 'Knowledge of all things magical and otherworldly',
+				characteristic: 'Intellect'
+			},
+			{
+				name: 'Lore',
+				description: 'Book-knowledge of the known world',
+				characteristic: 'Intellect'
+			},
+			{
+				name: 'Medicine',
+				description: 'Ability to diagnose and treat illness',
+				characteristic: 'Intellect'
+			},
+			{
+				name: 'Investigation',
+				description: 'Active spotting of hidden things like clues and traps',
+				characteristic: 'Cunning'
+			},
+			{
+				name: 'Stealth',
+				description: 'Ability to vanish and remain undetected',
+				characteristic: 'Cunning'
+			},
+			{
+				name: 'Ingenuity',
+				description: 'Creativity and ability to craft',
+				characteristic: 'Cunning'
+			},
+			{
+				name: 'Intution',
+				description: 'Ability to subconsciously pick up subtle cues',
+				characteristic: 'Willpower'
+			},
+			{
+				name: 'Composure',
+				description: 'Remaining calm under pressure',
+				characteristic: 'Willpower'
+			},
+			{
+				name: 'Vigilance',
+				description: 'Reaction speed to unexpected threats',
+				characteristic: 'Willpower'
+			},
+			{
+				name: 'Charm',
+				description: 'Ability to charm, butter up or seduce',
+				characteristic: 'Presence'
+			},
+			{
+				name: 'Insight',
+				description: 'Empathy and ability to understand others',
+				characteristic: 'Presence'
+			},
+			{
+				name: 'Persuasion',
+				description: 'Being convincing and persuasive',
+				characteristic: 'Presence'
+			}
 		]
 	}
 };

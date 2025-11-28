@@ -30,7 +30,7 @@
 	// Utils
 	import { lsk } from '$lib/utils/storage/keys.js';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { AR_KEY, GENERIC_KEY } from '$lib/gameSystems/index.js';
 	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
 
@@ -88,19 +88,39 @@
 		if (typeof window === 'undefined' || !window.localStorage)
 			return console.error('Localstorage not ready');
 
-		console.log('Deck: ', $state.snapshot(deck));
+		// Start saving
+		spinner.set('save', 'Saving...');
+
+		// LSK
 		const deckJSON = JSON.stringify(deck);
 		localStorage.setItem(lsk.deck, deckJSON);
-		console.log('Deck saved to localstorage', deckJSON);
+
+		// Save Character
+		const prismaCharacter = character.toPrisma();
+		console.log('Character: ', prismaCharacter);
+		CHARACTER_API.update(prismaCharacter)
+			.then(() => {
+				toast.success('Character updated');
+			})
+			.catch((error) => {
+				toast.error(`Error updating character: ${error}`);
+			})
+			.finally(() => {
+				setTimeout(() => {
+					spinner.complete();
+					invalidateAll();
+				}, 500);
+			});
 	}
 
 	function unsetActiveCharacter() {
-		alert('TODO: Unset active character');
+		localStorage.removeItem(lsk.activeCharacter);
+		character = undefined;
 	}
 
-	function setActiveCharacter(character: StoredCharacter) {
-		localStorage.setItem(lsk.activeCharacter, character.id);
-		character = character;
+	function setActiveCharacter(_character: StoredCharacter) {
+		localStorage.setItem(lsk.activeCharacter, _character.id);
+		character = _character;
 	}
 
 	//////////////////
@@ -152,16 +172,26 @@
 				throw new Error('Localstorage not available');
 			const deckJSON = JSON.stringify(deck);
 			localStorage.setItem(lsk.deck, deckJSON);
-			console.debug('Deck saved to localstorage', deckJSON);
+			console.debug('Deck saved to localstorage', JSON.parse(deckJSON));
 		} catch (error) {
 			console.error(error);
 		}
 	}
 </script>
 
+<!-- RENDERING -->
 <main>
 	{#if !data?.characters || dataCharactersAsStored.length === 0}
-		<p>No characters found</p>
+		<div class="flex w-full flex-col items-center justify-center gap-4 py-12">
+			<Header variant="h2">No characters found</Header>
+			<p class="w-lg text-muted-foreground">
+				It seems you have no characters linked to your account. You can create a new character to
+				start setting up a playdeck!
+			</p>
+			<Button href="/character/new" size="lg" variant="destructive"
+				><Icon icon="mdi:plus" />Create your first Character</Button
+			>
+		</div>
 	{:else if !character}
 		<Header variant="h2">Select Character</Header>
 		{#each dataCharactersAsStored as character}
@@ -177,34 +207,30 @@
 	{:else}
 		<div id="Actions" class="my-4 flex flex-row items-center gap-2">
 			<Header variant="h2" class="mr-4">{character.name}</Header>
-			{#if editDeck}
+			{#if !editDeck && !editItems}
+				<Button onclick={() => toggleEditMode('editDeck')} variant="advanced"
+					><Icon icon="mdi:view-dashboard-edit" />Edit Deck</Button
+				>
+				<Button onclick={() => toggleEditMode('editItems')} variant="advanced"
+					><Icon icon="mdi:pencil" />Edit Content</Button
+				>
+				<Button onclick={unsetActiveCharacter} variant="destructive"
+					>Select different character</Button
+				>
+			{:else}
 				<Button onclick={() => toggleEditMode('view')} variant="secondary"
 					><Icon icon="mdi:eye" />View</Button
 				>
 				<Button onclick={saveDeck} variant="success" spinner={{ id: 'save' }}
 					><Icon icon="mdi:floppy" />Save</Button
 				>
-				<Button onclick={() => (addWidgetDialog = true)} variant="success"
-					><Icon icon="mdi:plus" />Add Widget</Button
-				>
-			{:else}
-				<Button onclick={() => toggleEditMode('editDeck')} variant="advanced"
-					><Icon icon="mdi:pencil" />Edit Deck</Button
-				>
-				<Button onclick={() => toggleEditMode('editItems')} variant="advanced"
-					><Icon icon="mdi:pencil" />Edit Content</Button
-				>
+				{#if editDeck}
+					<Button onclick={() => (addWidgetDialog = true)} variant="success"
+						><Icon icon="mdi:plus" />Add Widget</Button
+					>
+				{/if}
 			{/if}
-			<Button
-				onclick={() => {
-					const characterClone = JSON.parse(JSON.stringify(character));
-					console.log('SERIALIZED CHARACTER', Object.getPrototypeOf(character));
-				}}
-				variant="secondary">DEBUG</Button
-			>
-			<Button onclick={unsetActiveCharacter} variant="destructive"
-				>Select different character</Button
-			>
+
 			<AddWidgetDialog
 				onAdd={(widgets) => {
 					DeckComponent.addToDeck(widgets);
@@ -213,10 +239,6 @@
 				bind:open={addWidgetDialog}
 			/>
 		</div>
-		{#if Object.values(deck).length > 0}
-			<Deck system={GENERIC_KEY} bind:this={DeckComponent} {character} bind:deck />
-		{:else}
-			TODO
-		{/if}
+		<Deck bind:this={DeckComponent} {character} bind:deck />
 	{/if}
 </main>
