@@ -239,10 +239,6 @@
 				bind:open={addWidgetDialog}
 			/>
 		</div>
-		{#if Object.values(deck).length > 0}
-			<Deck bind:this={DeckComponent} {character} bind:deck />
-		{:else}
-			TODO
-		{/if}
+		<Deck bind:this={DeckComponent} {character} bind:deck />
 	{/if}
 </main>

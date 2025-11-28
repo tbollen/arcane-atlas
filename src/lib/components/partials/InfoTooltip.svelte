@@ -22,7 +22,7 @@
 {#if children && children.length > 0}
 	<Tooltip.Provider>
 		<Tooltip.Root>
-			<Tooltip.Trigger class="cursor-help {className}">
+			<Tooltip.Trigger class=" cursor-help self-baseline {className}">
 				<Icon {icon} />
 			</Tooltip.Trigger>
 			<Tooltip.Content

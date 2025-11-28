@@ -82,11 +82,14 @@
 										<Tooltip.Trigger class="cursor-help">
 											{skill.name}
 										</Tooltip.Trigger>
-										<Tooltip.Content>{skill.description}</Tooltip.Content>
+										<Tooltip.Content
+											>{rules.stats.skills.find((s) => s.name == skill.name)
+												?.description}</Tooltip.Content
+										>
 									</Tooltip.Root>
 								</Tooltip.Provider>
 							</p>
-							<Mastery value={2} max={rules.skills.maxMastery} />
+							<Mastery value={skill.value} max={rules.skills.maxMastery} />
 						{/if}
 					{/each}
 				{/each}
