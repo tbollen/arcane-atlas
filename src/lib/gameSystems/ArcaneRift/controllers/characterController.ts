@@ -93,7 +93,10 @@ export class ArcaneRiftCharacterController {
 		const sum = Object.values(m.stats.characteristics)
 			.map((c) => c.value)
 			.reduce((sum, val) => sum + val, 0);
-		if (sum > this.rules.characteristics.maxSum) {
+		if (
+			sum >= this.rules.characteristics.maxSum &&
+			value > m.stats.characteristics[characteristic].value
+		) {
 			throw new Error(
 				`Sum of characteristics above maximum (${this.rules.characteristics.maxSum})`
 			);
@@ -200,18 +203,17 @@ export class ArcaneRiftCharacterController {
 		consequences: Consequence[]
 	): ArcaneRiftCharacterMechanics['consequences'] {
 		let m = this.getMechanics();
-
 		// Create template array to populate ([null, null, ...] for every slot)
-		let templateConsequences: typeof m.consequences = this.rules.consequences.map((c) => null);
+		let templateConsequences: typeof m.consequences = Array.from(
+			{ length: this.rules.consequences.length },
+			() => null
+		);
 
-		// Get exisitng consequences,
+		// Get consequences from passed in variables,
 		// - sort from lowest to highest roll
 		// - filter out null
 		// - add new consequence as last item
-		const consequencesToPlace = m.consequences
-			.filter((c) => c != null)
-			.sort((a, b) => this.rollToNumber(a.roll) - this.rollToNumber(b.roll))
-			.concat(consequences);
+		const consequencesToPlace = consequences.filter((c) => c != null);
 
 		const placeConsequence = (
 			c: { text: string; roll: ConsequenceRoll },
@@ -220,7 +222,6 @@ export class ArcaneRiftCharacterController {
 			// Loop through all consequence slots in the rules
 			for (let i = startIndex; i < this.rules.consequences.length; i++) {
 				const rule = this.rules.consequences[i];
-
 				// Check if this slot is suitable (rule.roll >= consequence.roll)
 				if (this.rollToNumber(rule.roll) >= this.rollToNumber(c.roll)) {
 					// Check if slot is empty
@@ -233,9 +234,11 @@ export class ArcaneRiftCharacterController {
 						return true;
 					} else {
 						// Slot is not empty, check if a higher slot is available
-						placeConsequence(c, i + 1);
+						return placeConsequence(c, i + 1);
 					}
 					// If rule.roll < consequence.roll, check next slot in for-loop
+				} else {
+					return placeConsequence(c, i + 1);
 				}
 			}
 			// If NO slot is suitable, return false
@@ -247,7 +250,7 @@ export class ArcaneRiftCharacterController {
 			// Place each
 			let placed = placeConsequence(c);
 			if (!placed) {
-				throw new Error('Could not place consequence');
+				throw new Error('No slot available for consequence');
 			}
 		}
 		return templateConsequences;
@@ -292,6 +295,8 @@ export class ArcaneRiftCharacterController {
 			...m,
 			consequences: [...m.consequences.slice(0, index), ...m.consequences.slice(index + 1)]
 		};
+
+		this.setMechanics(m);
 	}
 
 	// ----------------------
