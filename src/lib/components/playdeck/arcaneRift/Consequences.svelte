@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { AR_KEY } from '$lib/gameSystems';
 	import { type WidgetComponentProps } from '../widget';
+	import { verbose } from '$lib/utils/feedback/verbose';
 
 	// UI components
 	import { Button } from '$lib/components/ui/button';
@@ -71,12 +72,12 @@
 				{@const isNotEmpty = consequence.text.length > 0}
 				{#if isNotEmpty || !limitedList}
 					<div
-						id="consequence-{i}"
+						id="consequence-{index}"
 						class=" relative grid w-full grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-4"
 					>
 						<!-- HANDLE -->
 						<div
-							id="editHandle-{i}"
+							id="editHandle-{index}"
 							class="row-span-2 w-2 overflow-hidden rounded-lg transition-all {isNotEmpty
 								? 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
 								: 'bg-muted-foreground/20'}
@@ -90,13 +91,14 @@
 											'Are you sure you want to remove this consequence?'
 										);
 										if (!accept) return;
-										try {
-											character.fn?.[AR_KEY]?.removeConsequence(i);
-											toast.success('Consequence removed');
-										} catch (error) {
-											const e = error as Error;
-											toast.error(e.message);
-										}
+										verbose(
+											() => {
+												character.fn?.[AR_KEY]?.removeConsequence(index);
+											},
+											{
+												successMessage: 'Consequence removed'
+											}
+										);
 									}}><Icon icon="mdi:delete" /></Button
 								>
 							{/if}
@@ -104,7 +106,7 @@
 
 						<!-- If compact list and consequence is empty, show a different view -->
 						{#if isNotEmpty || !compactList}
-							<div id="consequence-{i}-text">
+							<div id="consequence-{index}-text">
 								{#if isNotEmpty}
 									<p class="font-semibold">{consequence.text}</p>
 								{:else}
@@ -172,21 +174,19 @@
 				</Button>
 			</div>
 			<Button
-				onclick={() => {
-					try {
-						if (consequenceText.length == 0) throw new Error('Consequence text cannot be empty');
-						if (consequenceRoll === 0) throw new Error('Consequence roll cannot be 0');
-						character.fn?.[AR_KEY]?.addConsequence({
-							text: consequenceText,
-							roll: consequenceRoll
-						});
-						// If successful, close the dialog
-						openAddDialog = false;
-					} catch (error) {
-						const e = error as Error;
-						toast.error(e.message);
-					}
-				}}
+				onclick={() =>
+					verbose(
+						() => {
+							character.fn?.[AR_KEY]?.addConsequence({
+								roll: consequenceRoll,
+								text: consequenceText
+							});
+							openAddDialog = false;
+						},
+						{
+							successMessage: `Consequence added: ${consequenceText}`
+						}
+					)}
 			>
 				<Icon icon="mdi:plus" /> Add Consequence
 			</Button>
