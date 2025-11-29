@@ -288,7 +288,7 @@
 							</div>
 							<!-- SKILLS -->
 							<div id="Skills">
-								<Header variant="h4">Stats</Header>
+								<Header variant="h4">Skills</Header>
 								<!-- SUM INDICATOR -->
 								<p class="text-sm text-muted-foreground">
 									Total sum: {Object.values(character.mechanics[AR_KEY].stats.skills)

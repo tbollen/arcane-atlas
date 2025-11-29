@@ -56,6 +56,8 @@
 		return longest;
 	});
 
+	// Estimate the width needed for the skill name column. Use 16em as a minimum to avoid too small columns.
+	// Approximate 0.5em per character + 1em padding
 	let estimatedSkillNameWidth: string = $derived(
 		`${Math.max(16, longestSkillName.length * 0.5 + 1)}em` // Approx. 0.5em per character + padding
 	);
