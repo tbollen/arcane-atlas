@@ -255,7 +255,7 @@
 									>
 										<Button
 											variant="bold"
-											disabled={stressTrack.max <= 0}
+											disabled={stressTrack.max <= 1}
 											onclick={() =>
 												verbose(() =>
 													character.fn[AR_KEY]!.setStressTrackMax(

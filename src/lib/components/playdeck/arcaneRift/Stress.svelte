@@ -70,10 +70,10 @@
 					{#each { length: rules.maxAllowed } as slot, index}
 						{@const isFilled = stressTrack.value > index}
 						<button
-							aria-label="Toggle {stressTrack.variant} stress to {index}/0"
+							aria-label="Toggle {stressTrack.variant} stress to {index + 1}"
 							onclick={() =>
 								verbose(() => {
-									let targetValue = index + 1 == stressTrack.value ? index : index + 1;
+									let targetValue = index + 1 === stressTrack.value ? index : index + 1;
 									character.fn?.[AR_KEY]?.setStressTrackValue(stressTrack.variant, targetValue);
 								})}
 							disabled={index + 1 > stressTrack.max}

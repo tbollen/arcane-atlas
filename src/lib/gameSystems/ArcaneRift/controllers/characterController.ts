@@ -319,13 +319,13 @@ export class ArcaneRiftCharacterController {
 
 	setStressTrackValue(variant: string, value: number) {
 		let m = this.getMechanics();
-		// Find track
-		const trackIndex = m.stressTracks.findIndex((t) => t.variant == variant);
-		if (trackIndex == -1) throw new Error(`Stress track with variant "${variant}" not found`);
 		// Check value
 		if (value < 0) throw new Error('Stress value cannot be negative');
 		if (value > this.rules.stressTracks.maxAllowed)
 			throw new Error(`Stress value cannot be higher than ${this.rules.stressTracks.maxAllowed}`);
+		// Find track
+		const trackIndex = m.stressTracks.findIndex((t) => t.variant == variant);
+		if (trackIndex == -1) throw new Error(`Stress track with variant "${variant}" not found`);
 		// Check vs character Maximum
 		if (value > m.stressTracks[trackIndex].max)
 			throw new Error(
@@ -338,9 +338,6 @@ export class ArcaneRiftCharacterController {
 
 	setStressTrackMax(variant: string, max: number) {
 		let m = this.getMechanics();
-		// Find track
-		const trackIndex = m.stressTracks.findIndex((t) => t.variant == variant);
-		if (trackIndex == -1) throw new Error(`Stress track with variant "${variant}" not found`);
 		// Check max
 		if (max < 1) throw new Error('Stress track maximum must be at least 1');
 		// Check vs Rules
@@ -348,6 +345,10 @@ export class ArcaneRiftCharacterController {
 			throw new Error(
 				`Stress track maximum cannot be higher than ${this.rules.stressTracks.maxAllowed}`
 			);
+		// Find track
+		const trackIndex = m.stressTracks.findIndex((t) => t.variant == variant);
+		if (trackIndex == -1) throw new Error(`Stress track with variant "${variant}" not found`);
+
 		// Update
 		m.stressTracks[trackIndex].max = max;
 
