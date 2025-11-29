@@ -93,10 +93,6 @@
 			? dataCharacters.find((c) => c.id.toString() == $activeCharacter.id.toString())
 			: undefined
 	);
-
-	$effect(() => {
-		console.log('Active Character:', character);
-	});
 </script>
 
 <section id="navigation" class="navbar border-b-2 border-threat-500 bg-obsidian-50">
