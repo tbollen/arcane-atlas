@@ -267,9 +267,6 @@ Columns: {columns} // Width: {containerWidth}
 					icon="mdi:arrow-expand"
 					class="absolute right-1 bottom-1 z-[11] scale-x-[-1] text-xl text-obsidian-50"
 				/>
-				<span class="absolute bottom-1 left-1 z-[11] text-xs text-obsidian-50"
-					>{widget.componentID}</span
-				>
 			{:else if editItems}
 				<button
 					id="overlay"
@@ -291,22 +288,6 @@ Columns: {columns} // Width: {containerWidth}
 				>
 					<Icon icon="mdi:pencil" />
 				</button>
-			{/if}
-			<!-- Widget not found button -->
-			{#if widget.componentID === 'placeholder'}
-				<div
-					class="absolute inset-x-0 bottom-6 z-20 mx-auto flex h-auto w-[70%] flex-col items-center justify-center gap-2"
-				>
-					<p class="text-sm text-threat-600">
-						Widget with ID <code>{widget.name}</code> not found.
-					</p>
-					<Button
-						variant="destructive"
-						onclick={() => {
-							removeItem(widget.id);
-						}}><Icon icon="mdi:delete" /> Remove Widget</Button
-					>
-				</div>
 			{/if}
 			<Component bind:character />
 		</Grid>
