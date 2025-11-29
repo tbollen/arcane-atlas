@@ -28,6 +28,7 @@
 	import { toast } from 'svelte-sonner';
 	import { arcaneRiftCharacterMechanics } from '$lib/gameSystems/ArcaneRift/ar_characters';
 	import InfoTooltip from '../partials/InfoTooltip.svelte';
+	import Mastery from '../partials/arcaneRift/Mastery.svelte';
 
 	let {
 		character = $bindable(),
@@ -284,6 +285,70 @@
 										</Button>
 									</div>
 								{/each}
+							</div>
+							<!-- SKILLS -->
+							<div id="Skills">
+								<Header variant="h4">Skills</Header>
+								<!-- SUM INDICATOR -->
+								<p class="text-sm text-muted-foreground">
+									Total sum: {Object.values(character.mechanics[AR_KEY].stats.skills)
+										.map((c) => c.value)
+										.reduce((sum, val) => sum + val, 0)} /
+									{character.mechanics[AR_KEY].rules.skills.maxSum}
+								</p>
+								<section class="mb-4 grid grid-cols-[repeat(auto-fill,minmax(22rem,1fr))] gap-8">
+									{#each Object.values(character.mechanics[AR_KEY].stats.characteristics) as char, index}
+										{@const rules = character.mechanics[AR_KEY].rules.skills}
+										{@const sum = Object.values(character.mechanics[AR_KEY].stats.skills)
+											.map((s) => s.value)
+											.reduce((sum, val) => sum + val, 0)}
+										{@const maxSumReached = sum >= rules.maxSum}
+										<!-- GO THROUGH SKILLS FOR EACH CHARACTERISTIC -->
+										<div
+											id="charskills-{char.name}"
+											class="grid grid-cols-[1fr_2fr] gap-x-4 gap-y-1"
+										>
+											<h5
+												class="col-span-2 bg-obsidian-800 pl-3 font-semibold text-white uppercase"
+											>
+												{char.name}
+											</h5>
+											{#each Object.values(character.mechanics[AR_KEY].stats.skills) as skill, skillIndex}
+												{#if skill.characteristic == char.name}
+													<!-- Name -->
+													<p class="font-semibold">{skill.name}</p>
+													<!-- Value controls -->
+													<div
+														id="char-{skill.name}-valuecontrol"
+														class="flex w-max items-center gap-2"
+													>
+														<Button
+															variant="bold"
+															disabled={skill.value <= 0}
+															onclick={() =>
+																verbose(() =>
+																	character.fn[AR_KEY]!.updateSkill(skill, skill.value - 1)
+																)}><Icon icon="mdi:minus" /></Button
+														>
+														<Mastery
+															value={skill.value}
+															max={rules.maxMastery}
+															class="h-8 w-max border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
+														/>
+														<Button
+															variant="bold"
+															disabled={skill.value >= rules.maxMastery || maxSumReached}
+															onclick={() =>
+																verbose(() =>
+																	character.fn[AR_KEY]!.updateSkill(skill, skill.value + 1)
+																)}><Icon icon="mdi:plus" /></Button
+														>
+													</div>
+												{/if}
+											{/each}
+										</div>
+									{/each}
+								</section>
 							</div>
 						{/if}
 					{/if}
