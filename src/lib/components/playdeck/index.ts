@@ -108,23 +108,23 @@ const placeholderWidget: MappedWidget = {
 
 // Load deck
 /**
- * Converts a StoredDeck from @type StoredDeck to @type StoredDeckWidget
+ * Converts a StoredDeck from @type StoredDeck to @type DeckWidget[]
  * @param deck {StoredDeck} The StoredDeck to convert
  * @param system {DeckSystem} The game system to filter by (optional)
  * @returns {DeckWidgets} The converted deck to be used and rendered
  */
 export function loadDeck(input: StoredDeck, system?: DeckSystem): DeckWidget[] {
-	let widget: MappedWidget;
 	const widgets = input.map((item, index) => {
 		try {
 			// Get widget information from map
-			widget = getWidget(item.componentID);
+			const widget = getWidget(item.componentID);
 			const deckWidget: DeckWidget = { ...item, ...widget, id: `${item.componentID}-${index}` };
 			return deckWidget;
 		} catch (e) {
 			// If widget is not found, log warning and add placeholder (for missing/deleted widgets)
 			console.warn(e, 'adding placeholder');
 			return {
+				...item, // Keep any gridstack info
 				...placeholderWidget,
 				id: `placeholder-${index}`,
 				componentID: 'placeholder',
