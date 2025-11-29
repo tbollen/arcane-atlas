@@ -25,9 +25,6 @@
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import { toast } from 'svelte-sonner';
-	import { arcaneRiftCharacterMechanics } from '$lib/gameSystems/ArcaneRift/ar_characters';
-	import InfoTooltip from '../partials/InfoTooltip.svelte';
 	import Mastery from '../partials/arcaneRift/Mastery.svelte';
 
 	let {
@@ -227,6 +224,66 @@
 						<p class="text-sm text-muted-foreground">
 							Consequences are added and removed on the go. You can edit them in the widget itself
 						</p>
+					{/if}
+					{#if isProperty('stressTracks', AR_KEY)}
+						<!-- STRESS TRACKS -->
+						<Header variant="h3">Stress Tracks</Header>
+						<p class="text-sm text-muted-foreground">
+							Adjust the maximum values for each stress track below
+						</p>
+						<div
+							class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-x-8 gap-y-4"
+						>
+							{#each character.mechanics[AR_KEY].stressTracks as stressTrack}
+								{@const rules = character.mechanics[AR_KEY].rules.stressTracks}
+								<div class="flex flex-row items-center gap-4">
+									<!-- TRACK INFO -->
+									<div class="min-w-0 flex-1">
+										<Header variant="h4">{stressTrack.variant} Stress</Header>
+										<p
+											class="text-sm text-muted-foreground {stressTrack.max >= rules.maxAllowed
+												? 'text-amber-600'
+												: ''}"
+										>
+											Max value: {stressTrack.max} / {rules.maxAllowed}
+										</p>
+									</div>
+									<!-- Value controls -->
+									<div
+										id="char-{stressTrack.variant}-valuecontrol"
+										class="flex w-max flex-shrink-0 items-center gap-2"
+									>
+										<Button
+											variant="bold"
+											disabled={stressTrack.max <= 1}
+											onclick={() =>
+												verbose(() =>
+													character.fn[AR_KEY]!.setStressTrackMax(
+														stressTrack.variant,
+														stressTrack.max - 1
+													)
+												)}><Icon icon="mdi:minus" /></Button
+										>
+										<div
+											class="h-8 w-max border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
+										>
+											{stressTrack.max}
+										</div>
+										<Button
+											variant="bold"
+											disabled={stressTrack.max >= rules.maxAllowed}
+											onclick={() =>
+												verbose(() =>
+													character.fn[AR_KEY]!.setStressTrackMax(
+														stressTrack.variant,
+														stressTrack.max + 1
+													)
+												)}><Icon icon="mdi:plus" /></Button
+										>
+									</div>
+								</div>
+							{/each}
+						</div>
 					{/if}
 					{#if isProperty('stats', AR_KEY)}
 						<!-- STATS -->
