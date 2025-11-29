@@ -20,7 +20,7 @@
 	let compactList = $derived(containerHeight < 300);
 
 	const shortOnlyRowHeight = 'h-[2.5em]';
-	const fullRowHeight = 'h-[4em]';
+	const fullRowHeight = 'min-h-[4em] h-max';
 
 	let maxAspects = $derived(Array(character.rules[AR_KEY]?.aspects.maxAmount || 5).fill(''));
 </script>
