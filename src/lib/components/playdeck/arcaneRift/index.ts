@@ -25,7 +25,7 @@ export const arcaneRiftWidgetMap: SystemWidgetMap = {
 	['stats']: {
 		component: Stats,
 		name: 'Stats',
-		initialLayout: { w: 3, h: 4, min: { w: 2, h: 2 }, max: { w: 6, h: 10 } },
+		initialLayout: { w: 3, h: 4, min: { w: 2, h: 2 }, max: { w: 12, h: 10 } },
 		characterProperties: { [AR_KEY]: ['stats'] }
 	}
 };
