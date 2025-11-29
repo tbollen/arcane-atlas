@@ -6,8 +6,13 @@
 	import type { StoredCharacter } from '$lib/domain/characters/character.svelte';
 	// UI Components
 	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
-	// Set Routes
-	import { base } from '$app/paths';
+
+	// Page and Data
+	import { page } from '$app/state';
+
+	// UI
+	import Icon from '@iconify/svelte';
+
 	interface BaseRoute {
 		path: string;
 		name: string;
@@ -78,10 +83,6 @@
 
 	let currentRoute: string = $derived(page.url.pathname);
 
-	// Imports
-	import Icon from '@iconify/svelte';
-	import { page } from '$app/state';
-
 	// Accept and handle server data
 	let { data } = $props();
 	let dataCharacters = $derived(data.characters) as PrismaCharacter[];
@@ -100,7 +101,7 @@
 
 <section id="navigation" class="navbar border-b-2 border-threat-500 bg-obsidian-50">
 	<div class="z-2">
-		<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Atlas</a>
+		<a href="/" id="logo" class="displayText websiteLogo">Arcane Atlas</a>
 	</div>
 	<!-- Navigation -->
 	<nav class="links">
@@ -110,12 +111,12 @@
 			{:else if typeof route === 'object' && 'dropdown' in route}
 				<!-- Route is a MasterRoute, show dropdown on hover -->
 				<div class="navItem navDropdown linkLine">
-					<a href="{base}/{route.path}">
+					<a href="/{route.path}">
 						{route.name}
 					</a>
 					<div class="navDropdownMenu">
 						{#each route.dropdown as dropdownRoute}
-							<a href="{base}/{dropdownRoute.path}" class="dropdownNavItem">
+							<a href="/{dropdownRoute.path}" class="dropdownNavItem">
 								<Icon icon={dropdownRoute.icon} />
 								{dropdownRoute.name}
 							</a>
@@ -125,7 +126,7 @@
 			{:else}
 				<!-- BaseRoute -->
 				<div class="navItem linkLine" class:active={currentRoute === route.path}>
-					<a href="{base}/{route.path}">
+					<a href="/{route.path}">
 						<!-- <Icon icon={routes[routeName].icon} /> -->
 						{route.name}
 					</a>
