@@ -7,23 +7,22 @@
 	let {
 		value,
 		max,
-		edit,
 		class: className
 	}: {
 		value: number;
 		max: number;
-		edit?: { character: StoredCharacter };
 		class?: HTMLAttributes<HTMLDivElement>['class'];
 	} = $props();
+
+	let borderBoxSize: ResizeObserverSize[] = $state([]);
+	let height: number = $derived(borderBoxSize?.[0]?.blockSize ?? 16);
 </script>
 
 {#snippet Mastery(index: number, value: number)}
-	<button
-		aria-pressed={value >= index}
-		disabled={!edit}
+	<div
 		class="relative flex aspect-square h-[80%]
-		       items-center justify-center overflow-visible
-		       {edit ? 'cursor-pointer' : 'cursor-default'}"
+		       items-center justify-center overflow-visible"
+		style="width: {height * 0.8}px;"
 	>
 		{#if value >= index}
 			<div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
@@ -37,10 +36,10 @@
 			       items-center justify-center rounded-full border-2 border-obsidian-500
 			       bg-white/0"
 		></div>
-	</button>
+	</div>
 {/snippet}
 
-<div class="flex flex-row items-center gap-1 {className}">
+<div class="flex w-fit flex-row items-center gap-1 {className}" bind:borderBoxSize>
 	{#each { length: max } as x, i}
 		{@render Mastery(i + 1, value)}
 	{/each}
