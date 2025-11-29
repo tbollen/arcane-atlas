@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Types and modules
+	import { verbose } from '$lib/utils/feedback/verbose';
 	import {
 		StoredCharacter,
 		type CharacterProperties
@@ -86,17 +87,6 @@
 		propertiesToShow == undefined || // undefined means show all
 			Object.keys(propertiesToShow).length > 1 // if only one system, don't show tabs
 	);
-
-	///////////////////////////////////
-	// HELPER FUNCTIONS FOR UI & FEEDBACK
-
-	function attempt<T>(fn: () => T, fallback = 'Something went wrong.'): T | undefined {
-		try {
-			return fn();
-		} catch (e) {
-			toast.error((e as Error).message ?? fallback);
-		}
-	}
 
 	///////////////////////////////////
 	// VARS FOR INPUTS
@@ -193,7 +183,7 @@
 											size="icon"
 											disabled={index == 0}
 											onclick={() =>
-												attempt(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
+												verbose(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
 										>
 											<Icon icon="mdi:arrow-up" /></Button
 										>
@@ -201,13 +191,13 @@
 											size="icon"
 											disabled={index == character.mechanics[AR_KEY]?.aspects?.length - 1}
 											onclick={() =>
-												attempt(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
+												verbose(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
 										>
 											<Icon icon="mdi:arrow-down" /></Button
 										>
 										<Button
 											size="icon"
-											onclick={() => attempt(() => character.fn[AR_KEY]!.removeAspect(index))}
+											onclick={() => verbose(() => character.fn[AR_KEY]!.removeAspect(index))}
 											><Icon icon="mdi:close" /></Button
 										>
 									</div>
@@ -222,7 +212,7 @@
 							/>
 							<Button
 								onclick={() => {
-									attempt(() => {
+									verbose(() => {
 										character.fn[AR_KEY]!.addAspect(newAspectInput);
 										newAspectInput = { short: '', description: '' };
 									});
@@ -274,7 +264,7 @@
 											variant={char.value <= rules.minValue ? 'ghost' : 'secondary'}
 											disabled={char.value <= rules.minValue}
 											onclick={() =>
-												attempt(() =>
+												verbose(() =>
 													character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value - 1)
 												)}
 										>
@@ -286,7 +276,7 @@
 												: 'secondary'}
 											disabled={char.value >= rules.maxValue || maxSumReached}
 											onclick={() =>
-												attempt(() =>
+												verbose(() =>
 													character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value + 1)
 												)}
 										>
