@@ -102,7 +102,7 @@ const placeholderWidget: MappedWidget = {
 	system: GENERIC_KEY,
 	name: 'Undefined Widget',
 	component: PlaceholderWidget,
-	initialLayout: { w: 3, h: 2, min: { w: 2, h: 2 }, max: { w: 2, h: 2 } },
+	initialLayout: { w: 3, h: 2, min: { w: 3, h: 2 }, max: { w: 3, h: 2 } },
 	characterProperties: {}
 };
 
