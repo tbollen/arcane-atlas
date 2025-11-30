@@ -9,14 +9,15 @@
 		variants: {
 			variant: {
 				default:
-					'text-inherit hover:text-threat-500 transition-colors underline decoration-transparent hover:decoration-threat-500',
+					'text-inherit hover:text-threat-500 transition-colors underline decoration-transparent hover:decoration-threat-500 data-[active=true]:text-threat-500 data-[active=true]:decoration-threat-500',
 				accent:
-					'text-threat-500 underline underline-offset-4 hover:text-threat-600 transition-colors hover:text-threat-700',
-				subtle: 'text-foreground/70 hover:text-foreground transition-colors',
-				bold: 'hover:bg-obsidian-800 hover:text-white px-1 py-0.5 rounded transition-colors',
-				line: 'relative text-foreground no-underline after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:bg-threat-500 after:transition-all after:duration-300 after:-translate-x-1/2 hover:after:w-full hover:after:left-0 hover:after:translate-x-0',
+					'text-threat-500 underline underline-offset-4 hover:text-threat-600 transition-colors hover:text-threat-700 data-[active=true]:text-threat-700',
+				subtle:
+					'text-foreground/70 hover:text-foreground transition-colors data-[active=true]:text-foreground',
+				bold: 'hover:bg-obsidian-800 hover:text-white px-1 py-0.5 rounded transition-colors data-[active=true]:bg-obsidian-800 data-[active=true]:text-white',
+				line: 'relative text-foreground no-underline after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:bg-threat-500 after:transition-all after:duration-300 after:-translate-x-1/2 hover:after:w-full hover:after:left-0 hover:after:translate-x-0 data-[active=true]:after:w-full data-[active=true]:after:left-0 data-[active=true]:after:translate-x-0',
 				marker:
-					'relative text-foreground no-underline before:absolute before:bottom-0 before:left-0 before:h-full before:w-0 before:bg-threat-500 before:-z-10 before:transition-all before:duration-300 hover:before:w-full before:origin-left hover:before:origin-right hover:text-white hover:transition-[color] hover:delay-100'
+					'relative text-foreground no-underline before:absolute before:bottom-0 before:left-0 before:h-full before:w-0 before:bg-threat-500 before:-z-10 before:transition-all before:duration-300 hover:before:w-full before:origin-left hover:before:origin-right hover:text-white hover:transition-[color] hover:delay-100 data-[active=true]:before:w-full data-[active=true]:text-white'
 			},
 			display: {
 				inline: 'inline-flex',
@@ -37,6 +38,7 @@
 			variant?: LinkVariant;
 			display?: LinkDisplay;
 			tooltip?: string | boolean;
+			active?: boolean;
 		};
 </script>
 
@@ -48,6 +50,7 @@
 		ref = $bindable(null),
 		href,
 		tooltip,
+		active = false,
 		children,
 		...restProps
 	}: LinkProps = $props();
@@ -57,6 +60,7 @@
 	<a
 		bind:this={ref}
 		data-slot="button"
+		data-active={active}
 		class={cn(buttonVariants({ variant, display }), className)}
 		{href}
 		{...restProps}
