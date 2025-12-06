@@ -7,7 +7,7 @@ Help us improve Arcane Atlas by contributing code, reporting issues, or suggesti
 ### Feeling generous? 
 Consider sponsoring the project on Ko-fi: [https://ko-fi.com/thomasbollen](https://ko-fi.com/thomasbollen)
 
-## Setup Instructions
+## Setup Instructions (Linux)
 
 Follow these steps to get Arcane Atlas running locally for development or testing. This guide will help you configure environment variables, set up your database, install dependencies, and start the application. After completing these steps, you'll have a working local instance of Arcane Atlas.
 
@@ -22,12 +22,12 @@ Edit `.env` and define the following variables:
 - `DATABASE_URL`: Connection string for your PostgreSQL database. Format: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=SCHEMA`.
 - `BETTER_AUTH_SECRET`: Any crypto-safe key for authentication.
 - `BETTER_AUTH_URL`: Base URL of your app (default: `http://localhost:5173`).
-- `RESEND_API_KEY`: Your Resend email API key (for sending transactional emails).
+- `RESEND_API_KEY`: Your Resend email API key (for sending transactional emails)*.
 - `RESEND_DOMAIN`: Domain extension for sending emails (e.g., `resend.dev`).
 - `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET`: Discord OAuth credentials for social login.
 - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`: GitHub OAuth credentials for social login.
 
-
+**\*Note:** Currently, the API key is set directly in the `.env` file for convenience. In the future, email sending will be dockerized for improved security and flexibility, and the API key will be managed through Docker secrets or environment variables in your container setup.
 ### 2. Start the Database (Docker)
 
 Arcane Atlas uses PostgreSQL as its database. If you don't have PostgreSQL installed locally, you can use Docker Compose to quickly spin up a database container.
@@ -79,7 +79,7 @@ Run:
 ```bash
 npm run dev
 ```
-Or use the provided `launch.json` for VS Code to start and debug the server.
+Or use the provided `launch.json` for VS Code to start and debug the server by pressing F5 or through the Run and Debug panel.
 
 ---
 To create a production version of your app:
