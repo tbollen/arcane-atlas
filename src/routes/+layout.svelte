@@ -24,6 +24,9 @@
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 
+	// Active Character setting
+	import { activeCharacter } from '$lib/stores/activeCharacter.svelte';
+
 	let { children, data } = $props();
 
 	// Layout
@@ -44,13 +47,17 @@
 		updateWidth();
 		window.addEventListener('resize', updateWidth);
 
-		return () => {
-			window.removeEventListener('resize', updateWidth);
-		};
-	});
-
-	onMount(() => {
 		spinner.complete(); // Always remove loading spinner when page mounts
+
+		// ACTIVE CHARACTER
+		// Populate active character data
+		if (data.user) activeCharacter.setUser(data.user as PrismaUser);
+		if (data.characters) activeCharacter.setDataCharacters(data.characters);
+		// Set active character from localStorage if available
+		const storedCharacterID = localStorage.getItem(lsk.activeCharacter);
+		if (storedCharacterID) {
+			activeCharacter.fromKey(storedCharacterID);
+		}
 	});
 </script>
 
