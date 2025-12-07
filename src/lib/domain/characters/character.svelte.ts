@@ -20,6 +20,46 @@ import {
 
 // ID Shorthands
 import type { UserID, CampaignID, CharacterID, CardID } from '..';
+import { clone } from '$lib/utils/serializing'
+import { checkDeckValidity, type StoredDeck } from '$lib/components/playdeck';
+
+// STORED DECK TYPE CHECK & CONVERSION
+/**
+ * Checks if the input is a valid StoredDeck, attempts to convert if possible, and throws errors if not.
+ * @param value - The value to check/convert.
+ * @returns {StoredDeck} - The validated or converted StoredDeck.
+ * @throws {Error} - If the value cannot be converted to a valid StoredDeck.
+ */
+export function toStoredDeck(value: unknown): StoredDeck {
+	// If value is undefined/null, treat as empty deck
+	if (value === undefined || value === null) {
+		return [];
+	}
+	// If value is a JSON string, try to parse it
+	if (typeof value === 'string') {
+		try {
+			const parsed = JSON.parse(value);
+			return toStoredDeck(parsed);
+		} catch (e) {
+			console.log('Error parsing StoredDeck JSON string:', e);
+			return [];
+		}
+	}
+	// If value is already a valid StoredDeck
+	if (Array.isArray(value)) {
+		try {
+			checkDeckValidity(value);
+			console.log('StoredDeck is valid:', Object.values(value));
+			return Object.values(value);
+		} catch (e) {
+			console.log('Error validating StoredDeck array:', e);
+			return [];
+		}
+	}
+
+	console.log('Invalid StoredDeck value type:', typeof value, value);
+	return [];
+}
 
 // TYPES
 type System = keyof CharacterMechanics;
@@ -63,6 +103,8 @@ class Character {
 	systems: System[] = $state([]);
 	mechanics: CharacterMechanics = $state({ [GENERIC_KEY]: {} });
 
+	deck: StoredDeck = $state([])
+
 	// Controllers
 	rules: CharacterRules;
 	fn: CharacterController = new CharacterController(
@@ -78,6 +120,7 @@ class Character {
 
 		this.mechanics = (init?.mechanics as CharacterMechanics) ?? { [GENERIC_KEY]: {} };
 		this.systems = Object.keys(this.mechanics) as System[];
+		this.deck = toStoredDeck(init?.deck);
 
 		// SET UP RULES (TODO: Make this more dynamic) -> currently immutable
 		this.rules = this.systems.reduce(
@@ -230,7 +273,10 @@ export class StoredCharacter extends Character {
 			subtitle: _character?.subtitle ?? '',
 			description: _character.description ?? '',
 			image: _character.imageUrl,
-			mechanics: _character.mechanics
+			mechanics: _character.mechanics,
+
+			// Deck
+			deck: JSON.parse(JSON.stringify(_character.deck)) // Serialize to plain JSON for Prisma compatibility
 		};
 	}
 
@@ -238,7 +284,7 @@ export class StoredCharacter extends Character {
 		return new StoredCharacter({
 			id: generatePrefixedUUID('character'),
 			ownerId: userId,
-			data
+			data: { ...data, deck: JSON.parse(JSON.stringify(toStoredDeck(data?.deck))) },
 		});
 	}
 }
@@ -282,7 +328,9 @@ export class CharacterStore {
 		const newCharacter = new StoredCharacter({
 			id: newId,
 			ownerId: userId,
-			data,
+			data: data
+				? { ...data, deck: data.deck ? JSON.parse(JSON.stringify(toStoredDeck(data.deck))) : undefined }
+				: undefined,
 			clientUserId: userId
 		});
 		// TODO: add caching (but do we really need this?)
