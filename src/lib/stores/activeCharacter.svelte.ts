@@ -2,6 +2,7 @@ import {
 	StoredCharacter,
 	type PrismaCharacterExtended
 } from '$lib/domain/characters/character.svelte';
+import { lsk } from '$lib/utils/storage/keys';
 import { type User as PrismaUser } from '@prisma/client';
 
 class ActiveCharacter {
@@ -30,17 +31,21 @@ class ActiveCharacter {
 		if (!user) {
 			throw new Error('User must be set before setting active character from data.');
 		}
-		this.activeCharacter = StoredCharacter.fromPrisma({ character: prismaCharacter, user: user });
+		this.set(StoredCharacter.fromPrisma({ character: prismaCharacter, user: user }));
 	}
 
 	set(character: StoredCharacter) {
 		this.activeCharacter = character;
+		// Persist to localStorage
+		localStorage.setItem(lsk.activeCharacter, character.id);
 	}
 
 	clear() {
 		this.activeCharacter = undefined;
 		this.user = undefined;
 		this.dataCharacters = [];
+		// Remove from localStorage
+		localStorage.removeItem(lsk.activeCharacter);
 	}
 }
 
