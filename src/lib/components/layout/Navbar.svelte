@@ -5,7 +5,7 @@
 	import type { Character as PrismaCharacter } from '@prisma/client';
 	import type { WidthLayout } from '../../../routes/+layout.svelte';
 	// Stores
-	import { activeCharacter } from '$lib/stores/activeCharacter.svelte';
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
 	import type { StoredCharacter } from '$lib/domain/characters/character.svelte';
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 	// UI Components
@@ -31,6 +31,8 @@
 	import Link from '$lib/components/ui/link/link.svelte';
 	import * as ButtonGroup from '$lib/components/ui/button-group/';
 	import * as Select from '$lib/components/ui/select/';
+
+	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
 
 	interface BaseRoute {
 		path: string;
@@ -126,7 +128,7 @@
 		},
 		{
 			name: 'Cards',
-			path: $activeCharacter ? `cards?character=${$activeCharacter.id}` : 'cards',
+			path: 'cards',
 			icon: 'mdi:cards',
 			description: 'Card collection and editor'
 		}
@@ -144,15 +146,6 @@
 		layout,
 		borderBoxSize = $bindable([])
 	}: { data: LayoutData; layout: WidthLayout; borderBoxSize: ResizeObserverSize[] } = $props();
-
-	let dataCharacters = $derived(data.characters) as PrismaCharacter[];
-
-	// Get active character from store and match from DB for Avatar
-	let character: PrismaCharacter | undefined = $derived(
-		data.user && $activeCharacter && $activeCharacter.ownerId == data.user.id
-			? dataCharacters.find((c) => c.id.toString() == $activeCharacter.id.toString())
-			: undefined
-	);
 
 	// LAYOUT AND RESPONSIVENESS HANDLING
 	let narrowLayout: boolean = $derived(layout === 'narrow');
