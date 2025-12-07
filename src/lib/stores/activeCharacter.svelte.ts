@@ -39,6 +39,8 @@ class ActiveCharacter {
 
 	clear() {
 		this.activeCharacter = undefined;
+		this.user = undefined;
+		this.dataCharacters = [];
 	}
 }
 
