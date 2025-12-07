@@ -23,4 +23,7 @@ model Character {
     image           String
     description     String
     mechanics       Json
+
+    // Deck
+    deck            Json
 }
