@@ -171,6 +171,7 @@
 			console.error(e);
 		}
 		spinner.complete();
+		activeCharacterStore.clear(); // Clear active character on logout
 		invalidateAll(); //Trick to reload context and update Avatar and locals
 		console.log('Signed out');
 	}
@@ -248,6 +249,7 @@ px-4 py-2 print:hidden"
 					<hr class="my-2 border-threat-500" />
 				</Drawer.Title>
 			</Drawer.Header>
+			{activeCharacter?.name ?? 'No Active Character'}
 			<div id="drawerBody" class="flex h-full flex-col overflow-y-auto px-4">
 				<!-- USER INFO -->
 				{#if data.user}

@@ -14,6 +14,8 @@
 
 	// Spinner Store
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
+	// Active Character Store
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
 
 	// Toasts
 	import { toast } from 'svelte-sonner';
@@ -121,6 +123,7 @@
 			console.error(e);
 		}
 		spinner.complete();
+		activeCharacterStore.clear(); // Clear active character on logout
 		invalidateAll(); //Trick to reload context and update Avatar and locals
 		console.log('Signed out');
 		goto('/login');
