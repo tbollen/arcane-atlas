@@ -4,8 +4,8 @@
 	import { type VariantProps, tv } from 'tailwind-variants';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 
-	export const buttonVariants = tv({
-		base: " cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+	export const linkVariants = tv({
+		base: " cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-inherit outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
 				default:
@@ -15,7 +15,9 @@
 				subtle:
 					'text-foreground/70 hover:text-foreground transition-colors data-[active=true]:text-foreground',
 				bold: 'hover:bg-obsidian-800 hover:text-white px-1 py-0.5 rounded transition-colors data-[active=true]:bg-obsidian-800 data-[active=true]:text-white',
-				line: 'relative text-foreground no-underline after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:bg-threat-500 after:transition-all after:duration-300 after:-translate-x-1/2 hover:after:w-full hover:after:left-0 hover:after:translate-x-0 data-[active=true]:after:w-full data-[active=true]:after:left-0 data-[active=true]:after:translate-x-0',
+				line: 'relative text-foreground no-underline after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:max-w-full after:bg-threat-500 after:transition-all after:duration-300 after:-translate-x-1/2 after:origin-center hover:after:w-full data-[active=true]:after:w-[50%] data-[active=true]:hover:after:w-full',
+				lineLeft:
+					'relative text-foreground no-underline before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 before:bg-threat-500 before:transition-all before:duration-300 hover:before:w-full before:origin-left hover:before:origin-right data-[active=true]:before:w-full',
 				marker:
 					'relative text-foreground no-underline before:absolute before:bottom-0 before:left-0 before:h-full before:w-0 before:bg-threat-500 before:-z-10 before:transition-all before:duration-300 hover:before:w-full before:origin-left hover:before:origin-right hover:text-white hover:transition-[color] hover:delay-100 data-[active=true]:before:w-full data-[active=true]:text-white'
 			},
@@ -30,8 +32,8 @@
 		}
 	});
 
-	export type LinkVariant = VariantProps<typeof buttonVariants>['variant'];
-	export type LinkDisplay = VariantProps<typeof buttonVariants>['display'];
+	export type LinkVariant = VariantProps<typeof linkVariants>['variant'];
+	export type LinkDisplay = VariantProps<typeof linkVariants>['display'];
 
 	export type LinkProps = WithElementRef<HTMLLinkAttributes> &
 		WithElementRef<HTMLAnchorAttributes> & {
@@ -39,6 +41,7 @@
 			display?: LinkDisplay;
 			tooltip?: string | boolean;
 			active?: boolean;
+			href: string;
 		};
 </script>
 
@@ -61,7 +64,7 @@
 		bind:this={ref}
 		data-slot="button"
 		data-active={active}
-		class={cn(buttonVariants({ variant, display }), className)}
+		class={cn(linkVariants({ variant, display }), className)}
 		{href}
 		{...restProps}
 	>
@@ -72,7 +75,7 @@
 {#if tooltip}
 	<Tooltip.Provider>
 		<Tooltip.Root>
-			<Tooltip.Trigger class="cursor-help self-baseline">
+			<Tooltip.Trigger>
 				{@render link()}
 			</Tooltip.Trigger>
 			<Tooltip.Content>
