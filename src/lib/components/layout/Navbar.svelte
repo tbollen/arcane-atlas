@@ -31,6 +31,7 @@
 	import Link from '$lib/components/ui/link/link.svelte';
 	import * as ButtonGroup from '$lib/components/ui/button-group/';
 	import * as Select from '$lib/components/ui/select/';
+	import Label from '../ui/label/label.svelte';
 
 	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
 
@@ -102,11 +103,24 @@
 	// Routes for managing things during downtime
 	const backstageRoutes: Array<BaseRoute> = [
 		{
-			name: 'Campaigns',
+			name: 'Cards',
+			icon: 'mdi:cards',
+			description: 'Create and edit game cards',
+			path: 'cards'
+		},
+		{
+			name: 'Characters',
+			icon: 'mdi:account',
+			description: 'Manage my characters',
+			requiresLogin: true,
+			path: 'character'
+		},
+		{
+			name: 'Campaign',
 			icon: 'mdi:book-open-variant',
 			description: 'Manage my campaigns',
 			requiresLogin: true,
-			path: 'campaigns'
+			path: 'campaign'
 		}
 	];
 
@@ -127,8 +141,8 @@
 			requiresLogin: true
 		},
 		{
-			name: 'Cards',
-			path: 'cards',
+			name: 'My Cards', // TODO: dynamic set name from campaign data
+			path: 'cards', //TODO change to play/cards when implemented
 			icon: 'mdi:cards',
 			description: 'Card collection and editor'
 		}
@@ -171,7 +185,6 @@
 			console.error(e);
 		}
 		spinner.complete();
-		activeCharacterStore.clear(); // Clear active character on logout
 		invalidateAll(); //Trick to reload context and update Avatar and locals
 		console.log('Signed out');
 	}
@@ -226,10 +239,6 @@ px-4 py-2 print:hidden"
 
 	<!-- Badges -->
 	<div class="flex justify-end">
-		<!-- <a class="badge" href="https://github.com/tbollen/Game_Card_Builder" target="_blank">
-			<Icon icon="mdi:github" />
-		</a> -->
-		<!-- <CharacterAvatar user={data.user} {character} /> -->
 		<Button variant="ghost" class="badge ml-2 text-xl" onclick={() => (drawerOpen = true)}>
 			<Icon icon="mdi:menu" mode="bg" />
 		</Button>
@@ -249,7 +258,6 @@ px-4 py-2 print:hidden"
 					<hr class="my-2 border-threat-500" />
 				</Drawer.Title>
 			</Drawer.Header>
-			{activeCharacter?.name ?? 'No Active Character'}
 			<div id="drawerBody" class="flex h-full flex-col overflow-y-auto px-4">
 				<!-- USER INFO -->
 				{#if data.user}
@@ -291,18 +299,47 @@ px-4 py-2 print:hidden"
 
 				<nav class="flex flex-col gap-2 py-2">
 					<!-- MODES -->
-					<ButtonGroup.Root>
-						<Button
-							onclick={() => (currentMode = 'backstage')}
-							variant={currentMode === 'backstage' ? 'bold' : 'default'}>Backstage</Button
-						>
-						<Button
-							onclick={() => (currentMode = 'play')}
-							variant={currentMode === 'play' ? 'bold' : 'default'}>Play</Button
-						>
-					</ButtonGroup.Root>
+					{#if data.user}
+						<ButtonGroup.Root>
+							<Button
+								onclick={() => (currentMode = 'backstage')}
+								variant={currentMode === 'backstage' ? 'bold' : 'default'}>Backstage</Button
+							>
+							<Button
+								onclick={() => (currentMode = 'play')}
+								variant={currentMode === 'play' ? 'bold' : 'default'}>Play</Button
+							>
+						</ButtonGroup.Root>
+					{/if}
 					<!-- LINKS -->
-					{#if currentMode === 'backstage'}
+					{#if currentMode === 'backstage' || !data.user}
+						{#each generalRoutes as route}
+							{#if route.visibility === false}
+								<!-- Skip hidden routes -->
+							{:else if !route.requiresLogin || (route.requiresLogin && data.user)}
+								<!-- BaseRoute -->
+								<a
+									href="/{route.path}"
+									class="flex flex-col gap-1 rounded-full px-4 py-2 hover:bg-obsidian-500/10"
+									onclick={closeDrawer}
+								>
+									<Link
+										href="/{route.path}"
+										active={currentRoute == `/${route.path}`}
+										variant="lineLeft"
+										class="w-max justify-start"
+									>
+										<div class="flex flex-row items-center gap-2">
+											<Icon icon={route.icon} class="text-inherit" />
+											<span>{route.name}</span>
+										</div>
+									</Link>
+									{#if !mobileLayout}
+										<p class="text-sm text-muted-foreground">{route.description}</p>
+									{/if}
+								</a>
+							{/if}
+						{/each}
 						{#each backstageRoutes as route}
 							{#if route.visibility === false}
 								<!-- Skip hidden routes -->
@@ -332,12 +369,30 @@ px-4 py-2 print:hidden"
 						{/each}
 					{:else if currentMode === 'play'}
 						<!-- CHARACTER SELECTION -->
-						<Select.Root type="single">
-							<Select.Trigger class="w-full">Cheese</Select.Trigger>
+						<Label for="activeCharacter" class="mt-2 mb-1 text-sm font-medium"
+							>Select Character</Label
+						>
+						<Select.Root
+							name="activeCharacter"
+							type="single"
+							onValueChange={(value) => activeCharacterStore.fromKey(value)}
+							value={activeCharacter?.id}
+						>
+							<Select.Trigger class="h-max! w-full border-0 shadow-none hover:bg-obsidian-500/10">
+								{#if activeCharacter}
+									<CharacterAvatar character={activeCharacter.toPrisma()} />
+								{:else}
+									<span class="text-muted-foreground">Select Character</span>
+								{/if}
+							</Select.Trigger>
 							<Select.Content class="w-full">
 								{#each data.characters as character}
-									<Select.Item value={character.id}>
-										{character.name}
+									<Select.Item
+										class="h-max"
+										value={character.id}
+										onclick={() => activeCharacterStore.fromData(character)}
+									>
+										<CharacterAvatar {character} />
 									</Select.Item>
 								{/each}
 							</Select.Content>
@@ -371,12 +426,6 @@ px-4 py-2 print:hidden"
 						{/each}
 					{/if}
 				</nav>
-				<Button
-					variant="bold"
-					class={mobileLayout ? 'mt-4' : 'mt-auto'}
-					href="playdeck"
-					onclick={closeDrawer}>Start playing!</Button
-				>
 			</div>
 			<!-- CONTENT GOES HERE -->
 			<Drawer.Footer>
