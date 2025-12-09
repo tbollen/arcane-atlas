@@ -6,11 +6,10 @@
 	import '../app.css';
 
 	// Svelte stuff
-	import { onMount, setContext } from 'svelte';
+	import { onMount } from 'svelte';
 
 	// Utils
-	import { lsk, ck } from '$lib/utils/storage/keys';
-	import { StoredCharacter } from '$lib/domain/characters/character.svelte';
+	import { lsk } from '$lib/utils/storage/keys';
 	import type { User as PrismaUser } from '@prisma/client';
 
 	// Import Style
@@ -50,15 +49,33 @@
 		spinner.complete(); // Always remove loading spinner when page mounts
 
 		// ACTIVE CHARACTER
-		// Populate active character data
-		if (data.user) activeCharacter.setUser(data.user as PrismaUser);
-		if (data.characters) activeCharacter.setDataCharacters(data.characters);
-		// Set active character from localStorage if available
-		const storedCharacterID = localStorage.getItem(lsk.activeCharacter);
-		if (storedCharacterID) {
-			activeCharacter.fromKey(storedCharacterID);
-		}
+		populateActiveCharacter();
 	});
+
+	function populateActiveCharacter() {
+		// ACTIVE CHARACTER
+		// Clear active character if no user (not logged in)
+		if (!data.user) {
+			activeCharacter.clear();
+			return;
+		}
+		// Populate active character data
+		activeCharacter.setUser(data.user as PrismaUser);
+		if (data.characters) activeCharacter.setDataCharacters(data.characters);
+
+		// If the user has only one character, always set it as active
+		if (data.characters.length === 1) {
+			activeCharacter.fromData(data.characters[0]);
+			return; // No need to check localStorage
+		}
+		// Set active character from localStorage if available
+		if (typeof window !== 'undefined') {
+			const storedCharacterID = localStorage.getItem(lsk.activeCharacter);
+			if (storedCharacterID) {
+				activeCharacter.fromKey(storedCharacterID);
+			}
+		}
+	}
 </script>
 
 <!-- TOASTER -->

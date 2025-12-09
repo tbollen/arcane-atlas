@@ -12,7 +12,7 @@
 	import { lsk } from '$lib/utils/storage/keys';
 
 	// Active Character Store
-	import { activeCharacter } from '$lib/stores/activeCharacter.svelte';
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
 
 	// Props
 	interface Props {
@@ -21,11 +21,14 @@
 
 	var { character }: Props = $props();
 
-	let isActive = $derived($activeCharacter && $activeCharacter.id == character.id);
+	// Active Character
+	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
+
+	let isActive = $derived(activeCharacter && activeCharacter.id == character.id);
 
 	// FUNCTIONS
 	function setActiveCharacter(character: StoredCharacter) {
-		$activeCharacter = character;
+		activeCharacterStore.set(character);
 		localStorage.setItem(lsk.activeCharacter, character.id);
 	}
 </script>
