@@ -2,11 +2,9 @@
 	// Svelte
 	import { goto, invalidateAll } from '$app/navigation';
 	// Types
-	import type { Character as PrismaCharacter } from '@prisma/client';
 	import type { WidthLayout } from '../../../routes/+layout.svelte';
 	// Stores
 	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
-	import type { StoredCharacter } from '$lib/domain/characters/character.svelte';
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
 	// UI Components
 	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
@@ -31,7 +29,6 @@
 	import Link from '$lib/components/ui/link/link.svelte';
 	import * as ButtonGroup from '$lib/components/ui/button-group/';
 	import * as Select from '$lib/components/ui/select/';
-	import Label from '../ui/label/label.svelte';
 
 	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
 
@@ -245,6 +242,14 @@ px-4 py-2 print:hidden"
 
 	<!-- Badges -->
 	<div class="flex justify-end">
+		<!-- User account -->
+		<Avatar.Root class="size-10 cursor-pointer" onclick={() => goto('/account')}>
+			<Avatar.Image src={data.user?.image ?? undefined} alt={data.user?.name ?? 'User Avatar'} />
+			<Avatar.Fallback>
+				<Icon icon="mdi:account-circle" class="size-10 text-muted-foreground" />
+			</Avatar.Fallback>
+		</Avatar.Root>
+		<!-- Hamburger menu button -->
 		<Button variant="ghost" class="badge ml-2 text-xl" onclick={() => (drawerOpen = true)}>
 			<Icon icon="mdi:menu" mode="bg" />
 		</Button>
