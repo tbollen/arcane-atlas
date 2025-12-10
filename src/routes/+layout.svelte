@@ -64,7 +64,7 @@
 		if (data.characters) activeCharacter.setDataCharacters(data.characters);
 
 		// If the user has only one character, always set it as active
-		if (data.characters.length === 1) {
+		if (data.characters.length === 1 && data.characters[0] !== undefined) {
 			activeCharacter.fromData(data.characters[0]);
 			return; // No need to check localStorage
 		}
