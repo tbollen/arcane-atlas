@@ -6,7 +6,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';
 	import Mastery from '$lib/components/partials/arcaneRift/Mastery.svelte';
-	import InfoTooltip from '$lib/components/partials/InfoTooltip.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import * as Dialog from '$lib/components/ui/dialog';
 
