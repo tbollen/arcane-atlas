@@ -145,7 +145,7 @@
 				const colNum = parseInt(key);
 				// Check if key is a number and valid column
 				if (
-					typeof colNum === 'number' && // is a number
+					!isNaN(colNum) && // is a number (is not NaN)
 					colNum >= deckConfig.minColumns && // is above min columns
 					colNum <= deckConfig.maxColumns && // is below max columns
 					!deckConfig.columnsToKeep.includes(colNum) // is NOT in columns to keep
@@ -221,7 +221,7 @@
 	// GRID VARIABLES, recalculated in recalculateGrid()
 	var container: HTMLDivElement;
 	let containerWidth = $state(CELLSIZE); //container width in pixels, initialize to cellsize
-	let columns = $state(1); //number of columns, initialize to 1
+	let columns = $state(MIN_COLUMNS); //number of columns, initialize to 1
 	let cols = $derived([[1000, columns]]);
 
 	/////////////////////////////////
