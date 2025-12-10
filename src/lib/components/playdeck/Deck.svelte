@@ -367,16 +367,25 @@
 	<ButtonGroup.Root>
 		<Button
 			variant={!editDeck && !editItems ? 'bold' : 'ghost'}
+			tooltip="Hide editing options"
 			onclick={() => toggleEditMode('view')}
 		>
 			<Icon icon="mdi:play" />
 			Play
 		</Button>
-		<Button variant={editItems ? 'bold' : 'ghost'} onclick={() => toggleEditMode('editItems')}>
-			<Icon icon="mdi:account" />
-			Character
+		<Button
+			variant={editItems ? 'bold' : 'ghost'}
+			onclick={() => toggleEditMode('editItems')}
+			tooltip="Edit information on the widgets"
+		>
+			<Icon icon="mdi:content-copy" />
+			Content
 		</Button>
-		<Button variant={editDeck ? 'bold' : 'ghost'} onclick={() => toggleEditMode('editDeck')}>
+		<Button
+			variant={editDeck ? 'bold' : 'ghost'}
+			onclick={() => toggleEditMode('editDeck')}
+			tooltip="Edit the deck layout"
+		>
 			<Icon icon="mdi:view-dashboard" />
 			Layout
 		</Button>
@@ -404,7 +413,7 @@
 				tooltip="See all character fields"
 			>
 				<Icon icon="mdi:format-list-bulleted" />
-				All Fields
+				Edit Character
 			</Button>
 		{/if}
 
@@ -428,15 +437,6 @@
 		{/if}
 	</div>
 </div>
-<!-- DIALOGS -->
-<AddWidgetDialog
-	onAdd={(widgets) => {
-		addToDeck(widgets);
-	}}
-	{character}
-	bind:open={addWidgetDialog}
-/>
-<EditDialog bind:open={edit.open} componentID={edit.componentID} bind:character />
 <!-- Deck -->
 <div id="DeckWrapper" class="relative flex w-full justify-center">
 	<div
@@ -506,6 +506,16 @@
 		{/if}
 	</div>
 </div>
+
+<!-- DIALOGS -->
+<AddWidgetDialog
+	onAdd={(widgets) => {
+		addToDeck(widgets);
+	}}
+	{character}
+	bind:open={addWidgetDialog}
+/>
+<EditDialog bind:open={edit.open} componentID={edit.componentID} bind:character />
 
 <style lang="postcss">
 	:global(.svlt-grid-shadow) {
