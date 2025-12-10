@@ -2,7 +2,9 @@
 	// Import UI components
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
+	import * as ButtonGroup from '$lib/components/ui/button-group';
 	import EditDialog from './EditDialog.svelte';
+	import { Header } from '$lib/components/typography';
 
 	// Import partials
 	import GameSystemSelector from './GameSystemSelector.svelte';
@@ -45,6 +47,7 @@
 	import { toast } from 'svelte-sonner';
 	import { defaultDeckConfig, type DeckConfig } from './deckConfig';
 	import { invalidateAll } from '$app/navigation';
+	import AddWidgetDialog from '../../../routes/playdeck/AddWidgetDialog.svelte';
 
 	let {
 		deck = $bindable(),
@@ -55,6 +58,11 @@
 		character: StoredCharacter;
 		config?: DeckConfig;
 	} = $props();
+
+	////////////////////////////////
+	// SAVE TRACKING
+
+	let unsaved: boolean = $state(false);
 
 	////////////////////////////////
 	// DECK FUNCTIONS
@@ -300,6 +308,10 @@
 		}
 	}
 
+	// DIALOG OPENING
+	let addWidgetDialog: boolean = $state(false);
+	let editLayoutDialog: boolean = $state(false);
+
 	onMount(() => {
 		recalculateGrid();
 		// Re-calculate grid on window resize
@@ -309,82 +321,155 @@
 	});
 </script>
 
-<!-- DEBUG info -->
-{#if editDeck}
-	<!-- TODO: FIX -->
-	<!-- <GameSystemSelector bind:character bind:edit={editDeck} bind:system /> -->
-{/if}
-Current Layout: {currentLayout.name} / {currentLayout.width}px
-<br />
-Columns: {columns} // Width: {containerWidth}
-<!-- Dynamic Edit Dialog -->
+<!-- EDIT BAR -->
+<div id="Actions" class="my-4 flex flex-row items-center gap-8">
+	<div class="flex flex-col">
+		<Header tag="h2" variant="h3">{character.name}'s Deck</Header>
+		<Button
+			size="xs"
+			class="inline-block w-max"
+			variant="ghost"
+			onclick={() => (editLayoutDialog = true)}
+			>{currentLayout.name} ({currentLayout.columns})</Button
+		>
+	</div>
+
+	<!-- Mode Toggle Buttons -->
+	<ButtonGroup.Root>
+		<Button
+			variant={!editDeck && !editItems ? 'bold' : 'ghost'}
+			onclick={() => toggleEditMode('view')}
+		>
+			<Icon icon="mdi:play" />
+			Play
+		</Button>
+		<Button variant={editItems ? 'bold' : 'ghost'} onclick={() => toggleEditMode('editItems')}>
+			<Icon icon="mdi:account" />
+			Character
+		</Button>
+		<Button variant={editDeck ? 'bold' : 'ghost'} onclick={() => toggleEditMode('editDeck')}>
+			<Icon icon="mdi:view-dashboard" />
+			Layout
+		</Button>
+	</ButtonGroup.Root>
+
+	<!-- Context Actions -->
+	<div id="contextActions" class="ml-auto flex flex-grow flex-wrap items-center justify-end gap-2">
+		{#if editDeck}
+			<Button
+				size="sm"
+				onclick={() => (addWidgetDialog = true)}
+				variant="bold"
+				tooltip="Add a new widget to the deck"
+			>
+				<Icon icon="mdi:plus" />
+				Add Widget
+			</Button>
+		{/if}
+
+		{#if editItems}
+			<Button
+				size="sm"
+				onclick={() => (edit.open = true)}
+				variant="secondary"
+				tooltip="See all character fields"
+			>
+				<Icon icon="mdi:format-list-bulleted" />
+				All Fields
+			</Button>
+		{/if}
+
+		<!-- Save Button -->
+		{#if editDeck || editItems || unsaved}
+			<Button size="sm" onclick={saveDeck} variant="blossom" spinner={{ id: 'save' }}>
+				{#if unsaved}
+					<Icon icon="mdi:floppy" />
+					Save
+				{:else}
+					<Icon icon="mdi:check" />
+					Saved
+				{/if}
+			</Button>
+		{/if}
+	</div>
+</div>
+<!-- DIALOGS -->
+<AddWidgetDialog
+	onAdd={(widgets) => {
+		addToDeck(widgets);
+	}}
+	{character}
+	bind:open={addWidgetDialog}
+/>
 <EditDialog bind:open={edit.open} componentID={edit.componentID} bind:character />
 <!-- Deck -->
-<div
-	id="Deck"
-	bind:this={container}
-	class="outline-obisidian-500 flex flex-row flex-wrap rounded-2xl outline-1
+<div id="DeckWrapper" class="relative flex w-full justify-center">
+	<div
+		id="Deck"
+		bind:this={container}
+		class="outline-obisidian-500 rounded-2xl outline-1
 	{editItems ? editItemsStyler : ''}
 	[&_.svlt-grid-item]:overflow-hidden [&_.svlt-grid-item]:rounded-lg [&_.svlt-grid-item]:outline-blossom-500
 	[&_.svlt-grid-resizer]:z-20 [&_.svlt-grid-resizer::after]:h-4! [&_.svlt-grid-resizer::after]:w-4! [&_.svlt-grid-resizer::after]:border-obsidian-50!"
-	style="width: {containerWidth}px !important;"
->
-	{#if items.length !== 0}
-		<Grid {items} on:change={handleGridChange} rowHeight={CELLSIZE} let:item let:dataItem {cols}>
-			{@const widget = dataItem as DeckWidget}
-			{@const Component = dataItem.component as DeckWidget['component']}
-			{#if editDeck}
-				<!-- Drag handle overlay -->
-				<div
-					id="overlay"
-					class="absolute inset-0 z-10 flex
+		style="width: {containerWidth}px !important;"
+	>
+		{#if items.length !== 0}
+			<Grid {items} on:change={handleGridChange} rowHeight={CELLSIZE} let:item let:dataItem {cols}>
+				{@const widget = dataItem as DeckWidget}
+				{@const Component = dataItem.component as DeckWidget['component']}
+				{#if editDeck}
+					<!-- Drag handle overlay -->
+					<div
+						id="overlay"
+						class="absolute inset-0 z-10 flex
  					cursor-move items-center
 					justify-center bg-foreground/20
 					text-3xl text-background transition-colors"
-					title="Drag"
-				>
-					<Icon icon="mdi:drag" class="text-6xl" />
-				</div>
-				<!-- Delete button -->
-				<Button
-					onclick={() => removeItem(widget.id)}
-					size="icon"
-					variant="default"
-					class="text:threat-500 absolute top-1 right-1 z-30  text-threat-500 hover:bg-threat-500 hover:text-white"
-				>
-					<Icon icon="mdi:delete" />
-				</Button>
-				<!-- System Badge -->
-				<!-- Resizer Icon -->
-				<Icon
-					icon="mdi:arrow-expand"
-					class="absolute right-1 bottom-1 z-[11] scale-x-[-1] text-xl text-obsidian-50"
-				/>
-			{:else if editItems}
-				<button
-					id="overlay"
-					hidden={Object.keys(widget.characterProperties).length === 0}
-					class="absolute inset-0 z-10 flex
+						title="Drag"
+					>
+						<Icon icon="mdi:drag" class="text-6xl" />
+					</div>
+					<!-- Delete button -->
+					<Button
+						onclick={() => removeItem(widget.id)}
+						size="icon"
+						variant="default"
+						class="text:threat-500 absolute top-1 right-1 z-30  text-threat-500 hover:bg-threat-500 hover:text-white"
+					>
+						<Icon icon="mdi:delete" />
+					</Button>
+					<!-- System Badge -->
+					<!-- Resizer Icon -->
+					<Icon
+						icon="mdi:arrow-expand"
+						class="absolute right-1 bottom-1 z-[11] scale-x-[-1] text-xl text-obsidian-50"
+					/>
+				{:else if editItems}
+					<button
+						id="overlay"
+						hidden={Object.keys(widget.characterProperties).length === 0}
+						class="absolute inset-0 z-10 flex
 					cursor-pointer items-center justify-center
 					bg-transparent text-3xl text-transparent transition-colors
 					hover:bg-foreground/50 hover:text-background"
-					onclick={() => {
-						console.log('Data item', dataItem);
-						edit = {
-							open: true,
-							componentID: dataItem.componentID,
-							editableProperties: dataItem.editableProperties
-						};
-						edit = edit;
-					}}
-					title="Open edit dialog"
-				>
-					<Icon icon="mdi:pencil" />
-				</button>
-			{/if}
-			<Component bind:character />
-		</Grid>
-	{/if}
+						onclick={() => {
+							console.log('Data item', dataItem);
+							edit = {
+								open: true,
+								componentID: dataItem.componentID,
+								editableProperties: dataItem.editableProperties
+							};
+							edit = edit;
+						}}
+						title="Open edit dialog"
+					>
+						<Icon icon="mdi:pencil" />
+					</button>
+				{/if}
+				<Component bind:character />
+			</Grid>
+		{/if}
+	</div>
 </div>
 
 <style lang="postcss">

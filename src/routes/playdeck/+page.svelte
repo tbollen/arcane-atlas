@@ -69,17 +69,8 @@
 	let editDeck: boolean = $state(false);
 	let editItems: boolean = $state(false);
 
-	// Dialog vars
-	let addWidgetDialog: boolean = $state(false);
-	let selectedWidgets: string[] = $state([]);
-
 	//////////////////////////
 	// DECK FUNCTIONS
-
-	// Save changes to the deck
-	async function saveDeck() {
-		await DeckComponent.saveDeck();
-	}
 
 	function unsetActiveCharacter() {
 		localStorage.removeItem(lsk.activeCharacter);
@@ -139,40 +130,6 @@
 			</button>
 		{/each}
 	{:else}
-		<div id="Actions" class="my-4 flex flex-row items-center gap-2">
-			<Header variant="h2" class="mr-4">{character.name}</Header>
-			{#if !editDeck && !editItems}
-				<Button onclick={() => toggleEditMode('editDeck')} variant="advanced"
-					><Icon icon="mdi:view-dashboard-edit" />Edit Deck</Button
-				>
-				<Button onclick={() => toggleEditMode('editItems')} variant="advanced"
-					><Icon icon="mdi:pencil" />Edit Content</Button
-				>
-				<Button onclick={unsetActiveCharacter} variant="destructive"
-					>Select different character</Button
-				>
-			{:else}
-				<Button onclick={() => toggleEditMode('view')} variant="secondary"
-					><Icon icon="mdi:eye" />View</Button
-				>
-				<Button onclick={saveDeck} variant="success" spinner={{ id: 'save' }}
-					><Icon icon="mdi:floppy" />Save</Button
-				>
-				{#if editDeck}
-					<Button onclick={() => (addWidgetDialog = true)} variant="success"
-						><Icon icon="mdi:plus" />Add Widget</Button
-					>
-				{/if}
-			{/if}
-
-			<AddWidgetDialog
-				onAdd={(widgets) => {
-					DeckComponent.addToDeck(widgets);
-				}}
-				{character}
-				bind:open={addWidgetDialog}
-			/>
-		</div>
 		<Deck bind:this={DeckComponent} {character} bind:deck config={deckConfig} />
 	{/if}
 </main>
