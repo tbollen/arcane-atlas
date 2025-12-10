@@ -46,7 +46,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { defaultDeckConfig, type DeckConfig } from './deckConfig';
-	import { invalidateAll } from '$app/navigation';
+	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
 	import AddWidgetDialog from '../../../routes/playdeck/AddWidgetDialog.svelte';
 
 	let {
@@ -63,6 +63,13 @@
 	// SAVE TRACKING
 
 	let unsaved: boolean = $state(false);
+	let lastCharacterState = $derived(character.toPrisma());
+
+	// Track changes to character
+	$effect(() => {
+		character.toPrisma();
+		unsaved = character.toPrisma() !== lastCharacterState;
+	});
 
 	////////////////////////////////
 	// DECK FUNCTIONS
@@ -181,6 +188,8 @@
 			.then((response) => {
 				toast.success('Character updated');
 				invalidateAll();
+				// Set saved
+				unsaved = false;
 				return response; // return the response for further handling
 			})
 			.catch((error) => {
@@ -264,6 +273,9 @@
 			});
 			// UPDATE DECK
 			deck = itemsToDeck(items);
+
+			// SET UNSAVED
+			unsaved = true;
 		}
 	}
 
@@ -318,6 +330,23 @@
 		window.addEventListener('resize', recalculateGrid);
 		// Set editMode to 'view'
 		toggleEditMode('view');
+		// Set saved state
+		unsaved = false;
+	});
+
+	beforeNavigate((navigation) => {
+		// Warn if unsaved changes
+		if (unsaved) {
+			const confirmLeave = confirm(
+				'You have unsaved changes in your deck. Do you want to leave without saving?'
+			);
+			if (!confirmLeave) {
+				navigation.cancel();
+			} else {
+				// Clean up
+				window.removeEventListener('resize', recalculateGrid);
+			}
+		}
 	});
 </script>
 
@@ -381,7 +410,13 @@
 
 		<!-- Save Button -->
 		{#if editDeck || editItems || unsaved}
-			<Button size="sm" onclick={saveDeck} variant="blossom" spinner={{ id: 'save' }}>
+			<Button
+				size="sm"
+				onclick={saveDeck}
+				disabled={!unsaved}
+				variant="blossom"
+				spinner={{ id: 'save' }}
+			>
 				{#if unsaved}
 					<Icon icon="mdi:floppy" />
 					Save
