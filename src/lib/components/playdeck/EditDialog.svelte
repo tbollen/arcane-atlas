@@ -425,9 +425,3 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
-
-<Button
-	onclick={() => {
-		open = true;
-	}}>OPEN</Button
->
