@@ -8,6 +8,9 @@
 		spinner as spinnerStore
 	} from '$lib/stores/loadingSpinner.svelte';
 
+	// Import Tooltip
+	import * as Tooltip from '$lib/components/ui/tooltip';
+
 	export const buttonVariants = tv({
 		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
@@ -41,6 +44,26 @@
 		}
 	});
 
+	export const tooltipVariants = tv({
+		variants: {
+			variant: {
+				default: 'bg-secondary text-secondary-foreground',
+				blossom: 'bg-blossom-700 text-primary-foreground',
+				bold: 'bg-obsidian-900 text-primary-foreground',
+				advanced: 'bg-weave-500 text-primary-foreground',
+				destructive: 'bg-threat-500 text-white',
+				success: 'bg-success-500 text-white',
+				outline: 'bg-background text-foreground border',
+				secondary: 'bg-secondary text-secondary-foreground',
+				ghost: 'bg-accent text-accent-foreground',
+				link: 'bg-transparent text-primary underline-offset-4'
+			}
+		},
+		defaultVariants: {
+			variant: 'default'
+		}
+	});
+
 	export type ButtonVariant = VariantProps<typeof buttonVariants>['variant'];
 	export type ButtonSize = VariantProps<typeof buttonVariants>['size'];
 
@@ -49,6 +72,7 @@
 			variant?: ButtonVariant;
 			size?: ButtonSize;
 			spinner?: SpinnerComponent;
+			tooltip?: string;
 		};
 </script>
 
@@ -62,6 +86,7 @@
 		type = 'button',
 		disabled,
 		spinner = undefined,
+		tooltip,
 		children,
 		...restProps
 	}: ButtonProps = $props();
@@ -73,44 +98,55 @@
 	let isDisabled: boolean | undefined = $derived(disabled || (isLoading && !spinner?.keepEnabled));
 </script>
 
-{#if href}
-	<a
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		href={disabled ? undefined : href}
-		aria-disabled={disabled}
-		role={disabled ? 'link' : undefined}
-		tabindex={disabled ? -1 : undefined}
-		{...restProps}
-	>
-		{@render children?.()}
-	</a>
-{:else}
-	<button
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
-		{type}
-		disabled={isDisabled}
-		{...restProps}
-	>
-		{#if isLoading}
-			<Spinner />
-			{#if spinner?.keepMessage}
-				{@render children?.()}
-			{:else}
-				{spinnerStore.message}
-			{/if}
-		{:else}
+{#snippet Button()}
+	{#if href}
+		<a
+			bind:this={ref}
+			data-slot="button"
+			class={cn(buttonVariants({ variant, size }), className)}
+			href={disabled ? undefined : href}
+			aria-disabled={disabled}
+			role={disabled ? 'link' : undefined}
+			tabindex={disabled ? -1 : undefined}
+			{...restProps}
+		>
 			{@render children?.()}
-		{/if}
-	</button>
-{/if}
+		</a>
+	{:else}
+		<button
+			bind:this={ref}
+			data-slot="button"
+			class={cn(buttonVariants({ variant, size }), className)}
+			{type}
+			disabled={isDisabled}
+			{...restProps}
+		>
+			{#if isLoading}
+				<Spinner />
+				{#if spinner?.keepMessage}
+					{@render children?.()}
+				{:else}
+					{spinnerStore.message}
+				{/if}
+			{:else}
+				{@render children?.()}
+			{/if}
+		</button>
+	{/if}
+{/snippet}
 
-<style>
-	a.default,
-	button.default {
-		color: red !important;
-	}
-</style>
+{#if tooltip}
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				<div>{@render Button()}</div>
+			</Tooltip.Trigger>
+			<Tooltip.Content
+				arrowClasses={cn(tooltipVariants({ variant }))}
+				class={cn(tooltipVariants({ variant }))}>{tooltip}</Tooltip.Content
+			>
+		</Tooltip.Root>
+	</Tooltip.Provider>
+{:else}
+	{@render Button()}
+{/if}
