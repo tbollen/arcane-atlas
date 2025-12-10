@@ -100,59 +100,52 @@
 		}
 	];
 
-	// Routes for managing things during downtime
-	const backstageRoutes: Array<BaseRoute> = [
-		{
-			name: 'Cards',
-			icon: 'mdi:cards',
-			description: 'Create and edit game cards',
-			path: 'cards'
-		},
-		{
-			name: 'Characters',
-			icon: 'mdi:account',
-			description: 'Manage my characters',
-			requiresLogin: true,
-			path: 'character'
-		},
-		{
-			name: 'Campaign',
-			icon: 'mdi:book-open-variant',
-			description: 'Manage my campaigns',
-			requiresLogin: true,
-			path: 'campaign'
-		}
-	];
-
-	// Routes for play (filtered)
-	const playRoutes: Array<BaseRoute> = $derived([
-		{
-			name: 'Deck',
-			path: 'playdeck',
-			icon: 'mdi:view-dashboard',
-			description: 'Manage and play with your deck',
-			requiresLogin: true
-		},
-		{
-			name: 'Campaign', //TODO: dynamic set name from campaign data
-			path: 'campaign', //TODO change to play/campaign/[id] when implemented
-			icon: 'mdi:book-open-variant',
-			description: 'View campaign details',
-			requiresLogin: true
-		},
-		{
-			name: 'My Cards', // TODO: dynamic set name from campaign data
-			path: 'cards', //TODO change to play/cards when implemented
-			icon: 'mdi:cards',
-			description: 'Card collection and editor'
-		}
-	]);
-
-	// CURRENT ROUTE / ACTIVE LINK HANDLING
-	let currentRoute: string = $derived(page.route.id ?? '/');
-	let currentMode: 'backstage' | 'play' = $derived(
-		playRoutes.some((route) => route.path === currentRoute.slice(1)) ? 'play' : 'backstage'
-	);
+	const tabbedRoutes = $derived({
+		backstage: [
+			{
+				name: 'Cards',
+				icon: 'mdi:cards',
+				description: 'Create and edit game cards',
+				path: 'cards'
+			},
+			{
+				name: 'Characters',
+				icon: 'mdi:account',
+				description: 'Manage my characters',
+				requiresLogin: true,
+				path: 'character'
+			},
+			{
+				name: 'Campaign',
+				icon: 'mdi:book-open-variant',
+				description: 'Manage my campaigns',
+				requiresLogin: true,
+				path: 'campaign'
+			}
+		],
+		play: [
+			{
+				name: 'Deck',
+				path: 'playdeck',
+				icon: 'mdi:view-dashboard',
+				description: 'Manage and play with your deck',
+				requiresLogin: true
+			},
+			{
+				name: 'Campaign', //TODO: dynamic set name from campaign data
+				path: 'campaign', //TODO change to play/campaign/[id] when implemented
+				icon: 'mdi:book-open-variant',
+				description: 'View campaign details',
+				requiresLogin: true
+			},
+			{
+				name: 'My Cards', // TODO: dynamic set name from campaign data
+				path: 'cards', //TODO change to play/cards when implemented
+				icon: 'mdi:cards',
+				description: 'Card collection and editor'
+			}
+		]
+	} satisfies Record<string, Array<BaseRoute>>);
 
 	// Accept and handle server data
 	let {
@@ -167,6 +160,19 @@
 
 	// Drawer state
 	let drawerOpen: boolean = $state(false);
+
+	// CURRENT ROUTE / ACTIVE LINK HANDLING
+	let currentRoute: string = $derived(page.route.id ?? '/');
+	// Determine current mode based on route, find first
+	let currentMode: keyof typeof tabbedRoutes = $derived(
+		!data?.user
+			? 'backstage'
+			: Object.keys(tabbedRoutes).find((key) =>
+					tabbedRoutes[key as keyof typeof tabbedRoutes].some(
+						(route) => `/${route.path}` === currentRoute
+					)
+				) ?? Object.keys(tabbedRoutes)[0]
+	) as keyof typeof tabbedRoutes;
 
 	function closeDrawer() {
 		drawerOpen = false;
@@ -301,77 +307,21 @@ px-4 py-2 print:hidden"
 					<!-- MODES -->
 					{#if data.user}
 						<ButtonGroup.Root>
-							<Button
-								onclick={() => (currentMode = 'backstage')}
-								variant={currentMode === 'backstage' ? 'bold' : 'default'}>Backstage</Button
-							>
-							<Button
-								onclick={() => (currentMode = 'play')}
-								variant={currentMode === 'play' ? 'bold' : 'default'}>Play</Button
-							>
+							{#each Object.keys(tabbedRoutes) as mode}
+								<Button
+									onclick={() => {
+										currentMode = mode as keyof typeof tabbedRoutes;
+									}}
+									variant={currentMode === mode ? 'bold' : 'default'}
+								>
+									{mode.charAt(0).toUpperCase() + mode.slice(1)}
+								</Button>
+							{/each}
 						</ButtonGroup.Root>
 					{/if}
 					<!-- LINKS -->
-					{#if currentMode === 'backstage' || !data.user}
-						{#each generalRoutes as route}
-							{#if route.visibility === false}
-								<!-- Skip hidden routes -->
-							{:else if !route.requiresLogin || (route.requiresLogin && data.user)}
-								<!-- BaseRoute -->
-								<a
-									href="/{route.path}"
-									class="flex flex-col gap-1 rounded-full px-4 py-2 hover:bg-obsidian-500/10"
-									onclick={closeDrawer}
-								>
-									<Link
-										href="/{route.path}"
-										active={currentRoute == `/${route.path}`}
-										variant="lineLeft"
-										class="w-max justify-start"
-									>
-										<div class="flex flex-row items-center gap-2">
-											<Icon icon={route.icon} class="text-inherit" />
-											<span>{route.name}</span>
-										</div>
-									</Link>
-									{#if !mobileLayout}
-										<p class="text-sm text-muted-foreground">{route.description}</p>
-									{/if}
-								</a>
-							{/if}
-						{/each}
-						{#each backstageRoutes as route}
-							{#if route.visibility === false}
-								<!-- Skip hidden routes -->
-							{:else if !route.requiresLogin || (route.requiresLogin && data.user)}
-								<!-- BaseRoute -->
-								<a
-									href="/{route.path}"
-									class="flex flex-col gap-1 rounded-full px-4 py-2 hover:bg-obsidian-500/10"
-								>
-									<Link
-										href="/{route.path}"
-										active={currentRoute == `/${route.path}`}
-										variant="lineLeft"
-										class="w-max justify-start"
-										onclick={closeDrawer}
-									>
-										<div class="flex flex-row items-center gap-2">
-											<Icon icon={route.icon} class="text-inherit" />
-											<span>{route.name}</span>
-										</div>
-									</Link>
-									{#if !mobileLayout}
-										<p class="text-sm text-muted-foreground">{route.description}</p>
-									{/if}
-								</a>
-							{/if}
-						{/each}
-					{:else if currentMode === 'play'}
+					{#if currentMode === 'play'}
 						<!-- CHARACTER SELECTION -->
-						<Label for="activeCharacter" class="mt-2 mb-1 text-sm font-medium"
-							>Select Character</Label
-						>
 						<Select.Root
 							name="activeCharacter"
 							type="single"
@@ -397,34 +347,33 @@ px-4 py-2 print:hidden"
 								{/each}
 							</Select.Content>
 						</Select.Root>
-						{#each playRoutes as route}
-							{#if route.visibility === false}
-								<!-- Skip hidden routes -->
-							{:else if !route.requiresLogin || (route.requiresLogin && data.user)}
-								<!-- BaseRoute -->
-								<a
-									href="/{route.path}"
-									class="flex flex-col gap-1 rounded-full px-4 py-2 hover:bg-obsidian-500/10"
-								>
-									<Link
-										href="/{route.path}"
-										active={currentRoute == `/${route.path}`}
-										variant="lineLeft"
-										class="w-max justify-start"
-										onclick={closeDrawer}
-									>
-										<div class="flex flex-row items-center gap-2">
-											<Icon icon={route.icon} class="text-inherit" />
-											<span>{route.name}</span>
-										</div>
-									</Link>
-									{#if !mobileLayout}
-										<p class="text-sm text-muted-foreground">{route.description}</p>
-									{/if}
-								</a>
-							{/if}
-						{/each}
 					{/if}
+					<!-- ROUTES -->
+					{#each [...tabbedRoutes[currentMode], ...generalRoutes] as route}
+						{#if !route.requiresLogin || (route.requiresLogin && data.user)}
+							<!-- BaseRoute -->
+							<a
+								href="/{route.path}"
+								class="flex flex-col gap-1 rounded-full px-4 py-2 hover:bg-obsidian-500/10"
+							>
+								<Link
+									href="/{route.path}"
+									active={currentRoute == `/${route.path}`}
+									variant="lineLeft"
+									class="w-max justify-start"
+									onclick={closeDrawer}
+								>
+									<div class="flex flex-row items-center gap-2">
+										<Icon icon={route.icon} class="text-inherit" />
+										<span>{route.name}</span>
+									</div>
+								</Link>
+								{#if !mobileLayout}
+									<p class="text-sm text-muted-foreground">{route.description}</p>
+								{/if}
+							</a>
+						{/if}
+					{/each}
 				</nav>
 			</div>
 			<!-- CONTENT GOES HERE -->
