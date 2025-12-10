@@ -1,133 +1,393 @@
 <script lang="ts">
+	// Svelte
+	import { goto, invalidateAll } from '$app/navigation';
+	// Types
+	import type { WidthLayout } from '../../../routes/+layout.svelte';
+	// Stores
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
+	import { spinner } from '$lib/stores/loadingSpinner.svelte';
+	// UI Components
 	import CharacterAvatar from '$lib/components/layout/CharacterAvatar.svelte';
-	// Set Routes
-	import { base } from '$app/paths';
+	// Toasts
+	import { toast } from 'svelte-sonner';
+	// Import Partials
+	import KofiButton from '$lib/components/partials/branded/kofiButton.svelte';
+	import GithubRepoButton from '$lib/components/partials/branded/GithubRepoButton.svelte';
+
+	// AUTH
+	import { authClient } from '$lib/utils/auth/auth-client';
+
+	// Page and Data
+	import { page } from '$app/state';
+	import { type LayoutData } from '../../../routes/$types';
+
+	// UI
+	import Icon from '@iconify/svelte';
+	import { Button } from '$lib/components/ui/button/';
+	import * as Drawer from '$lib/components/ui/drawer/';
+	import * as Avatar from '$lib/components/ui/avatar/';
+	import Link from '$lib/components/ui/link/link.svelte';
+	import * as ButtonGroup from '$lib/components/ui/button-group/';
+	import * as Select from '$lib/components/ui/select/';
+
+	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
+
 	interface BaseRoute {
 		path: string;
 		name: string;
 		icon: string;
-		hidden?: boolean;
+		visibility?: boolean | 'drawerOnly';
+		description: string;
+		requiresLogin?: boolean;
+		disabled?: boolean;
 	}
-	interface MasterRoute {
-		name: string;
-		icon: string;
-		path: string;
-		hidden?: boolean;
-		dropdown: BaseRoute[]; // An array that can contain either a BaseRoute or a MasterRoute, these will display on hover
-	}
-	const routes: Array<BaseRoute | MasterRoute> = [
+	const routes: Array<BaseRoute> = [
 		{
 			path: '/',
 			name: 'Home',
 			icon: 'mdi:home',
-			hidden: true
+			visibility: false,
+			description: 'The homepage of Arcane Atlas'
 		},
 		{
 			name: 'Campaign',
 			icon: 'mdi:book',
-			path: 'campaign'
+			path: 'campaign',
+			description: 'Campaign overview and management',
+			requiresLogin: true
 		},
 		{
 			name: 'Character',
 			icon: 'mdi:account',
 			path: 'character',
-			dropdown: [
-				{
-					path: 'character',
-					name: 'Backstory',
-					icon: 'mdi:sword'
-				},
-				{
-					path: 'character_sheet',
-					name: 'Character Sheet',
-					icon: 'mdi:script'
-				}
-			]
+			description: 'Character management and details',
+			requiresLogin: true
 		},
 
 		{
 			name: 'Cards',
 			path: 'cards',
-			icon: 'mdi:cards'
-			// dropdown: [
-			// 	{
-			// 		path: 'collection',
-			// 		name: 'Collection',
-			// 		icon: 'mdi:view-grid'
-			// 	},
-			// 	{
-			// 		path: 'edit',
-			// 		name: 'Editor',
-			// 		icon: 'mdi:pencil'
-			// 	}
-			// ]
+			icon: 'mdi:cards',
+			description: 'Card collection and editor'
+		},
+
+		{
+			name: 'Playdeck',
+			path: 'playdeck',
+			icon: 'mdi:view-dashboard',
+			description: 'Playdeck management and gameplay',
+			requiresLogin: true
 		},
 
 		{
 			path: 'about',
 			name: 'About',
-			icon: 'mdi:information-outline'
+			icon: 'mdi:information-outline',
+			description: 'How to use Arcane Atlas'
 		}
 	];
 
-	const character = {
-		name: 'Neovald',
-		id: 'neovald',
-		image: 'https://robohash.org/Neovald'
-	};
-	let currentRoute: string = $derived(page.url.pathname);
+	// General routes accessible to all users
+	const generalRoutes: Array<BaseRoute> = [
+		{
+			name: 'About',
+			icon: 'mdi:information-outline',
+			description: 'Learn more about Arcane Atlas',
+			path: 'about'
+		}
+	];
 
-	// Imports
-	import Icon from '@iconify/svelte';
-	import { page } from '$app/state';
+	const tabbedRoutes = $derived({
+		backstage: [
+			{
+				name: 'Cards',
+				icon: 'mdi:cards',
+				description: 'Create and edit game cards',
+				path: 'cards'
+			},
+			{
+				name: 'Characters',
+				icon: 'mdi:account',
+				description: 'Manage my characters',
+				requiresLogin: true,
+				path: 'character'
+			},
+			{
+				name: 'Campaign',
+				icon: 'mdi:book-open-variant',
+				description: 'Manage my campaigns',
+				requiresLogin: true,
+				path: 'campaign'
+			}
+		],
+		play: [
+			{
+				name: 'Deck',
+				path: 'playdeck',
+				icon: 'mdi:view-dashboard',
+				description: 'Manage and play with your deck',
+				requiresLogin: true
+			},
+			{
+				name: 'Campaign', //TODO: dynamic set name from campaign data
+				path: 'campaign', //TODO change to play/campaign/[id] when implemented
+				icon: 'mdi:book-open-variant',
+				description: 'View campaign details',
+				requiresLogin: true
+			},
+			{
+				name: 'My Cards', // TODO: dynamic set name from campaign data
+				path: 'cards', //TODO change to play/cards when implemented
+				icon: 'mdi:cards',
+				description: 'Card collection and editor'
+			}
+		]
+	} satisfies Record<string, Array<BaseRoute>>);
 
 	// Accept and handle server data
-	let { data } = $props();
+	let {
+		data,
+		layout,
+		borderBoxSize = $bindable([])
+	}: { data: LayoutData; layout: WidthLayout; borderBoxSize: ResizeObserverSize[] } = $props();
+
+	// LAYOUT AND RESPONSIVENESS HANDLING
+	let narrowLayout: boolean = $derived(layout === 'narrow');
+	let mobileLayout: boolean = $derived(layout === 'mobile');
+
+	// Drawer state
+	let drawerOpen: boolean = $state(false);
+
+	// CURRENT ROUTE / ACTIVE LINK HANDLING
+	let currentRoute: string = $derived(page.route.id ?? '/');
+	// Determine current mode based on route, find first
+	let currentMode: keyof typeof tabbedRoutes = $derived(
+		!data?.user
+			? 'backstage'
+			: Object.keys(tabbedRoutes).find((key) =>
+					tabbedRoutes[key as keyof typeof tabbedRoutes].some(
+						(route) => `/${route.path}` === currentRoute
+					)
+				) ?? Object.keys(tabbedRoutes)[0]
+	) as keyof typeof tabbedRoutes;
+
+	function closeDrawer() {
+		drawerOpen = false;
+	}
+
+	// LOGGING OUT FUNCTION
+	async function logOut() {
+		const confirmLogOut = confirm('Are you sure you want to log out?');
+		if (!confirmLogOut) return;
+		spinner.set('logOut', 'Logging out...');
+		try {
+			await authClient.signOut();
+			toast.success('Successfully logged out.');
+		} catch (e) {
+			toast.error('Error logging out. Please try again.');
+			console.error(e);
+		}
+		spinner.complete();
+		invalidateAll(); //Trick to reload context and update Avatar and locals
+		console.log('Signed out');
+	}
 </script>
 
-<section id="navigation" class="navbar border-b-2 border-threat-500 bg-obsidian-50">
+<header
+	bind:borderBoxSize
+	class="sticky top-0 z-1
+	grid grid-cols-[1fr_max-content_1fr] items-center justify-center gap-3
+	border-b-2 border-threat-500 bg-obsidian-50
+px-4 py-2 print:hidden"
+>
+	<!-- LOGO -->
 	<div class="z-2">
-		<a href="{base}/" id="logo" class="displayText websiteLogo">Arcane Atlas</a>
+		<a href="/" id="logo" class="displayText websiteLogo relative">
+			{#if mobileLayout}
+				<span>A</span>
+			{:else}
+				<span>Arcane Atlas</span>
+			{/if}
+		</a>
 	</div>
 	<!-- Navigation -->
-	<nav class="links">
-		{#each routes as route}
-			{#if route.hidden}
-				<!-- Skip hidden routes -->
-			{:else if typeof route === 'object' && 'dropdown' in route}
-				<!-- Route is a MasterRoute, show dropdown on hover -->
-				<div class="navItem navDropdown linkLine">
-					<a href="{base}/{route.path}">
+	{#if mobileLayout}
+		<nav class="flex justify-center gap-4">
+			{#each routes as route}
+				<Button variant="link" class="text-lg" href={route.path}>
+					<Icon icon={route.icon} mode="bg" />
+				</Button>
+			{/each}
+		</nav>
+	{:else}
+		<nav class="flex flex-row justify-center gap-6">
+			{#each routes as route}
+				{#if route.visibility === false}
+					<!-- Skip hidden routes -->
+				{:else}
+					<!-- BaseRoute -->
+					<Link
+						href="/{route.path}"
+						active={currentRoute == `/${route.path}`}
+						tooltip={route.description}
+						variant="line"
+						onclick={closeDrawer}
+					>
 						{route.name}
-					</a>
-					<div class="navDropdownMenu">
-						{#each route.dropdown as dropdownRoute}
-							<a href="{base}/{dropdownRoute.path}" class="dropdownNavItem">
-								<Icon icon={dropdownRoute.icon} />
-								{dropdownRoute.name}
-							</a>
-						{/each}
-					</div>
-				</div>
-			{:else}
-				<!-- BaseRoute -->
-				<div class="navItem linkLine" class:active={currentRoute === route.path}>
-					<a href="{base}/{route.path}">
-						<!-- <Icon icon={routes[routeName].icon} /> -->
-						{route.name}
-					</a>
-				</div>
-			{/if}
-		{/each}
-	</nav>
+					</Link>
+				{/if}
+			{/each}
+		</nav>
+	{/if}
+
 	<!-- Badges -->
-	<div class="badges">
-		<!-- <a class="badge" href="https://github.com/tbollen/Game_Card_Builder" target="_blank">
-			<Icon icon="mdi:github" />
-		</a> -->
-		<CharacterAvatar user={data.user} character={data.character} />
+	<div class="flex justify-end">
+		<!-- User account -->
+		<Avatar.Root class="size-10 cursor-pointer" onclick={() => goto('/account')}>
+			<Avatar.Image src={data.user?.image ?? undefined} alt={data.user?.name ?? 'User Avatar'} />
+			<Avatar.Fallback>
+				<Icon icon="mdi:account-circle" class="size-10 text-muted-foreground" />
+			</Avatar.Fallback>
+		</Avatar.Root>
+		<!-- Hamburger menu button -->
+		<Button variant="ghost" class="badge ml-2 text-xl" onclick={() => (drawerOpen = true)}>
+			<Icon icon="mdi:menu" mode="bg" />
+		</Button>
 	</div>
-</section>
+	<Drawer.Root bind:open={drawerOpen} direction={mobileLayout ? 'bottom' : 'right'}>
+		<Drawer.Content>
+			<Drawer.Header>
+				<Drawer.Title>
+					<div class="flex flex-row justify-between">
+						<a href="/" onclick={closeDrawer} class="displayText text-3xl">Arcane Atlas</a>
+						<Drawer.Close>
+							<Button variant="ghost" class="rounded-full text-xl opacity-70 hover:opacity-100">
+								<Icon icon="mdi:menu-close" mode="bg" />
+							</Button>
+						</Drawer.Close>
+					</div>
+					<hr class="my-2 border-threat-500" />
+				</Drawer.Title>
+			</Drawer.Header>
+			<div id="drawerBody" class="flex h-full flex-col overflow-y-auto px-4">
+				<!-- USER INFO -->
+				{#if data.user}
+					<a
+						href="/account"
+						class="mb-4 flex flex-row items-center gap-4 rounded-full p-2 hover:bg-obsidian-500/10"
+						onclick={closeDrawer}
+					>
+						<Avatar.Root class="size-12">
+							<Avatar.Image
+								src={data.user.image ?? undefined}
+								alt={data.user.name ?? 'User Avatar'}
+							/>
+							<Avatar.Fallback>
+								<Icon icon="mdi:account-circle" class="size-12 text-muted-foreground" />
+							</Avatar.Fallback>
+						</Avatar.Root>
+						<div class="flex flex-col">
+							<span class="font-semibold">{data.user.name}</span>
+							<span class="text-sm text-muted-foreground">{data.user.email}</span>
+						</div>
+						<Button
+							onclick={logOut}
+							spinner={{ id: 'logOut', keepMessage: true }}
+							variant="ghost"
+							class="ml-auto"
+						>
+							<Icon icon="mdi:logout" />
+						</Button>
+					</a>
+				{:else}
+					<div class="mb-4 flex flex-row items-center gap-4">
+						<p class="text-muted-foreground">Log in to access all features.</p>
+						<Button href="/login" onclick={closeDrawer} variant="bold" class="mr-2">Log in</Button>
+					</div>
+				{/if}
+
+				<hr class="my-2 border-obsidian-500/25" />
+
+				<nav class="flex flex-col gap-2 py-2">
+					<!-- MODES -->
+					{#if data.user}
+						<ButtonGroup.Root>
+							{#each Object.keys(tabbedRoutes) as mode}
+								<Button
+									onclick={() => {
+										currentMode = mode as keyof typeof tabbedRoutes;
+									}}
+									variant={currentMode === mode ? 'bold' : 'default'}
+								>
+									{mode.charAt(0).toUpperCase() + mode.slice(1)}
+								</Button>
+							{/each}
+						</ButtonGroup.Root>
+					{/if}
+					<!-- LINKS -->
+					{#if currentMode === 'play'}
+						<!-- CHARACTER SELECTION -->
+						<Select.Root
+							name="activeCharacter"
+							type="single"
+							onValueChange={(value) => activeCharacterStore.fromKey(value)}
+							value={activeCharacter?.id}
+						>
+							<Select.Trigger class="h-max! w-full border-0 shadow-none hover:bg-obsidian-500/10">
+								{#if activeCharacter}
+									<CharacterAvatar character={activeCharacter.toPrisma()} />
+								{:else}
+									<span class="text-muted-foreground">Select Character</span>
+								{/if}
+							</Select.Trigger>
+							<Select.Content class="w-full">
+								{#each data.characters as character}
+									<Select.Item class="h-max" value={character.id}>
+										<CharacterAvatar {character} />
+									</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+					{/if}
+					<!-- ROUTES -->
+					{#each [...tabbedRoutes[currentMode], ...generalRoutes] as route}
+						{#if !route.requiresLogin || (route.requiresLogin && data.user)}
+							<!-- BaseRoute -->
+							<a
+								href="/{route.path}"
+								class="flex flex-col gap-1 rounded-full px-4 py-2 hover:bg-obsidian-500/10"
+							>
+								<Link
+									href="/{route.path}"
+									active={currentRoute == `/${route.path}`}
+									variant="lineLeft"
+									class="w-max justify-start"
+									onclick={closeDrawer}
+								>
+									<div class="flex flex-row items-center gap-2">
+										<Icon icon={route.icon} class="text-inherit" />
+										<span>{route.name}</span>
+									</div>
+								</Link>
+								{#if !mobileLayout}
+									<p class="text-sm text-muted-foreground">{route.description}</p>
+								{/if}
+							</a>
+						{/if}
+					{/each}
+				</nav>
+			</div>
+			<!-- CONTENT GOES HERE -->
+			<Drawer.Footer>
+				<hr class="my-2 border-threat-500" />
+				<div class="flex w-full flex-row justify-center gap-4">
+					<KofiButton variant="secondary" />
+					<GithubRepoButton variant="secondary" />
+				</div>
+			</Drawer.Footer>
+		</Drawer.Content>
+	</Drawer.Root>
+</header>
 
 <style>
 	#navigation {

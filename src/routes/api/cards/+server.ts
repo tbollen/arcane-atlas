@@ -4,7 +4,7 @@ import type { card as PrismaCard } from '@prisma/client';
 import { db } from '$lib/server/db';
 import { MAX_CARDS } from '$lib/server/rules/maxCards';
 import type { CardPermissions } from '$lib/domain/cards/cardStore.svelte';
-import type { CardID } from '$lib/domain/cards/cardStore.svelte';
+import type { CardID } from '$lib/domain/';
 
 export type CardPayload = {
 	action: 'create' | 'update' | 'delete';

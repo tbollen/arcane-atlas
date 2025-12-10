@@ -6,7 +6,10 @@ model Character {
     // Owner
     ownerId         String
     owner           User        @relation("CharacterOwner", fields: [ownerId], references: [id])
+
+    // Permissions
     viewers         User[]      @relation("CharacterViewers")
+    public          Boolean     @default(false)
 
     // Character Cards
     cards           card[]      @relation("CharacterCards")
@@ -16,7 +19,11 @@ model Character {
 
     // Character Info
     name            String
+    subtitle        String
     image           String
     description     String
     mechanics       Json
+
+    // Deck
+    deck            Json
 }

@@ -60,7 +60,7 @@
 	// Get the Game System and Mechanics //
 	///////////////////////////////////////
 	import { gameSystems, type SystemKey } from '$lib/gameSystems';
-	import { arcaneRiftMechanics } from '$lib/gameSystems/ArcaneRift/ar_cards';
+	import { arcaneRiftCardMechanics } from '$lib/gameSystems/ArcaneRift/ar_cards';
 	import { AR_KEY } from '$lib/gameSystems';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	// TODO: make dynamic and fix. Currently this is the only system so it works fine...
@@ -81,7 +81,7 @@
 		// Update the card systems identifiers
 		card.systems = _cardSystemsMessenger;
 		// Add necessary (empty) mechanics
-		card.mechanics[AR_KEY] = arcaneRiftMechanics;
+		card.mechanics[AR_KEY] = arcaneRiftCardMechanics;
 		// Set Active System to generic if current system is removed
 		if (!card.systems.includes(activeSystem)) {
 			activeSystem = card.systems[0];

@@ -10,7 +10,7 @@ type Aspect = {
 };
 
 import { skillList, characteristics } from '$lib/gameSystems/ArcaneRift/ar_skillCheckList';
-export type ArcaneRiftMechanics = {
+export type ArcaneRiftCardMechanics = {
 	// Arcane Rift specific mechanics here
 	aspects: Aspect[];
 	fields: Field[];
@@ -20,7 +20,7 @@ export type ArcaneRiftMechanics = {
 	};
 };
 
-export const arcaneRiftMechanics: ArcaneRiftMechanics = {
+export const arcaneRiftCardMechanics: ArcaneRiftCardMechanics = {
 	aspects: [],
 	fields: [],
 	check: {}

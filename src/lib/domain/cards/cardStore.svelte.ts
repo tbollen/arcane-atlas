@@ -1,5 +1,5 @@
 // Utils
-import { type Prefixed_UUID, generatePrefixedUUID } from '$lib/utils/uuid';
+import { generatePrefixedUUID } from '$lib/utils/uuid';
 import { clone } from '$lib/utils/serializing';
 import { checkWebStorage, lsk } from '$lib/utils/storage/keys';
 
@@ -13,10 +13,7 @@ import { Card } from '$lib/domain/cards/card.svelte';
 // Import defaults
 import { defaultTemplates } from '$lib/domain/cards/defaultTemplates';
 
-// Shorthand for prefixed UUIDs
-import type { UserID } from '$lib/domain/users/user';
-import type { CharacterID } from '$lib/domain/characters/character';
-export type CardID = Prefixed_UUID<'card'>;
+import type { UserID, CampaignID, CharacterID, CardID } from '..';
 
 // TODO: Find way to load dynamically
 
@@ -38,9 +35,6 @@ export type ClientCardPermission = {
 	canEdit: boolean;
 	canView: boolean;
 };
-
-// Context Key
-export const CARD_CONTEXT_KEY: string = 'db_cardStore' as const;
 
 // StoredCard Class (Card with ID)
 export class StoredCard extends Card {
@@ -164,13 +158,13 @@ export class CardStore {
 	templates: Card[] = $state(defaultTemplates);
 	private idSet: Set<CardID> = $state(new Set());
 
-	constructor(c: { cards: StoredCard[]; templates?: Card[] }) {
+	constructor(c: { cards: StoredCard[]; templates?: Card[]; ids: CardID[] }) {
 		// Set cards and templates
 		this.cards = c.cards;
 		this.templates = c.templates ?? defaultTemplates;
 
 		// Make the idSet (overwrite whatever was there before)
-		this.idSet = new Set(this.cards.map((card) => card.id));
+		this.idSet = new Set(c.ids);
 		// After init, cache the store
 		this.cache();
 	}

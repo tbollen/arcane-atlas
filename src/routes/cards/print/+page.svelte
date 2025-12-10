@@ -9,8 +9,8 @@
 	import { selectedCardIds } from '$lib/stores/selectedCardIds';
 	import { type CardStore } from '$lib/domain/cards/cardStore.svelte';
 	import { getContext } from 'svelte';
-	import { CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
-	const cardStoreContext = getContext<CardStore>(CARD_CONTEXT_KEY);
+	import { ck } from '$lib/utils/storage/keys';
+	const cardStoreContext = getContext<CardStore>(ck.cardStore);
 	//
 	let cardSet: typeof cardStoreContext.cards = $state([]);
 	// Set Cards
@@ -38,8 +38,10 @@
 	const cardsPerPage = (cardAmountX * cardAmountY) / 2;
 
 	// Create multiple sets from cardSet, each split by the amount of cards per page
-	const cardSetSplit = Array.from({ length: Math.ceil(cardSet.length / cardsPerPage) }, (_, i) =>
-		cardSet.slice(i * cardsPerPage, (i + 1) * cardsPerPage)
+	const cardSetSplit = $derived(
+		Array.from({ length: Math.ceil(cardSet.length / cardsPerPage) }, (_, i) =>
+			cardSet.slice(i * cardsPerPage, (i + 1) * cardsPerPage)
+		)
 	);
 
 	onMount(() => {
@@ -138,7 +140,6 @@
 		/* Print Color Adjust */
 		-webkit-print-color-adjust: exact; /* For WebKit browsers */
 		print-color-adjust: exact; /* For WebKit browsers */
-		color-adjust: exact; /* Standard property */
 		border-top: var(--borderY);
 		border-left: var(--borderX);
 		border-right: var(--borderX);
@@ -165,6 +166,5 @@
 		/* Print Color Adjust */
 		-webkit-print-color-adjust: exact; /* For WebKit browsers */
 		print-color-adjust: exact; /* For WebKit browsers */
-		color-adjust: exact; /* Standard property */
 	}
 </style>

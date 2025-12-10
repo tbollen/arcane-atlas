@@ -7,6 +7,7 @@
 
 	// Utils
 	import { serializeCard } from '$lib/domain/cards/cardStore.svelte';
+	import { ck } from '$lib/utils/storage/keys';
 
 	// Spinner
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
@@ -21,10 +22,10 @@
 	// Card stores, types and modules
 	import cachedTemplate from '$lib/stores/cachedTemplate.js';
 	import { CardStore } from '$lib/domain/cards/cardStore.svelte';
-	import { StoredCard, CARD_CONTEXT_KEY } from '$lib/domain/cards/cardStore.svelte';
+	import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// User info and types
-	import type { UserID } from '$lib/domain/users/user';
+	import type { UserID } from '$lib/domain';
 
 	// Components and Partials
 	import MainLoader from '$lib/components/partials/MainLoader.svelte';
@@ -46,7 +47,7 @@
 	// DATA INITIALIZATION //
 	/////////////////////////
 	import { getContext } from 'svelte';
-	const cardStore = getContext<CardStore>(CARD_CONTEXT_KEY);
+	const cardStore = getContext<CardStore>(ck.cardStore);
 
 	// Data getting (card and cardstore)
 	// Initialize card on page load, use a dummy card ('new') for init only!!

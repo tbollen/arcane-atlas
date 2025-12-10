@@ -1,12 +1,21 @@
 // Keys to use for local storage
 export const lsk = {
 	cardStore: 'cardStore',
-	user: 'user'
+	user: 'user',
+	activeCharacter: 'activeCharacter',
+	deck: 'deck'
 };
 
 // Keys to use for session storage
 export const ssk = {
 	currentCard: 'currentCard'
+};
+
+// Context keys
+export const ck: Record<string, string> = {
+	cardStore: 'db_cardStore',
+	characterStore: 'db_characterStore',
+	activeCharacter: 'activeCharacter'
 };
 
 export async function checkWebStorage(): Promise<boolean> {

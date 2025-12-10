@@ -1,19 +1,38 @@
 <script lang="ts">
 	// UI Components
 	import { Header } from '$lib/components/typography/';
+	import { Button } from '$lib/components/ui/button/';
 	import UnderConstruction from '$lib/components/partials/UnderConstruction.svelte';
+	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
 	import '$lib/styles';
 
-	import { onMount } from 'svelte';
+	// Utils
+	import { onMount, getContext } from 'svelte';
+	import { ck, lsk } from '$lib/utils/storage/keys.js';
+	import { CharacterStore } from '$lib/domain/characters/character.svelte.js';
+
+	// Stores
+
+	const characterStore = getContext<CharacterStore>(ck.characterStore);
 
 	let { data } = $props();
+
+	// FUNCTIONS //
 
 	onMount(async () => {
 		// DO LATER
 	});
 </script>
 
-<main class="content">
+<main class="px-4">
+	<Button href="/character/new">Add Character</Button>
+	<div class="characterCardGrid">
+		{#each characterStore.characters as character}
+			<CharacterCard {character} />
+		{/each}
+	</div>
+
+	<!-- UNDER CONSTRUCTION PART -->
 	<Header variant="h1" class="mb-8">Character</Header>
 	<UnderConstruction class="h-36">
 		<Header variant="h3" tag="h2">Planned Features</Header>
@@ -37,3 +56,12 @@
 		</ul>
 	</UnderConstruction>
 </main>
+
+<style>
+	.characterCardGrid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(var(--container-lg), min-content));
+		gap: 2rem;
+		justify-content: center;
+	}
+</style>

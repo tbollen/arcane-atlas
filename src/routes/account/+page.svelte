@@ -14,6 +14,8 @@
 
 	// Spinner Store
 	import { spinner } from '$lib/stores/loadingSpinner.svelte';
+	// Active Character Store
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
 
 	// Toasts
 	import { toast } from 'svelte-sonner';
@@ -34,8 +36,7 @@
 	import { onMount } from 'svelte';
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import USER_API from '$lib/utils/api/users_api';
-	import type { CardID } from '$lib/domain/cards/cardStore.svelte';
-	import type { UserID } from '$lib/domain/users/user';
+	import type { CardID, UserID } from '$lib/domain/';
 
 	// Form stuff
 	import { enhance } from '$app/forms';
@@ -122,6 +123,7 @@
 			console.error(e);
 		}
 		spinner.complete();
+		activeCharacterStore.clear(); // Clear active character on logout
 		invalidateAll(); //Trick to reload context and update Avatar and locals
 		console.log('Signed out');
 		goto('/login');
