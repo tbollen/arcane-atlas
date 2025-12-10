@@ -12,7 +12,8 @@
 		"test:integration": "playwright test",
 		"test:unit": "vitest",
 		"lint": "prettier --check .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"postinstall": "npx prisma generate"
 	},
 	"devDependencies": {
 		"@iconify/svelte": "^4.0.2",
