@@ -37,13 +37,16 @@
 	// Svelte
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { defaultDeckConfig, type DeckConfig } from './deckConfig';
 
 	let {
 		deck = $bindable(),
-		character
+		character,
+		config
 	}: {
 		deck: StoredDeck;
 		character: StoredCharacter;
+		config?: Partial<DeckConfig>;
 	} = $props();
 
 	////////////////////////////////
@@ -133,10 +136,15 @@
 	//////////////////////////////////////////
 	// GRIDSTACK
 
+	// DECK CONFIG
+	let deckConfig: DeckConfig = { ...defaultDeckConfig, ...config };
+
 	// GRID CONSTANTS
-	const FONT_SIZE = 16; //Default 16px
-	const CELLSIZE = 6 * FONT_SIZE; //cellsize in pixels
-	const MAX_GRID_WIDTH = CELLSIZE * 12; //Min width of the grid
+	const MAX_COLUMNS = deckConfig.maxColumns;
+	const MIN_COLUMNS = deckConfig.minColumns;
+	const FONT_SIZE = deckConfig.fontSize; //Default 16px
+	const CELLSIZE = deckConfig.emPerCell * FONT_SIZE; //cellsize in pixels
+	const MAX_GRID_WIDTH = CELLSIZE * MAX_COLUMNS; //Min width of the grid
 
 	// GRID VARIABLES, recalculated in recalculateGrid()
 	var container: HTMLDivElement;
