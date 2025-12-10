@@ -13,7 +13,10 @@
 	import AddWidgetDialog from './AddWidgetDialog.svelte';
 
 	// Import classes
-	import { StoredCharacter, type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
+	import {
+		StoredCharacter,
+		type PrismaCharacterExtended
+	} from '$lib/domain/characters/character.svelte.js';
 
 	// DECK stuff
 	import Deck from '$lib/components/playdeck/Deck.svelte';
@@ -36,6 +39,7 @@
 
 	// API
 	import CHARACTER_API from '$lib/utils/api/characters_api.js';
+	import { defaultDeckConfig, type DeckConfig } from '$lib/components/playdeck/deckConfig';
 
 	// Init character
 	let { data } = $props();
@@ -50,6 +54,9 @@
 	// Init deck
 	let DeckComponent: Deck;
 	let deck: StoredDeck = $state(fallbackDeck);
+
+	// Deck config
+	const deckConfig: DeckConfig = defaultDeckConfig;
 
 	// EDIT MODES
 	type EditMode = 'view' | 'editItems' | 'editDeck';
@@ -70,33 +77,8 @@
 	// DECK FUNCTIONS
 
 	// Save changes to the deck
-	function saveDeck() {
-		if (!character) return console.error('No character selected');
-		if (!deck) return console.error('No deck found');
-		if (typeof window === 'undefined' || !window.localStorage)
-			return console.error('Localstorage not ready');
-
-		// Start saving
-		spinner.set('save', 'Saving...');
-
-		// Save deck to character
-		character.deck = deck;
-
-		// Save Character
-		const prismaCharacter = character.toPrisma();
-		CHARACTER_API.update(prismaCharacter)
-			.then(() => {
-				toast.success('Character updated');
-			})
-			.catch((error) => {
-				toast.error(`Error updating character: ${error}`);
-			})
-			.finally(() => {
-				setTimeout(() => {
-					spinner.complete();
-					invalidateAll();
-				}, 500);
-			});
+	async function saveDeck() {
+		await DeckComponent.saveDeck();
 	}
 
 	function unsetActiveCharacter() {
@@ -121,16 +103,14 @@
 		} else {
 			// DO MOUNT
 			// Find the targeted character (activeCharacter)
-			const activeCharacterID = localStorage.getItem(lsk.activeCharacter)
-			activeCharacter = data.characters.find((char) => char.id === activeCharacterID );
-			if (activeCharacter){ 
-				character = dataCharactersAsStored.find((char) => char.id === activeCharacterID );
+			const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
+			activeCharacter = data.characters.find((char) => char.id === activeCharacterID);
+			if (activeCharacter) {
+				character = dataCharactersAsStored.find((char) => char.id === activeCharacterID);
 				deck = character?.deck ?? fallbackDeck;
 			}
-
 		}
 	});
-
 </script>
 
 <!-- RENDERING -->
@@ -193,6 +173,6 @@
 				bind:open={addWidgetDialog}
 			/>
 		</div>
-		<Deck bind:this={DeckComponent} {character} bind:deck />
+		<Deck bind:this={DeckComponent} {character} bind:deck config={deckConfig} />
 	{/if}
 </main>
