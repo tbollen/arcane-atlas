@@ -1,0 +1,92 @@
+<script lang="ts" module>
+	import { cn, type WithElementRef } from '$lib/utils.js';
+	import type { HTMLAnchorAttributes, HTMLLinkAttributes } from 'svelte/elements';
+	import { type VariantProps, tv } from 'tailwind-variants';
+	import * as Tooltip from '$lib/components/ui/tooltip';
+
+	export const linkVariants = tv({
+		base: " cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-inherit outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+		variants: {
+			variant: {
+				default:
+					'text-inherit hover:text-threat-500 transition-colors underline decoration-transparent hover:decoration-threat-500 data-[active=true]:text-threat-500 data-[active=true]:decoration-threat-500',
+				accent:
+					'text-threat-500 underline underline-offset-4 hover:text-threat-600 transition-colors hover:text-threat-700 data-[active=true]:text-threat-700',
+				subtle:
+					'text-foreground/70 hover:text-foreground transition-colors data-[active=true]:text-foreground',
+				bold: 'hover:bg-obsidian-800 hover:text-white px-1 py-0.5 rounded transition-colors data-[active=true]:bg-obsidian-800 data-[active=true]:text-white',
+				line: 'relative text-foreground no-underline after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:max-w-full after:bg-threat-500 after:transition-all after:duration-300 after:-translate-x-1/2 after:origin-center hover:after:w-full data-[active=true]:after:w-[50%] data-[active=true]:hover:after:w-full',
+				lineLeft:
+					'relative text-foreground no-underline before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 before:bg-threat-500 before:transition-all before:duration-300 hover:before:w-full before:origin-left hover:before:origin-right data-[active=true]:before:w-full',
+				marker:
+					'relative text-foreground no-underline before:absolute before:bottom-0 before:left-0 before:h-full before:w-0 before:bg-threat-500 before:-z-10 before:transition-all before:duration-300 hover:before:w-full before:origin-left hover:before:origin-right hover:text-white hover:transition-[color] hover:delay-100 data-[active=true]:before:w-full data-[active=true]:text-white'
+			},
+			display: {
+				inline: 'inline-flex',
+				block: 'flex w-full'
+			}
+		},
+		defaultVariants: {
+			variant: 'default',
+			display: 'inline'
+		}
+	});
+
+	export type LinkVariant = VariantProps<typeof linkVariants>['variant'];
+	export type LinkDisplay = VariantProps<typeof linkVariants>['display'];
+
+	export type LinkProps = WithElementRef<HTMLLinkAttributes> &
+		WithElementRef<HTMLAnchorAttributes> & {
+			variant?: LinkVariant;
+			display?: LinkDisplay;
+			tooltip?: string | boolean;
+			active?: boolean;
+			href: string;
+		};
+</script>
+
+<script lang="ts">
+	let {
+		class: className,
+		variant = 'default',
+		display = 'inline',
+		ref = $bindable(null),
+		href,
+		tooltip,
+		active = false,
+		children,
+		...restProps
+	}: LinkProps = $props();
+</script>
+
+{#snippet link()}
+	<a
+		bind:this={ref}
+		data-slot="button"
+		data-active={active}
+		class={cn(linkVariants({ variant, display }), className)}
+		{href}
+		{...restProps}
+	>
+		{@render children?.()}
+	</a>
+{/snippet}
+
+{#if tooltip}
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{@render link()}
+			</Tooltip.Trigger>
+			<Tooltip.Content>
+				{#if typeof tooltip === 'string'}
+					<p>{tooltip}</p>
+				{:else}
+					<p>Go to: <code>{href}</code></p>
+				{/if}
+			</Tooltip.Content>
+		</Tooltip.Root>
+	</Tooltip.Provider>
+{:else}
+	{@render link()}
+{/if}

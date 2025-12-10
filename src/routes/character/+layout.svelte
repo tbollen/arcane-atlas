@@ -31,10 +31,8 @@
 		// Set active character in store
 		const activeCharacterFromLS = localStorage.getItem(lsk.activeCharacter);
 		if (activeCharacterFromLS && data.characters.find((c) => c.id == activeCharacterFromLS)) {
-			$activeCharacter = characterStore.getCharacter(activeCharacterFromLS);
+			activeCharacter.set(characterStore.getCharacter(activeCharacterFromLS));
 		}
-		console.log('Character ID in local storage:', activeCharacterFromLS);
-		console.log('Active character:', $activeCharacter);
 	});
 </script>
 
