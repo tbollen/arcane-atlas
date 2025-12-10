@@ -53,7 +53,7 @@
 	}: {
 		deck: StoredDeck;
 		character: StoredCharacter;
-		config?: Partial<DeckConfig>;
+		config?: DeckConfig;
 	} = $props();
 
 	////////////////////////////////
@@ -148,10 +148,12 @@
 					!isNaN(colNum) && // is a number (is not NaN)
 					colNum >= deckConfig.minColumns && // is above min columns
 					colNum <= deckConfig.maxColumns && // is below max columns
-					!deckConfig.columnsToKeep.includes(colNum) // is NOT in columns to keep
+					!Object.keys(deckConfig.layouts).includes(colNum.toString()) // is NOT in columns to keep
 				) {
 					// Find first nearest larger column to keep (nextCol)
-					const nextCol = deckConfig.columnsToKeep.find((col) => col > colNum);
+					const nextCol = Object.keys(deckConfig.layouts)
+						.map(Number)
+						.find((col) => col > colNum);
 					// If empty, use values of colNum on nextCol
 					if (nextCol && nextCol in widget === false) widget[nextCol] = widget[colNum];
 					// Drop this column (colNum)
@@ -209,7 +211,10 @@
 	// GRIDSTACK
 
 	// DECK CONFIG
-	let deckConfig: DeckConfig = { ...defaultDeckConfig, ...config };
+	let deckConfig: DeckConfig = config ?? defaultDeckConfig;
+	let currentLayout: DeckConfig['layouts'][number] = $state(
+		deckConfig.layouts[deckConfig.minColumns]
+	);
 
 	// GRID CONSTANTS
 	const MAX_COLUMNS = deckConfig.maxColumns;
@@ -264,11 +269,14 @@
 				Math.min(MAX_COLUMNS, Math.floor(windowWidth / CELLSIZE))
 			);
 
-			// COLUMN SNAPPING (based on deckConfig)
-			const snappedColumns =
-				deckConfig.columnsToKeep.findLast((col) => col <= calculatedColumns) ?? MIN_COLUMNS;
+			// COLUMN SNAPPING (based on deckConfig) >> calculate nearest lower column to snap to
+			const snapColumns: number[] = Object.keys(deckConfig.layouts).map((key) => parseInt(key));
+			const snappedColumns = snapColumns
+				.filter((col) => col <= calculatedColumns)
+				.reduce((max, col) => Math.max(max, col as number), MIN_COLUMNS);
 			// Don't update when the amount of columns hasn't changed
 			if (snappedColumns === previousColumns) return;
+			currentLayout = deckConfig.layouts[snappedColumns];
 
 			// Update grid params
 			cols = [[1000, snappedColumns]];
@@ -306,6 +314,8 @@
 	<!-- TODO: FIX -->
 	<!-- <GameSystemSelector bind:character bind:edit={editDeck} bind:system /> -->
 {/if}
+Current Layout: {currentLayout.name} / {currentLayout.width}px
+<br />
 Columns: {columns} // Width: {containerWidth}
 <!-- Dynamic Edit Dialog -->
 <EditDialog bind:open={edit.open} componentID={edit.componentID} bind:character />
