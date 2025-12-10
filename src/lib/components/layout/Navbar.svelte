@@ -342,11 +342,7 @@ px-4 py-2 print:hidden"
 							</Select.Trigger>
 							<Select.Content class="w-full">
 								{#each data.characters as character}
-									<Select.Item
-										class="h-max"
-										value={character.id}
-										onclick={() => activeCharacterStore.fromData(character)}
-									>
+									<Select.Item class="h-max" value={character.id}>
 										<CharacterAvatar {character} />
 									</Select.Item>
 								{/each}

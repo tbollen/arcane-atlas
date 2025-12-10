@@ -123,7 +123,7 @@
 					</div>
 					{#each Object.values(skills) as skill}
 						{#if skill.characteristic == char.name}
-							<p class="overflow-hidden pr-6 text-sm text-ellipsis whitespace-nowrap">
+							<p class="block overflow-hidden pr-6 text-sm text-ellipsis whitespace-nowrap">
 								{@render skill_sn(skill)}
 							</p>
 							<Mastery value={skill.value} max={rules.skills.maxMastery} />
