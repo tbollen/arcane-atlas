@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Types
-	import { type Character as PrismaCharacter, type User as PrismaUser } from '@prisma/client';
+	import { type User as PrismaUser } from '@prisma/client';
 
 	// Import UI components
 	import { Header } from '$lib/components/typography';
@@ -13,7 +13,7 @@
 	import AddWidgetDialog from './AddWidgetDialog.svelte';
 
 	// Import classes
-	import { StoredCharacter } from '$lib/domain/characters/character.svelte.js';
+	import { StoredCharacter, type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
 
 	// DECK stuff
 	import Deck from '$lib/components/playdeck/Deck.svelte';
@@ -43,25 +43,13 @@
 		StoredCharacter.fromPrisma({ character, user: data.user as PrismaUser })
 	);
 
-	// Functions
-	function setActiveCharacterFromID(id: string | null): StoredCharacter | undefined {
-		const foundCharacter = dataCharactersAsStored.find((c) => c.id === id);
-		if (!foundCharacter) {
-			toast.error('No character found with ID ' + id);
-			return undefined;
-		}
-		return foundCharacter;
-	}
-
 	// Init characters
 	let character: StoredCharacter | undefined = $state();
+	let activeCharacter: PrismaCharacterExtended | undefined = $state(undefined);
 
 	// Init deck
 	let DeckComponent: Deck;
-	let deck: StoredDeck = $state([
-		{ componentID: 'generic:banner', 6: gridHelp.item({ x: 0, y: 0, w: 6, h: 2 }) },
-		{ componentID: 'generic:description', 6: gridHelp.item({ x: 0, y: 2, w: 4, h: 2 }) }
-	]);
+	let deck: StoredDeck = $state(fallbackDeck);
 
 	// EDIT MODES
 	type EditMode = 'view' | 'editItems' | 'editDeck';
@@ -91,13 +79,11 @@
 		// Start saving
 		spinner.set('save', 'Saving...');
 
-		// LSK
-		const deckJSON = JSON.stringify(deck);
-		localStorage.setItem(lsk.deck, deckJSON);
+		// Save deck to character
+		character.deck = deck;
 
 		// Save Character
 		const prismaCharacter = character.toPrisma();
-		console.log('Character: ', prismaCharacter);
 		CHARACTER_API.update(prismaCharacter)
 			.then(() => {
 				toast.success('Character updated');
@@ -121,6 +107,7 @@
 	function setActiveCharacter(_character: StoredCharacter) {
 		localStorage.setItem(lsk.activeCharacter, _character.id);
 		character = _character;
+		deck = character?.deck ?? fallbackDeck;
 	}
 
 	//////////////////
@@ -133,50 +120,17 @@
 			goto('/login');
 		} else {
 			// DO MOUNT
-			character = getActiveCharacterFromLS() ?? character;
-			deck = getDeckFromLS();
-			saveDeckToLS();
+			// Find the targeted character (activeCharacter)
+			const activeCharacterID = localStorage.getItem(lsk.activeCharacter)
+			activeCharacter = data.characters.find((char) => char.id === activeCharacterID );
+			if (activeCharacter){ 
+				character = dataCharactersAsStored.find((char) => char.id === activeCharacterID );
+				deck = character?.deck ?? fallbackDeck;
+			}
+
 		}
 	});
 
-	// MOUNTING FUNCTIONS
-	function getActiveCharacterFromLS(): StoredCharacter | undefined {
-		if (typeof window === 'undefined' || !window.localStorage) return undefined;
-		const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
-		return setActiveCharacterFromID(activeCharacterID);
-	}
-
-	function getDeckFromLS(): StoredDeck {
-		try {
-			// Check if localStorage is available
-			if (typeof window === 'undefined' || !window.localStorage)
-				throw new Error('Localstorage not available');
-			// Try to get deck from localstorage
-			const localStorageDeck = localStorage.getItem(lsk.deck);
-			if (!localStorageDeck) throw new Error('No deck found in localstorage');
-			// Parse deck and check if formatting is correct
-			const parsedDeck = JSON.parse(localStorageDeck);
-			if (!checkDeckValidity(parsedDeck)) throw new Error('Invalid deck format');
-			// Return deck
-			console.debug('Deck loaded from localstorage', parsedDeck);
-			return parsedDeck;
-		} catch (error) {
-			console.error(error);
-			return fallbackDeck;
-		}
-	}
-
-	function saveDeckToLS(): void {
-		try {
-			if (typeof window === 'undefined' || !window.localStorage)
-				throw new Error('Localstorage not available');
-			const deckJSON = JSON.stringify(deck);
-			localStorage.setItem(lsk.deck, deckJSON);
-			console.debug('Deck saved to localstorage', JSON.parse(deckJSON));
-		} catch (error) {
-			console.error(error);
-		}
-	}
 </script>
 
 <!-- RENDERING -->
