@@ -7,6 +7,12 @@
 	// Import partials
 	import GameSystemSelector from './GameSystemSelector.svelte';
 
+	// Spinner
+	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
+
+	// API
+	import CHARACTER_API from '$lib/utils/api/characters_api.js';
+
 	// Import necessary types and utils
 	import { type StoredCharacter } from '$lib/domain/characters/character.svelte';
 	import {
@@ -38,6 +44,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { defaultDeckConfig, type DeckConfig } from './deckConfig';
+	import { invalidateAll } from '$app/navigation';
 
 	let {
 		deck = $bindable(),
@@ -107,6 +114,76 @@
 		deck = itemsToDeck(items);
 	}
 
+	export function removeItem(itemID: string) {
+		items = items.filter((item) => item.id !== itemID);
+		deck = itemsToDeck(items);
+	}
+
+	export async function saveDeck(): Promise<Response> {
+		if (!character) {
+			console.error('No character selected');
+			toast.error("Can't save deck: No character selected");
+			throw new Error('No character selected');
+		}
+		if (!deck) {
+			console.error('No deck found');
+			toast.error("Can't save deck: No deck found");
+			throw new Error('No deck found');
+		}
+
+		// Start saving
+		spinner.set('save', 'Saving...');
+
+		// Create a copy of the deck for modification
+		let _deck = deck;
+
+		// Go through each widget...
+		_deck.values().forEach((widget) => {
+			// Check by keys. Numbers hold column data and represent the amount of columns Grid uses
+			Object.keys(widget).forEach((key) => {
+				// Convert key to number
+				const colNum = parseInt(key);
+				// Check if key is a number and valid column
+				if (
+					typeof colNum === 'number' && // is a number
+					colNum >= deckConfig.minColumns && // is above min columns
+					colNum <= deckConfig.maxColumns && // is below max columns
+					!deckConfig.columnsToKeep.includes(colNum) // is NOT in columns to keep
+				) {
+					// Find first nearest larger column to keep (nextCol)
+					const nextCol = deckConfig.columnsToKeep.find((col) => col > colNum);
+					// If empty, use values of colNum on nextCol
+					if (nextCol && nextCol in widget === false) widget[nextCol] = widget[colNum];
+					// Drop this column (colNum)
+					delete widget[colNum];
+					// Result: only columns in columnsToKeep remain. Current col's data moved to nearest larger column if not specified in columnsToKeep
+				}
+			});
+		});
+
+		// Save deck to character
+		character.deck = _deck;
+
+		// Convert to PrismaCharacter
+		const prismaCharacter = character.toPrisma();
+		// Update character via API and return the promised Response
+		return await CHARACTER_API.update(prismaCharacter)
+			.then((response) => {
+				toast.success('Character updated');
+				invalidateAll();
+				return response; // return the response for further handling
+			})
+			.catch((error) => {
+				toast.error(`Error updating character: ${error}`);
+				throw error; // re-throw to propagate error
+			})
+			.finally(() => {
+				setTimeout(() => {
+					spinner.complete();
+				}, 500);
+			});
+	}
+
 	function createWidget(_widgetID: string): DeckWidget {
 		if (!widgetIDs.includes(_widgetID)) throw new Error('Invalid Widget ID');
 		// Get index from items
@@ -126,11 +203,6 @@
 		const newPosition = gridHelp.findSpace(newDeckWidget, items, columns);
 		// Add positional changes to newDeckWidget and return
 		return { ...newDeckWidget, [columns]: { ...newDeckWidget[columns], ...newPosition } };
-	}
-
-	export function removeItem(itemID: string) {
-		items = items.filter((item) => item.id !== itemID);
-		deck = itemsToDeck(items);
 	}
 
 	//////////////////////////////////////////
@@ -212,10 +284,6 @@
 			items = adjust ? gridHelp.adjust(_updatedItems, columns) : _updatedItems;
 		}
 	}
-
-	$effect(() => {
-		console.log('Deck:', $state.snapshot(deck));
-	});
 
 	onMount(() => {
 		recalculateGrid();
