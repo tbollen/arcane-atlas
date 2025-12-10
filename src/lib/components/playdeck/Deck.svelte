@@ -259,14 +259,21 @@
 		if (container !== undefined) {
 			const previousColumns = columns;
 			const windowWidth = Math.min(MAX_GRID_WIDTH, window.innerWidth);
-			columns = Math.floor(windowWidth / CELLSIZE);
+			let calculatedColumns = Math.max(
+				MIN_COLUMNS,
+				Math.min(MAX_COLUMNS, Math.floor(windowWidth / CELLSIZE))
+			);
+
+			// COLUMN SNAPPING (based on deckConfig)
+			const snappedColumns =
+				deckConfig.columnsToKeep.findLast((col) => col <= calculatedColumns) ?? MIN_COLUMNS;
 			// Don't update when the amount of columns hasn't changed
-			if (columns === previousColumns) return;
+			if (snappedColumns === previousColumns) return;
 
 			// Update grid params
-			cols = [[1000, columns]];
-			containerWidth = columns * CELLSIZE;
-
+			cols = [[1000, snappedColumns]];
+			containerWidth = snappedColumns * CELLSIZE;
+			columns = snappedColumns;
 			// Set variable to manage if the grid is adjusted or not
 			let adjust = false;
 
