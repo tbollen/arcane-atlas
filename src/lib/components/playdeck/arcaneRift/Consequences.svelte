@@ -57,8 +57,10 @@
 	let rollNum = $state(minRoll);
 
 	// Severity calculated from roll
-	let calculatedSeverity: Consequence['variant'] = $derived(calcServerity(rollNum)?.variant);
-	let slotsAreFull: boolean = $derived(calcServerity(rollNum)?.canPlace !== true);
+
+	let _calcSeverity = $derived(calcSeverity(rollNum));
+	let calculatedSeverity: Consequence['variant'] = $derived(_calcSeverity.variant);
+	let slotsAreFull: boolean = $derived(_calcSeverity.canPlace !== true);
 	let severityPlaceholder: string = $derived(
 		calculatedSeverity
 			? `e.g. ${
@@ -68,10 +70,10 @@
 				}`
 			: 'Set your roll first'
 	);
-	let severityIndex: number | undefined = $derived(calcServerity(rollNum).index);
+	let severityIndex: number | undefined = $derived(_calcSeverity.index);
 
 	// HELPER --> NULL functions as a flag for when slots are full
-	function calcServerity(roll: number) {
+	function calcSeverity(roll: number) {
 		// if (roll === 0) throw new Error('Roll not set');
 		if (!character.fn?.[AR_KEY]?.calculateSeverityFromRoll)
 			throw new Error('Character not configured for Arcane Rift properly');

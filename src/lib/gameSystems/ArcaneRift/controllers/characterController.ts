@@ -200,10 +200,13 @@ export class ArcaneRiftCharacterController {
 	// ----------------------
 	// CONSEQUENCES
 
-	getMinMaxConsequenceRolls(): { min: number; max: number } {
+	getMinMaxConsequenceRolls(): { min: number | null; max: number | null } {
 		const rolls = this.rules.consequences
 			.map((c) => (typeof c.roll === 'number' ? c.roll : Infinity))
 			.filter((r) => r !== Infinity);
+		if (rolls.length === 0) {
+			return { min: null, max: null };
+		}
 		return {
 			min: Math.min(...rolls),
 			max: Math.max(...rolls)
