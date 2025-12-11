@@ -257,19 +257,56 @@ export class ArcaneRiftCharacterController {
 		return templateConsequences;
 	}
 
-	calculateSeverityFromRoll(roll: ConsequenceRoll): { variant: ConsequenceVariant; index: number } {
+	/**
+	 * Calculate the severity variant and index for a given roll
+	 * @param roll  The consequence roll to evaluate
+	 * @returns  An object containing:
+	 *   - canPlace: boolean indicating if the consequence can be placed
+	 *   - variant: the severity variant of the consequence
+	 *   - index: the index of the consequence slot in the rules
+	 * Never throws!
+	 */
+	calculateSeverityFromRoll(roll: ConsequenceRoll): {
+		canPlace: boolean;
+		variant: ConsequenceVariant;
+		index: number;
+	} {
 		let m = this.getMechanics();
-		// Find matching consequence
+		const rules = this.rules;
+		// Convert ConsequenceRoll to number for comparison
 		const rollNum = this.rollToNumber(roll);
-		// Find the first slot where the roll made is equal or smaller than the consequence roll from the rules, AND the slot is empty (null)
-		const firstAvailableSlot = this.rules.consequences.find(
-			(slot, index) => rollNum <= this.rollToNumber(slot.roll) && m.consequences[index] == null
+		// Find the index of the first slot in the rules that can hold this roll
+		const firstFittingIndex = rules.consequences.findIndex(
+			(slot) => rollNum <= this.rollToNumber(slot.roll)
 		);
-		// If no slot found, all slots are full
-		if (!firstAvailableSlot) throw new Error('All slots are full! Take an extreme consequence.');
+		// If no fitting slot found, all slots are too small for the roll
+		if (firstFittingIndex === -1) {
+			// Then return the last slot and say: "cannot place"
+			return {
+				canPlace: false,
+				variant: rules.consequences[rules.consequences.length - 1].variant,
+				index: rules.consequences.length - 1
+			};
+		}
+
+		// If slot is found but full, check next slot (until a free slot is found or no more slots)
+		for (let i = firstFittingIndex; i < rules.consequences.length; i++) {
+			// Check if slot is empty
+			if (m.consequences[i] == null) {
+				// If empty, return this slot
+				return {
+					canPlace: true,
+					variant: rules.consequences[i].variant,
+					index: i
+				};
+			}
+		}
+
+		// Otherwise, all slots that can hold the roll are full. Then, return last slot but say: "cannot place"
 		return {
-			variant: firstAvailableSlot.variant,
-			index: this.rules.consequences.indexOf(firstAvailableSlot)
+			canPlace: false,
+			variant: rules.consequences[rules.consequences.length - 1].variant,
+			index: rules.consequences.length - 1
 		};
 	}
 

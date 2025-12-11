@@ -52,10 +52,8 @@
 	let rollNum = $state(0);
 
 	// Severity calculated from roll
-	let calculatedSeverity: Consequence['variant'] | undefined | null = $derived(
-		calcServerity(rollNum).variant
-	);
-	let slotsAreFull: boolean = $derived(calculatedSeverity === null);
+	let calculatedSeverity: Consequence['variant'] = $derived(calcServerity(rollNum)?.variant);
+	let slotsAreFull: boolean = $derived(calcServerity(rollNum)?.canPlace !== true);
 	let severityPlaceholder: string = $derived(
 		calculatedSeverity
 			? `e.g. ${
@@ -68,19 +66,12 @@
 	let severityIndex: number | undefined = $derived(calcServerity(rollNum).index);
 
 	// HELPER --> NULL functions as a flag for when slots are full
-	function calcServerity(roll: number): {
-		variant: Consequence['variant'] | undefined | null;
-		index: number | undefined;
-	} {
-		if (roll === 0) return { variant: undefined, index: undefined };
+	function calcServerity(roll: number) {
+		// if (roll === 0) throw new Error('Roll not set');
 		if (!character.fn?.[AR_KEY]?.calculateSeverityFromRoll)
 			throw new Error('Character not configured for Arcane Rift properly');
-		// Try to calculate severity
-		try {
-			return character.fn[AR_KEY].calculateSeverityFromRoll(roll);
-		} catch (error) {
-			return { variant: null, index: undefined };
-		}
+		// Calculate severity
+		return character.fn[AR_KEY].calculateSeverityFromRoll(roll);
 	}
 
 	let consequenceRoll: Consequence['roll'] = $derived(rollNum > 4 ? 'Despair' : rollNum);
@@ -223,16 +214,19 @@
 			<!-- CALCULATED SEVERITY -->
 			<Label for="severity">Calculated Severity</Label>
 			<p class="font-semibold">
-				{#if calculatedSeverity}
-					{calculatedSeverity}
-				{:else if slotsAreFull}
+				{#if slotsAreFull}
 					<!-- If slots are full! -->
-					<span class="font-bold text-threat-500">All consequence slots are full!</span> <br />
-					<span class="text-sm font-medium text-threat-300">
-						Add your consequence as a permanent aspect instead.</span
+					<InfoTooltip class="align-middle text-threat-500" icon="mdi:alert-circle-outline"
+						>Consequence must be added as a permanent aspect instead</InfoTooltip
 					>
+					<span class="align-middle capitalize">{calculatedSeverity}</span> <br />
+
+					<span class="text-sm font-medium text-threat-300"> All slots are full!</span>
 				{:else}
-					<span class="text-muted-foreground/50">N/A</span>
+					<InfoTooltip class="align-middle text-blossom-500" icon="mdi:check-circle-outline"
+						>The consequence can be placed</InfoTooltip
+					>
+					<span class="align-middle capitalize">{calculatedSeverity}</span>
 				{/if}
 			</p>
 			{#if !slotsAreFull}
