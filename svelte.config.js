@@ -18,6 +18,9 @@ const config = {
 		},
 		prerender: {
 			handleHttpError: 'warn'
+		},
+		alias: {
+			$static: 'static'
 		}
 	},
 	vite: {
