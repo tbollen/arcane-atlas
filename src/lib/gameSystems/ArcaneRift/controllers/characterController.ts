@@ -257,7 +257,7 @@ export class ArcaneRiftCharacterController {
 		return templateConsequences;
 	}
 
-	calculateSeverityFromRoll(roll: ConsequenceRoll): ConsequenceVariant {
+	calculateSeverityFromRoll(roll: ConsequenceRoll): { variant: ConsequenceVariant; index: number } {
 		let m = this.getMechanics();
 		// Find matching consequence
 		const rollNum = this.rollToNumber(roll);
@@ -267,7 +267,10 @@ export class ArcaneRiftCharacterController {
 		);
 		// If no slot found, all slots are full
 		if (!firstAvailableSlot) throw new Error('All slots are full! Take an extreme consequence.');
-		return firstAvailableSlot.variant;
+		return {
+			variant: firstAvailableSlot.variant,
+			index: this.rules.consequences.indexOf(firstAvailableSlot)
+		};
 	}
 
 	addConsequence(consequence: Omit<Consequence, 'variant'>) {

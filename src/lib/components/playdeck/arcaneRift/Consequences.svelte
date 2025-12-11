@@ -18,8 +18,10 @@
 
 	import {
 		arcaneRiftDefaultCharacterRules,
-		type Consequence
+		type Consequence,
+		consequenceSeverityExamples
 	} from '$lib/gameSystems/ArcaneRift/ar_characters';
+	import InfoTooltip from '$lib/components/partials/InfoTooltip.svelte';
 
 	let { character = $bindable() }: WidgetComponentProps = $props();
 
@@ -50,19 +52,34 @@
 	let rollNum = $state(0);
 
 	// Severity calculated from roll
-	let calculatedSeverity: Consequence['variant'] | undefined = $derived(calcServerity(rollNum));
+	let calculatedSeverity: Consequence['variant'] | undefined | null = $derived(
+		calcServerity(rollNum).variant
+	);
+	let slotsAreFull: boolean = $derived(calculatedSeverity === null);
+	let severityPlaceholder: string = $derived(
+		calculatedSeverity
+			? `e.g. ${
+					consequenceSeverityExamples[calculatedSeverity][
+						Math.floor(Math.random() * consequenceSeverityExamples[calculatedSeverity].length)
+					]
+				}`
+			: 'Set your roll first'
+	);
+	let severityIndex: number | undefined = $derived(calcServerity(rollNum).index);
 
-	// HELPER
-	function calcServerity(roll: number): Consequence['variant'] | undefined {
-		if (roll === 0) return undefined;
-		console.log('Calculating severity for roll:', roll);
+	// HELPER --> NULL functions as a flag for when slots are full
+	function calcServerity(roll: number): {
+		variant: Consequence['variant'] | undefined | null;
+		index: number | undefined;
+	} {
+		if (roll === 0) return { variant: undefined, index: undefined };
 		if (!character.fn?.[AR_KEY]?.calculateSeverityFromRoll)
 			throw new Error('Character not configured for Arcane Rift properly');
 		// Try to calculate severity
 		try {
 			return character.fn[AR_KEY].calculateSeverityFromRoll(roll);
 		} catch (error) {
-			return undefined;
+			return { variant: null, index: undefined };
 		}
 	}
 
@@ -70,6 +87,78 @@
 
 	let consequenceText: Consequence['text'] = $state('');
 </script>
+
+{#snippet consequencesList(preview?: { isPreview: boolean; index?: number })}
+	<!-- {#if character.mechanics[AR_KEY]?.aspects?.length == 0} -->
+	{#each characterConsequences as _consequence, i}
+		<!-- Reverse order when limitedList (very low height) -->
+		{@const index = limitedList || compactList ? characterConsequences.length - 1 - i : i}
+		{@const consequence = characterConsequences[index]}
+		{@const rule = rules[index]}
+
+		{@const isNotEmpty = consequence.text.length > 0}
+		{#if isNotEmpty || !limitedList}
+			<div
+				id="consequence-{index}"
+				class=" relative grid w-full grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-4"
+			>
+				<!-- HANDLE -->
+				<div
+					id="editHandle-{index}"
+					class="row-span-2 w-2 overflow-hidden rounded-lg transition-all
+					{preview && preview.index == index ? 'w-8 bg-threat-500 text-transparent hover:text-white' : ''}
+					{isNotEmpty
+						? preview?.isPreview
+							? 'bg-threat-500/30 text-transparent'
+							: 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
+						: 'bg-muted-foreground/20'}
+                        "
+				>
+					{#if isNotEmpty}
+						<Button
+							class="h-full w-full bg-inherit! text-inherit!"
+							onclick={() => {
+								const accept = window.confirm('Are you sure you want to remove this consequence?');
+								if (!accept) return;
+								verbose(
+									() => {
+										character.fn?.[AR_KEY]?.removeConsequence(index);
+									},
+									{
+										successMessage: 'Consequence removed'
+									}
+								);
+							}}><Icon icon="mdi:delete" /></Button
+						>
+					{/if}
+				</div>
+
+				<!-- If compact list and consequence is empty, show a different view -->
+				{#if isNotEmpty || !compactList}
+					<div id="consequence-{index}-text">
+						{#if isNotEmpty}
+							<p class="font-semibold">{consequence.text}</p>
+						{:else}
+							<p class="text-muted-foreground/25">. . .</p>
+						{/if}
+					</div>
+				{/if}
+				<p class="text-xs text-muted-foreground/50">{rule.variant}</p>
+				<!-- ROLL -->
+				<div class="absolute right-1 bottom-1 text-end text-muted-foreground/50">
+					{#if rule.roll === 'Despair'}
+						<DiceIcon symbol="despair" />
+					{:else if typeof rule.roll === 'number'}
+						{#each { length: rule.roll } as x}
+							<DiceIcon symbol="failure" />
+						{/each}
+					{/if}
+				</div>
+			</div>
+		{/if}
+	{/each}
+	<br class="flex-grow" />
+{/snippet}
 
 <!-- Safeguard to make sure the character has Arcane Rift mechanics -->
 {#if character.mechanics.hasOwnProperty(AR_KEY)}
@@ -80,73 +169,7 @@
 			</Button>
 		</Block.Title>
 		<Block.Listcontent>
-			<!-- {#if character.mechanics[AR_KEY]?.aspects?.length == 0} -->
-			{#each characterConsequences as _consequence, i}
-				<!-- Reverse order when limitedList (very low height) -->
-				{@const index = limitedList || compactList ? characterConsequences.length - 1 - i : i}
-				{@const consequence = characterConsequences[index]}
-				{@const rule = rules[index]}
-
-				{@const isNotEmpty = consequence.text.length > 0}
-				{#if isNotEmpty || !limitedList}
-					<div
-						id="consequence-{index}"
-						class=" relative grid w-full grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-4"
-					>
-						<!-- HANDLE -->
-						<div
-							id="editHandle-{index}"
-							class="row-span-2 w-2 overflow-hidden rounded-lg transition-all {isNotEmpty
-								? 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
-								: 'bg-muted-foreground/20'}
-                        "
-						>
-							{#if isNotEmpty}
-								<Button
-									class="h-full w-full bg-inherit! text-inherit!"
-									onclick={() => {
-										const accept = window.confirm(
-											'Are you sure you want to remove this consequence?'
-										);
-										if (!accept) return;
-										verbose(
-											() => {
-												character.fn?.[AR_KEY]?.removeConsequence(index);
-											},
-											{
-												successMessage: 'Consequence removed'
-											}
-										);
-									}}><Icon icon="mdi:delete" /></Button
-								>
-							{/if}
-						</div>
-
-						<!-- If compact list and consequence is empty, show a different view -->
-						{#if isNotEmpty || !compactList}
-							<div id="consequence-{index}-text">
-								{#if isNotEmpty}
-									<p class="font-semibold">{consequence.text}</p>
-								{:else}
-									<p class="text-muted-foreground/25">. . .</p>
-								{/if}
-							</div>
-						{/if}
-						<p class="text-xs text-muted-foreground/50">{rule.variant}</p>
-						<!-- ROLL -->
-						<div class="absolute right-1 bottom-1 text-end text-muted-foreground/50">
-							{#if rule.roll === 'Despair'}
-								<DiceIcon symbol="despair" />
-							{:else if typeof rule.roll === 'number'}
-								{#each { length: rule.roll } as x}
-									<DiceIcon symbol="failure" />
-								{/each}
-							{/if}
-						</div>
-					</div>
-				{/if}
-			{/each}
-			<br class="flex-grow" />
+			{@render consequencesList()}
 		</Block.Listcontent>
 		<Block.Footer />
 	</Block.Root>
@@ -195,22 +218,44 @@
 			<p class="font-semibold">
 				{#if calculatedSeverity}
 					{calculatedSeverity}
+				{:else if slotsAreFull}
+					<!-- If slots are full! -->
+					<span class="font-bold text-threat-500">All consequence slots are full!</span> <br />
+					<span class="text-sm font-medium text-threat-300">
+						Add your consequence as a permanent aspect instead.</span
+					>
 				{:else}
 					<span class="text-muted-foreground/50">N/A</span>
 				{/if}
 			</p>
 			<!-- TEXT -->
-			<Label for="text">Text of your consequence</Label>
-			<Input bind:value={consequenceText} placeholder="Stabwound in the leg" />
+			<Label for="text"
+				>Text of your consequence <InfoTooltip
+					>Write a description that matches the severity and works with your scenario</InfoTooltip
+				></Label
+			>
+			<Input bind:value={consequenceText} placeholder={severityPlaceholder} />
+
+			<!-- WIDGET PREVIEW -->
+			{@render consequencesList({ isPreview: true, index: severityIndex })}
+
+			<!-- ADD BUTTON -->
 			<Button
+				variant="default"
+				tooltip={consequenceText.length !== 0
+					? calculatedSeverity
+						? 'Add Consequence'
+						: 'Set a valid roll first'
+					: 'Enter consequence text'}
 				onclick={() =>
 					verbose(
 						() => {
-							// Add consequence to character
-							character.fn?.[AR_KEY]?.addConsequence({
-								roll: consequenceRoll,
-								text: consequenceText
-							});
+							if (slotsAreFull)
+								// Add consequence to character
+								character.fn?.[AR_KEY]?.addConsequence({
+									roll: consequenceRoll,
+									text: consequenceText
+								});
 							// Reset dialog values
 							rollNum = 0;
 							consequenceText = '';
@@ -221,6 +266,7 @@
 							successMessage: `Consequence added: ${consequenceText}`
 						}
 					)}
+				disabled={consequenceText.length == 0 || calculatedSeverity === undefined}
 			>
 				<Icon icon="mdi:plus" /> Add Consequence
 			</Button>
