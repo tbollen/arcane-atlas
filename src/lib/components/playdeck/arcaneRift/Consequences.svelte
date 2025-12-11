@@ -226,7 +226,9 @@
 					>
 					<span class="align-middle capitalize">{calculatedSeverity}</span> <br />
 
-					<span class="text-sm font-medium text-threat-300"> All slots are full!</span>
+					<span class="text-sm font-medium text-threat-300">
+						All valid slots are full! Add an Aspect instead</span
+					>
 				{:else}
 					<InfoTooltip class="align-middle text-blossom-500" icon="mdi:check-circle-outline"
 						>The consequence can be placed</InfoTooltip
