@@ -6,7 +6,8 @@ import {
 	type ConsequenceRoll,
 	type Aspect,
 	type Characteristic,
-	type Skill
+	type Skill,
+	type ConsequenceVariant
 } from '../ar_characters';
 
 export class ArcaneRiftCharacterController {
@@ -254,6 +255,25 @@ export class ArcaneRiftCharacterController {
 			}
 		}
 		return templateConsequences;
+	}
+
+	checkSeveranceFromRoll(roll: ConsequenceRoll): ConsequenceVariant {
+		console.group('Checking severance for roll:', roll);
+		let m = this.getMechanics();
+		// Find matching consequence
+		const rollNum = this.rollToNumber(roll);
+		console.log('Roll number:', rollNum);
+		console.log('Slots from rules:', this.rules.consequences);
+		console.log("Current character's consequences:", m.consequences);
+		// Find the first slot where the roll made is equal or higher than the consequence roll from the rules
+		const firstAvailableSlot = this.rules.consequences.find(
+			(c) => this.rollToNumber(c.roll) <= rollNum
+		);
+		console.log('First available slot from rules:', firstAvailableSlot);
+		console.groupEnd();
+		// If no slot found, all slots are full
+		if (!firstAvailableSlot) throw new Error('All slots are full! Take an extreme consequence.');
+		return firstAvailableSlot.variant;
 	}
 
 	addConsequence(consequence: Omit<Consequence, 'variant'>) {
