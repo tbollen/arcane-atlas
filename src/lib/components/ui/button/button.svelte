@@ -139,7 +139,7 @@
 	<Tooltip.Provider>
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<div>{@render Button()}</div>
+				{@render Button()}
 			</Tooltip.Trigger>
 			<Tooltip.Content
 				arrowClasses={cn(tooltipVariants({ variant }))}

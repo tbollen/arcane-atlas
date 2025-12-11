@@ -43,7 +43,7 @@
 	import gridHelp from 'svelte-grid/build/helper/index.mjs';
 
 	// Svelte
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { defaultDeckConfig, type DeckConfig } from './deckConfig';
 	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
@@ -63,7 +63,7 @@
 	// SAVE TRACKING
 
 	let unsaved: boolean = $state(false);
-	let lastCharacterState = $derived(character.toPrisma());
+	let lastCharacterState = $state(character.toPrisma());
 
 	// Track changes to character
 	$effect(() => {
@@ -150,7 +150,7 @@
 		spinner.set('save', 'Saving...');
 
 		// Create a copy of the deck for modification
-		let _deck = deck;
+		let _deck = structuredClone(deck);
 
 		// Go through each widget...
 		_deck.values().forEach((widget) => {
@@ -190,7 +190,9 @@
 				invalidateAll();
 				// Set saved
 				unsaved = false;
-				return response; // return the response for further handling
+				lastCharacterState = character.toPrisma(); // update last saved state
+				// return the response for further handling
+				return response;
 			})
 			.catch((error) => {
 				toast.error(`Error updating character: ${error}`);
@@ -238,7 +240,7 @@
 	const MIN_COLUMNS = deckConfig.minColumns;
 	const FONT_SIZE = deckConfig.fontSize; //Default 16px
 	const CELLSIZE = deckConfig.emPerCell * FONT_SIZE; //cellsize in pixels
-	const MAX_GRID_WIDTH = CELLSIZE * MAX_COLUMNS; //Min width of the grid
+	const MAX_GRID_WIDTH = CELLSIZE * MAX_COLUMNS; //Max width of the grid
 
 	// GRID VARIABLES, recalculated in recalculateGrid()
 	var container: HTMLDivElement;
@@ -342,11 +344,13 @@
 			);
 			if (!confirmLeave) {
 				navigation.cancel();
-			} else {
-				// Clean up
-				window.removeEventListener('resize', recalculateGrid);
 			}
 		}
+	});
+
+	onDestroy(() => {
+		// Clean up
+		window.removeEventListener('resize', recalculateGrid);
 	});
 </script>
 

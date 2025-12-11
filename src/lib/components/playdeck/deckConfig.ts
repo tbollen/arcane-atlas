@@ -8,8 +8,8 @@
  * @property layouts - An object mapping column counts to layout configurations
  */
 export class DeckConfig {
-	maxColumns: number = 1;
-	minColumns: number = 12;
+	maxColumns: number = 12;
+	minColumns: number = 1;
 	fontSize: number = 16;
 	emPerCell: number = 6;
 	layouts: {
