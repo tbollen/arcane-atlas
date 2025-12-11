@@ -13,7 +13,10 @@
 	import AddWidgetDialog from './AddWidgetDialog.svelte';
 
 	// Import classes
-	import { StoredCharacter, type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
+	import {
+		StoredCharacter,
+		type PrismaCharacterExtended
+	} from '$lib/domain/characters/character.svelte.js';
 
 	// DECK stuff
 	import Deck from '$lib/components/playdeck/Deck.svelte';
@@ -36,6 +39,7 @@
 
 	// API
 	import CHARACTER_API from '$lib/utils/api/characters_api.js';
+	import { defaultDeckConfig, type DeckConfig } from '$lib/components/playdeck/deckConfig';
 
 	// Init character
 	let { data } = $props();
@@ -51,6 +55,9 @@
 	let DeckComponent: Deck;
 	let deck: StoredDeck = $state(fallbackDeck);
 
+	// Deck config
+	const deckConfig: DeckConfig = defaultDeckConfig;
+
 	// EDIT MODES
 	type EditMode = 'view' | 'editItems' | 'editDeck';
 	function toggleEditMode(mode: EditMode = 'view') {
@@ -62,42 +69,8 @@
 	let editDeck: boolean = $state(false);
 	let editItems: boolean = $state(false);
 
-	// Dialog vars
-	let addWidgetDialog: boolean = $state(false);
-	let selectedWidgets: string[] = $state([]);
-
 	//////////////////////////
 	// DECK FUNCTIONS
-
-	// Save changes to the deck
-	function saveDeck() {
-		if (!character) return console.error('No character selected');
-		if (!deck) return console.error('No deck found');
-		if (typeof window === 'undefined' || !window.localStorage)
-			return console.error('Localstorage not ready');
-
-		// Start saving
-		spinner.set('save', 'Saving...');
-
-		// Save deck to character
-		character.deck = deck;
-
-		// Save Character
-		const prismaCharacter = character.toPrisma();
-		CHARACTER_API.update(prismaCharacter)
-			.then(() => {
-				toast.success('Character updated');
-			})
-			.catch((error) => {
-				toast.error(`Error updating character: ${error}`);
-			})
-			.finally(() => {
-				setTimeout(() => {
-					spinner.complete();
-					invalidateAll();
-				}, 500);
-			});
-	}
 
 	function unsetActiveCharacter() {
 		localStorage.removeItem(lsk.activeCharacter);
@@ -121,16 +94,14 @@
 		} else {
 			// DO MOUNT
 			// Find the targeted character (activeCharacter)
-			const activeCharacterID = localStorage.getItem(lsk.activeCharacter)
-			activeCharacter = data.characters.find((char) => char.id === activeCharacterID );
-			if (activeCharacter){ 
-				character = dataCharactersAsStored.find((char) => char.id === activeCharacterID );
+			const activeCharacterID = localStorage.getItem(lsk.activeCharacter);
+			activeCharacter = data.characters.find((char) => char.id === activeCharacterID);
+			if (activeCharacter) {
+				character = dataCharactersAsStored.find((char) => char.id === activeCharacterID);
 				deck = character?.deck ?? fallbackDeck;
 			}
-
 		}
 	});
-
 </script>
 
 <!-- RENDERING -->
@@ -159,40 +130,6 @@
 			</button>
 		{/each}
 	{:else}
-		<div id="Actions" class="my-4 flex flex-row items-center gap-2">
-			<Header variant="h2" class="mr-4">{character.name}</Header>
-			{#if !editDeck && !editItems}
-				<Button onclick={() => toggleEditMode('editDeck')} variant="advanced"
-					><Icon icon="mdi:view-dashboard-edit" />Edit Deck</Button
-				>
-				<Button onclick={() => toggleEditMode('editItems')} variant="advanced"
-					><Icon icon="mdi:pencil" />Edit Content</Button
-				>
-				<Button onclick={unsetActiveCharacter} variant="destructive"
-					>Select different character</Button
-				>
-			{:else}
-				<Button onclick={() => toggleEditMode('view')} variant="secondary"
-					><Icon icon="mdi:eye" />View</Button
-				>
-				<Button onclick={saveDeck} variant="success" spinner={{ id: 'save' }}
-					><Icon icon="mdi:floppy" />Save</Button
-				>
-				{#if editDeck}
-					<Button onclick={() => (addWidgetDialog = true)} variant="success"
-						><Icon icon="mdi:plus" />Add Widget</Button
-					>
-				{/if}
-			{/if}
-
-			<AddWidgetDialog
-				onAdd={(widgets) => {
-					DeckComponent.addToDeck(widgets);
-				}}
-				{character}
-				bind:open={addWidgetDialog}
-			/>
-		</div>
-		<Deck bind:this={DeckComponent} {character} bind:deck />
+		<Deck bind:this={DeckComponent} {character} bind:deck config={deckConfig} />
 	{/if}
 </main>
