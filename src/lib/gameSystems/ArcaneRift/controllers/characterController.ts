@@ -200,6 +200,16 @@ export class ArcaneRiftCharacterController {
 	// ----------------------
 	// CONSEQUENCES
 
+	getMinMaxConsequenceRolls(): { min: number; max: number } {
+		const rolls = this.rules.consequences
+			.map((c) => (typeof c.roll === 'number' ? c.roll : Infinity))
+			.filter((r) => r !== Infinity);
+		return {
+			min: Math.min(...rolls),
+			max: Math.max(...rolls)
+		};
+	}
+
 	private placeConsequences(
 		consequences: Consequence[]
 	): ArcaneRiftCharacterMechanics['consequences'] {

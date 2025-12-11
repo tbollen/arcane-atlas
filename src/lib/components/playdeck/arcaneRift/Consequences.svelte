@@ -25,6 +25,11 @@
 
 	let { character = $bindable() }: WidgetComponentProps = $props();
 
+	// DERIVED VALUES from RULES
+	let minRoll = character.fn?.[AR_KEY]?.getMinMaxConsequenceRolls().min ?? 1;
+	let maxRoll = character.fn?.[AR_KEY]?.getMinMaxConsequenceRolls().max ?? 4;
+	let despairValue = maxRoll + 1;
+
 	// HEIGHT CALCULATIONS
 
 	let rules = $derived(
@@ -49,7 +54,7 @@
 	// DIALOG VARS
 	let openAddDialog = $state(false);
 
-	let rollNum = $state(0);
+	let rollNum = $state(minRoll);
 
 	// Severity calculated from roll
 	let calculatedSeverity: Consequence['variant'] = $derived(calcServerity(rollNum)?.variant);
@@ -191,22 +196,22 @@
 			<!-- ROLL -->
 			<Label for="roll">Rolled result</Label>
 			<div class="flex items-center gap-2">
-				<Button variant="bold" disabled={rollNum <= 1} onclick={() => (rollNum -= 1)}
+				<Button variant="bold" disabled={rollNum <= minRoll} onclick={() => (rollNum -= 1)}
 					><Icon icon="mdi:minus" /></Button
 				>
 				<span class="w-28 border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
-					>{#if consequenceRoll == 'Despair'}
+					>{#if rollNum == despairValue}
 						<DiceIcon symbol="despair" richColor />
 					{:else}
-						{#each { length: consequenceRoll } as x}
+						{#each { length: rollNum } as x}
 							<DiceIcon symbol="failure" richColor />
 						{/each}
 					{/if}</span
 				>
-				<Button variant="bold" disabled={rollNum >= 5} onclick={() => (rollNum += 1)}
+				<Button variant="bold" disabled={rollNum >= despairValue} onclick={() => (rollNum += 1)}
 					><Icon icon="mdi:plus" /></Button
 				>
-				<Button class="ml-auto" variant="destructive" onclick={() => (rollNum = 5)}>
+				<Button class="ml-auto" variant="destructive" onclick={() => (rollNum = despairValue)}>
 					<Icon icon="mdi:cross-circle-outline" />
 					Despair
 				</Button>
@@ -274,7 +279,7 @@
 									description: aspectDescriptionText
 								});
 								// Reset dialog values
-								rollNum = 0;
+								rollNum = minRoll;
 								consequenceText = '';
 								aspectDescriptionText = '';
 								// Close dialog
@@ -305,7 +310,7 @@
 									text: consequenceText
 								});
 								// Reset dialog values
-								rollNum = 0;
+								rollNum = minRoll;
 								consequenceText = '';
 								// Close dialog
 								openAddDialog = false;
