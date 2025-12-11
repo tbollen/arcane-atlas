@@ -85,7 +85,8 @@
 
 	let consequenceRoll: Consequence['roll'] = $derived(rollNum > 4 ? 'Despair' : rollNum);
 
-	let consequenceText: Consequence['text'] = $state('');
+	let consequenceText: Consequence['text'] = $state(''); // also used for Aspect Short when needed
+	let aspectDescriptionText: string = $state(''); // only used when slots are full
 </script>
 
 {#snippet consequencesList(preview?: { isPreview: boolean; index?: number })}
@@ -228,48 +229,96 @@
 					<span class="text-muted-foreground/50">N/A</span>
 				{/if}
 			</p>
-			<!-- TEXT -->
-			<Label for="text"
-				>Text of your consequence <InfoTooltip
-					>Write a description that matches the severity and works with your scenario</InfoTooltip
-				></Label
-			>
-			<Input bind:value={consequenceText} placeholder={severityPlaceholder} />
+			{#if !slotsAreFull}
+				<!-- TEXT -->
+				<Label for="text"
+					>Text of your consequence <InfoTooltip
+						>Write a description that matches the severity and works with your scenario</InfoTooltip
+					></Label
+				>
+				<Input bind:value={consequenceText} placeholder={severityPlaceholder} />
+			{:else}
+				<!-- ADD ASPECT TEXTS -->
+				<Label for="aspectShort">Aspect Short</Label>
+				<Input
+					bind:value={consequenceText}
+					placeholder="A lasting condition that shapes your future"
+				/>
+				<Label for="aspectDescription"
+					>Aspect Description<InfoTooltip
+						>Describe how this aspect affects your character and gameplay</InfoTooltip
+					></Label
+				>
+				<Input bind:value={aspectDescriptionText} placeholder="Description" />
+			{/if}
 
 			<!-- WIDGET PREVIEW -->
 			{@render consequencesList({ isPreview: true, index: severityIndex })}
 
-			<!-- ADD BUTTON -->
-			<Button
-				variant="default"
-				tooltip={consequenceText.length !== 0
-					? calculatedSeverity
-						? 'Add Consequence'
-						: 'Set a valid roll first'
-					: 'Enter consequence text'}
-				onclick={() =>
-					verbose(
-						() => {
-							if (slotsAreFull)
+			{#if slotsAreFull}
+				<!-- ADD ASPECT BUTTON -->
+				<Button
+					variant="destructive"
+					disabled={consequenceText.length == 0 || aspectDescriptionText.length == 0}
+					tooltip={consequenceText.length !== 0
+						? aspectDescriptionText.length !== 0
+							? 'Add Aspect'
+							: 'Enter aspect description text'
+						: 'Enter aspect short text'}
+					onclick={() =>
+						verbose(
+							() => {
+								// Add aspect to character
+								character.fn?.[AR_KEY]?.addAspect({
+									short: consequenceText,
+									description: aspectDescriptionText
+								});
+								// Reset dialog values
+								rollNum = 0;
+								consequenceText = '';
+								aspectDescriptionText = '';
+								// Close dialog
+								openAddDialog = false;
+							},
+							{
+								successMessage: `Aspect added: ${consequenceText}`
+							}
+						)}
+				>
+					<Icon icon="mdi:plus" /> Add Aspect
+				</Button>
+			{:else}
+				<!-- ADD BUTTON -->
+				<Button
+					variant="default"
+					tooltip={consequenceText.length !== 0
+						? calculatedSeverity
+							? 'Add Consequence'
+							: 'Set a valid roll first'
+						: 'Enter consequence text'}
+					onclick={() =>
+						verbose(
+							() => {
 								// Add consequence to character
 								character.fn?.[AR_KEY]?.addConsequence({
 									roll: consequenceRoll,
 									text: consequenceText
 								});
-							// Reset dialog values
-							rollNum = 0;
-							consequenceText = '';
-							// Close dialog
-							openAddDialog = false;
-						},
-						{
-							successMessage: `Consequence added: ${consequenceText}`
-						}
-					)}
-				disabled={consequenceText.length == 0 || calculatedSeverity === undefined}
-			>
-				<Icon icon="mdi:plus" /> Add Consequence
-			</Button>
+								// Reset dialog values
+								rollNum = 0;
+								consequenceText = '';
+								// Close dialog
+								openAddDialog = false;
+							},
+							{
+								successMessage: `Consequence added: ${consequenceText}`
+							}
+						)}
+					disabled={consequenceText.length == 0 || calculatedSeverity === undefined}
+				>
+					<Icon icon="mdi:plus" /> Add Consequence
+				</Button>
+			{/if}
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
