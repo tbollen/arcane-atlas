@@ -110,7 +110,7 @@
 					{preview && preview.index == index ? 'w-8 bg-threat-500 text-transparent hover:text-white' : ''}
 					{isNotEmpty
 						? preview?.isPreview
-							? 'bg-threat-500/30 text-transparent'
+							? 'bg-threat-500/30 text-transparent hover:w-8 hover:bg-threat-600 hover:text-white'
 							: 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
 						: 'bg-muted-foreground/20'}
                         "
@@ -144,7 +144,13 @@
 						{/if}
 					</div>
 				{/if}
-				<p class="text-xs text-muted-foreground/50">{rule.variant}</p>
+				<p
+					class="text-xs {preview && preview.index == index
+						? 'font-medium text-threat-700'
+						: 'text-muted-foreground/50'}"
+				>
+					{rule.variant}
+				</p>
 				<!-- ROLL -->
 				<div class="absolute right-1 bottom-1 text-end text-muted-foreground/50">
 					{#if rule.roll === 'Despair'}
