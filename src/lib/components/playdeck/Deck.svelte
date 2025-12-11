@@ -150,7 +150,7 @@
 		spinner.set('save', 'Saving...');
 
 		// Create a copy of the deck for modification
-		let _deck = structuredClone(deck);
+		let _deck = deck;
 
 		// Go through each widget...
 		_deck.values().forEach((widget) => {

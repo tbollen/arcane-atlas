@@ -13,9 +13,9 @@
 
 	// Tailwind class variants
 	let classVariants: Record<Variant, string> = {
-		default: 'size-24',
-		'A-Spinner': 'size-24 drop-shadow-[6px_6px_0px_rgba(0,0,0,0.25)] drop-shadow-threat-500',
-		'A-Triplet': 'size-24 drop-shadow-[6px_6px_0px_rgba(0,0,0,0.25)] drop-shadow-threat-500'
+		default: '',
+		'A-Spinner': ' drop-shadow-[6px_6px_0px_rgba(0,0,0,0.25)] drop-shadow-threat-500',
+		'A-Triplet': ' drop-shadow-[6px_6px_0px_rgba(0,0,0,0.25)] drop-shadow-threat-500'
 	};
 
 	let { class: className, variant = 'default', ...restProps }: Props = $props();
@@ -37,7 +37,7 @@
 		src="/icons/Arcane-A.svg"
 		alt="Loading"
 		role="status"
-		class={cn(variant, classVariants[variant], addedClass)}
+		class={cn(variant, classVariants[variant], addedClass, className)}
 	/>
 {/snippet}
 
