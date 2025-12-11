@@ -88,12 +88,12 @@
 	{@render children?.()}
 </section>
 <!-- FULL PAGE SPINNER -->
-{#if spinner.isLoading && spinner.id === 'full'}
+{#if (spinner.isLoading && spinner.id === 'full') || true}
 	<div
 		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3.5 bg-primary/80"
 		aria-busy="true"
 	>
-		<Spinner class="size-36 text-background" />
+		<Spinner class="size-36 text-background" variant="A-Spinner" />
 		{#if spinner.message}
 			<p class="text-3xl text-background">{spinner.message}</p>
 		{/if}
