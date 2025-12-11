@@ -3,7 +3,7 @@
 
 // TYPES AND FUNCTIONS PER MEHCANICS
 // Consequences
-type ConsequenceVariant = 'mild' | 'moderate' | 'severe' | 'extreme';
+export type ConsequenceVariant = 'mild' | 'moderate' | 'severe' | 'extreme';
 const severityOrder: ConsequenceVariant[] = ['mild', 'moderate', 'severe', 'extreme'];
 export type ConsequenceRoll = number | 'Despair';
 export type Consequence = { text: string; roll: ConsequenceRoll; variant: ConsequenceVariant };
