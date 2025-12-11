@@ -257,20 +257,14 @@ export class ArcaneRiftCharacterController {
 		return templateConsequences;
 	}
 
-	checkSeveranceFromRoll(roll: ConsequenceRoll): ConsequenceVariant {
-		console.group('Checking severance for roll:', roll);
+	calculateSeverityFromRoll(roll: ConsequenceRoll): ConsequenceVariant {
 		let m = this.getMechanics();
 		// Find matching consequence
 		const rollNum = this.rollToNumber(roll);
-		console.log('Roll number:', rollNum);
-		console.log('Slots from rules:', this.rules.consequences);
-		console.log("Current character's consequences:", m.consequences);
-		// Find the first slot where the roll made is equal or higher than the consequence roll from the rules
+		// Find the first slot where the roll made is equal or smaller than the consequence roll from the rules, AND the slot is empty (null)
 		const firstAvailableSlot = this.rules.consequences.find(
-			(c) => this.rollToNumber(c.roll) <= rollNum
+			(slot, index) => rollNum <= this.rollToNumber(slot.roll) && m.consequences[index] == null
 		);
-		console.log('First available slot from rules:', firstAvailableSlot);
-		console.groupEnd();
 		// If no slot found, all slots are full
 		if (!firstAvailableSlot) throw new Error('All slots are full! Take an extreme consequence.');
 		return firstAvailableSlot.variant;

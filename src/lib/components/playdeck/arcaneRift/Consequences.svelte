@@ -48,6 +48,24 @@
 	let openAddDialog = $state(false);
 
 	let rollNum = $state(0);
+
+	// Severity calculated from roll
+	let calculatedSeverity: Consequence['variant'] | undefined = $derived(calcServerity(rollNum));
+
+	// HELPER
+	function calcServerity(roll: number): Consequence['variant'] | undefined {
+		if (roll === 0) return undefined;
+		console.log('Calculating severity for roll:', roll);
+		if (!character.fn?.[AR_KEY]?.calculateSeverityFromRoll)
+			throw new Error('Character not configured for Arcane Rift properly');
+		// Try to calculate severity
+		try {
+			return character.fn[AR_KEY].calculateSeverityFromRoll(roll);
+		} catch (error) {
+			return undefined;
+		}
+	}
+
 	let consequenceRoll: Consequence['roll'] = $derived(rollNum > 4 ? 'Despair' : rollNum);
 
 	let consequenceText: Consequence['text'] = $state('');
@@ -149,14 +167,13 @@
 			<Dialog.Title>Add new Consequence</Dialog.Title>
 		</Dialog.Header>
 		<div id="inputWrapper" class="flex flex-col gap-2 text-start [&>Label:not(:first-child)]:mt-6">
-			<Label for="text">Text of your consequence</Label>
-			<Input bind:value={consequenceText} placeholder="Stabwound in the leg" />
+			<!-- ROLL -->
 			<Label for="roll">Rolled result</Label>
 			<div class="flex items-center gap-2">
 				<Button variant="bold" disabled={rollNum <= 1} onclick={() => (rollNum -= 1)}
 					><Icon icon="mdi:minus" /></Button
 				>
-				<span class="w-24 border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
+				<span class="w-28 border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
 					>{#if consequenceRoll == 'Despair'}
 						<DiceIcon symbol="despair" richColor />
 					{:else}
@@ -173,14 +190,31 @@
 					Despair
 				</Button>
 			</div>
+			<!-- CALCULATED SEVERITY -->
+			<Label for="severity">Calculated Severity</Label>
+			<p class="font-semibold">
+				{#if calculatedSeverity}
+					{calculatedSeverity}
+				{:else}
+					<span class="text-muted-foreground/50">N/A</span>
+				{/if}
+			</p>
+			<!-- TEXT -->
+			<Label for="text">Text of your consequence</Label>
+			<Input bind:value={consequenceText} placeholder="Stabwound in the leg" />
 			<Button
 				onclick={() =>
 					verbose(
 						() => {
+							// Add consequence to character
 							character.fn?.[AR_KEY]?.addConsequence({
 								roll: consequenceRoll,
 								text: consequenceText
 							});
+							// Reset dialog values
+							rollNum = 0;
+							consequenceText = '';
+							// Close dialog
 							openAddDialog = false;
 						},
 						{
