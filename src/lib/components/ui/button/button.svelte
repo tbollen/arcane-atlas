@@ -11,8 +11,24 @@
 	// Import Tooltip
 	import * as Tooltip from '$lib/components/ui/tooltip';
 
+	const standardDisabledClasses =
+		'opacity-40 cursor-not-allowed active:scale-100';
+
+	export const disabledVariant = {
+		default: `${standardDisabledClasses} border border-gray-300 hover:bg-secondary`,
+		blossom: `${standardDisabledClasses} hover:bg-blossom-700`,
+		bold: `${standardDisabledClasses} hover:bg-obsidian-900`,
+		advanced: `${standardDisabledClasses} hover:bg-weave-500`,
+		destructive: `${standardDisabledClasses} hover:bg-threat-500`,
+		success: `${standardDisabledClasses} hover:bg-success-500`,
+		outline: `${standardDisabledClasses} hover:bg-background border border-gray-300`,
+		secondary: `${standardDisabledClasses} border border-gray-300 hover:bg-secondary`,
+		ghost: `${standardDisabledClasses} border border-gray-300 hover:bg-transparent`,
+		link: `${standardDisabledClasses} hover:no-underline`
+	};
+
 	export const buttonVariants = tv({
-		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
 				default: 'bg-secondary text-secondary-foreground hover:bg-obsidian-200 active:scale-95',
@@ -36,7 +52,8 @@
 				xs: 'h-6 gap-1 rounded-md px-2 has-[>svg]:px-1.5 text-xs',
 				lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
 				icon: 'size-9'
-			}
+			},
+			disabled: disabledVariant
 		},
 		defaultVariants: {
 			variant: 'default',
@@ -100,38 +117,38 @@
 
 {#snippet Button()}
 	{#if href}
-		<a
-			bind:this={ref}
-			data-slot="button"
-			class={cn(buttonVariants({ variant, size }), className)}
-			href={disabled ? undefined : href}
-			aria-disabled={disabled}
-			role={disabled ? 'link' : undefined}
-			tabindex={disabled ? -1 : undefined}
-			{...restProps}
-		>
-			{@render children?.()}
-		</a>
+		       <a
+			       bind:this={ref}
+			       data-slot="button"
+				   class={cn(buttonVariants({ variant, size, disabled: isDisabled ? variant : undefined }), className)}
+			       href={disabled ? undefined : href}
+			       aria-disabled={disabled}
+			       role={disabled ? 'link' : undefined}
+			       tabindex={disabled ? -1 : undefined}
+			       {...restProps}
+		       >
+			       {@render children?.()}
+		       </a>
 	{:else}
-		<button
-			bind:this={ref}
-			data-slot="button"
-			class={cn(buttonVariants({ variant, size }), className)}
-			{type}
-			disabled={isDisabled}
-			{...restProps}
-		>
-			{#if isLoading}
-				<Spinner />
-				{#if spinner?.keepMessage}
-					{@render children?.()}
-				{:else}
-					{spinnerStore.message}
-				{/if}
-			{:else}
-				{@render children?.()}
-			{/if}
-		</button>
+		       <button
+			       bind:this={ref}
+			       data-slot="button"
+				   class={cn(buttonVariants({ variant, size, disabled: isDisabled ? variant : undefined }), className)}
+			       {type}
+			       disabled={isDisabled}
+			       {...restProps}
+		       >
+			       {#if isLoading}
+				       <Spinner />
+				       {#if spinner?.keepMessage}
+					       {@render children?.()}
+				       {:else}
+					       {spinnerStore.message}
+				       {/if}
+			       {:else}
+				       {@render children?.()}
+			       {/if}
+		       </button>
 	{/if}
 {/snippet}
 
