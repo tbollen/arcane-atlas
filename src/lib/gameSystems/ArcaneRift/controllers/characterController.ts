@@ -279,7 +279,7 @@ export class ArcaneRiftCharacterController {
 	 *   - index: the index of the consequence slot in the rules
 	 * Never throws!
 	 */
-	calculateSeverityFromRoll(roll: ConsequenceRoll): {
+	findConsequenceSlotFromRoll(roll: ConsequenceRoll): {
 		canPlace: boolean;
 		variant: ConsequenceVariant;
 		index: number;
