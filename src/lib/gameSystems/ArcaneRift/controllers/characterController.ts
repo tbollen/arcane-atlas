@@ -361,13 +361,15 @@ export class ArcaneRiftCharacterController {
 	} {
 		let m = this.getMechanics();
 		const rules = this.rules;
-		// Find first available slot for this variant
-		const slotIndex = rules.consequences.findIndex((c, i) => c.variant == variant);
-		// Check if variant exists
-		if (slotIndex == -1)
+		// Find first available and empty slot for this variant
+		const slots = rules.consequences.map((c, i) => c.variant == variant);
+		// Check if variant exists, should not happen (technically...)
+		if (slots.every((s) => s === false))
 			throw new Error(`Consequence variant "${variant}" does not exist in rules`);
-		// Check if can place
-		const canPlace = m.consequences[slotIndex] == null;
+		// Check for the matching slots if any slot is empty (when dealing with multiple slots of the same variant)
+		const slotIndex = slots.findIndex((s, i) => s === true && m.consequences[i] == null);
+		// Can it be placed?
+		const canPlace = slotIndex !== -1 && m.consequences[slotIndex] == null;
 
 		// Return info
 		return {
@@ -445,6 +447,7 @@ export class ArcaneRiftCharacterController {
 	 *   - canDemote: boolean indicating if the consequence can be demoted
 	 *   - nextVariant: the variant of the next lower severity slot, or null if cannot demote
 	 *   - nextIndex: the index of the next lower severity slot, or null if cannot demote
+	 * @throws Never throws!
 	 */
 	checkDemoteConsequenceSlot(target: number | Consequence): {
 		canDemote: boolean;
@@ -453,19 +456,19 @@ export class ArcaneRiftCharacterController {
 	} {
 		let m = this.getMechanics();
 		// Get index from target
+		const notFound = { canDemote: false, nextVariant: null, nextIndex: null };
 		const index =
 			typeof target == 'number' ? target : m.consequences.findIndex((c) => c?.text == target.text);
 		// Check if index is valid
-		if (index == -1) throw new Error('Consequence to demote not found');
+		if (index == -1) return notFound;
 		// Get consequence to demote
 		const consequenceToDemote = m.consequences[index];
-		if (consequenceToDemote == null) throw new Error('Cannot demote null consequence');
+		if (consequenceToDemote == null) return notFound;
 
 		// Find next lower slot in rules by variant
 		const sortedVariants = this.getSortedConsequenceVariants();
 		const currentVariantIndex = sortedVariants.findIndex((v) => v == consequenceToDemote.variant);
-		if (currentVariantIndex == -1)
-			throw new Error('Current consequence variant not found in rules');
+		if (currentVariantIndex == -1) return notFound; // Should not happen!
 		// If already lowest variant, cannot demote
 		if (currentVariantIndex == 0) return { canDemote: false, nextVariant: null, nextIndex: null };
 		// Get next lower variant
