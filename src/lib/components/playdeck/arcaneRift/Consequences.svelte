@@ -87,7 +87,7 @@
 	let aspectDescriptionText: string = $state(''); // only used when slots are full
 </script>
 
-{#snippet consequencesList(preview?: { isPreview: boolean; index?: number })}
+{#snippet consequencesList(preview?: { isPreview: boolean; index?: number; advanced?: boolean })}
 	<!-- {#if character.mechanics[AR_KEY]?.aspects?.length == 0} -->
 	{#each characterConsequences as _consequence, i}
 		<!-- Reverse order when limitedList (very low height) -->
@@ -95,27 +95,19 @@
 		{@const consequence = characterConsequences[index]}
 		{@const rule = rules[index]}
 
+		{@const demoteInfo = character.fn?.[AR_KEY]?.checkDemoteConsequenceSlot(index)}
 		{@const isNotEmpty = consequence.text.length > 0}
 		{#if isNotEmpty || !limitedList}
 			<div
 				id="consequence-{index}"
 				class=" relative grid w-full grid-cols-[auto_1fr] grid-rows-[auto_auto] gap-x-4"
 			>
-				<!-- HANDLE -->
-				<div
-					id="editHandle-{index}"
-					class="row-span-2 w-2 overflow-hidden rounded-lg transition-all
-					{preview && preview.index == index ? 'w-8 bg-threat-500 text-transparent hover:text-white' : ''}
-					{isNotEmpty
-						? preview?.isPreview
-							? 'bg-threat-500/30 text-transparent hover:w-8 hover:bg-threat-600 hover:text-white'
-							: 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
-						: 'bg-muted-foreground/20'}
-                        "
-				>
-					{#if isNotEmpty}
+				{#if preview && preview.advanced}
+					<div class="row-span-2 flex flex-row gap-2">
+						<!-- Remove Button -->
 						<Button
-							class="h-full w-full bg-inherit! text-inherit!"
+							variant="destructive"
+							class="aspect-square h-full"
 							onclick={() => {
 								const accept = window.confirm('Are you sure you want to remove this consequence?');
 								if (!accept) return;
@@ -129,11 +121,62 @@
 								);
 							}}><Icon icon="mdi:delete" /></Button
 						>
-					{/if}
-				</div>
-
+						<!-- Demote Button -->
+						<Button
+							variant="bold"
+							class="aspect-square h-full"
+							disabled={!demoteInfo?.canDemote}
+							tooltip={demoteInfo?.canDemote
+								? `Demote consequence to "${demoteInfo?.nextVariant}"`
+								: 'Cannot demote this consequence!'}
+							onclick={() => {
+								verbose(
+									() => {
+										character.fn?.[AR_KEY]?.demoteConsequence(index);
+									},
+									{
+										successMessage: `Consequence demoted to "${demoteInfo?.nextVariant}"`
+									}
+								);
+							}}><Icon icon="mdi:arrow-down-bold" /></Button
+						>
+					</div>
+				{:else}
+					<!-- HANDLE -->
+					<div
+						id="editHandle-{index}"
+						class="row-span-2 w-2 overflow-hidden rounded-lg transition-all
+					{preview && preview.index == index ? 'w-8 bg-threat-500 text-transparent hover:text-white' : ''}
+					{isNotEmpty
+							? preview?.isPreview
+								? 'bg-threat-500/30 text-transparent hover:w-8 hover:bg-threat-600 hover:text-white'
+								: 'bg-threat-500 text-transparent hover:w-8 hover:text-white'
+							: 'bg-muted-foreground/20'}
+                        "
+					>
+						{#if isNotEmpty}
+							<Button
+								class="h-full w-full bg-inherit! text-inherit!"
+								onclick={() => {
+									const accept = window.confirm(
+										'Are you sure you want to remove this consequence?'
+									);
+									if (!accept) return;
+									verbose(
+										() => {
+											character.fn?.[AR_KEY]?.removeConsequence(index);
+										},
+										{
+											successMessage: 'Consequence removed'
+										}
+									);
+								}}><Icon icon="mdi:delete" /></Button
+							>
+						{/if}
+					</div>
+				{/if}
 				<!-- If compact list and consequence is empty, show a different view -->
-				{#if isNotEmpty || !compactList}
+				{#if isNotEmpty || !compactList || preview?.advanced}
 					<div id="consequence-{index}-text">
 						{#if isNotEmpty}
 							<p class="font-semibold">{consequence.text}</p>
@@ -143,8 +186,9 @@
 					</div>
 				{/if}
 				<p
-					class="text-xs {preview && preview.index == index
-						? 'font-medium text-threat-700'
+					class="text-xs
+					{preview && preview.index == index
+						? 'font-medium text-threat-700 underline'
 						: 'text-muted-foreground/50'}"
 				>
 					{rule.variant}
@@ -262,7 +306,7 @@
 			{/if}
 
 			<!-- WIDGET PREVIEW -->
-			{@render consequencesList({ isPreview: true, index: severityIndex })}
+			{@render consequencesList({ isPreview: true, index: severityIndex, advanced: true })}
 
 			{#if slotsAreFull}
 				<!-- ADD ASPECT BUTTON -->
@@ -309,7 +353,7 @@
 						verbose(
 							() => {
 								// Add consequence to character
-								character.fn?.[AR_KEY]?.addConsequence({
+								character.fn?.[AR_KEY]?.addConsequenceByRoll({
 									roll: consequenceRoll,
 									text: consequenceText
 								});
