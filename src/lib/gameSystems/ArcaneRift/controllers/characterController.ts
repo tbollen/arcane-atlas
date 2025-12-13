@@ -200,6 +200,11 @@ export class ArcaneRiftCharacterController {
 	// ----------------------
 	// CONSEQUENCES
 
+	// GETTERS for info
+	/**
+	 * Get minimum and maximum numeric consequence rolls from rules
+	 * @returns Object with min and max properties, null if no numeric rolls exist
+	 */
 	getMinMaxConsequenceRolls(): { min: number | null; max: number | null } {
 		const rolls = this.rules.consequences
 			.map((c) => (typeof c.roll === 'number' ? c.roll : Infinity))
@@ -211,6 +216,23 @@ export class ArcaneRiftCharacterController {
 			min: Math.min(...rolls),
 			max: Math.max(...rolls)
 		};
+	}
+
+	/**
+	 * Get sorted list of unique consequence variants from rules
+	 * @returns Array of unique ConsequenceVariant, sorted by roll value (mildest [0] to most severe [last])
+	 */
+	getSortedConsequenceVariants(): ConsequenceVariant[] {
+		// Get unique variants from rules, sorted by roll value
+		const variants = Array.from(
+			new Set(
+				this.rules.consequences
+					.slice()
+					.sort((a, b) => this.rollToNumber(a.roll) - this.rollToNumber(b.roll))
+					.map((c) => c.variant)
+			)
+		);
+		return variants;
 	}
 
 	private placeConsequences(
@@ -270,6 +292,8 @@ export class ArcaneRiftCharacterController {
 		return templateConsequences;
 	}
 
+	// SLOT FINDING
+
 	/**
 	 * Calculate the severity variant and index for a given roll
 	 * @param roll  The consequence roll to evaluate
@@ -323,37 +347,166 @@ export class ArcaneRiftCharacterController {
 		};
 	}
 
-	addConsequence(consequence: Omit<Consequence, 'variant'>) {
+	/**
+	 * Find the first available slot for a given consequence variant
+	 * @param variant The consequence variant to find a slot for
+	 * @returns An object containing:
+	 *   - canPlace: boolean indicating if the consequence can be placed
+	 *   - index: the index of the consequence slot in the rules
+	 * @throws Error if the variant does not exist in the rules
+	 */
+	findConsequenceSlotFromVariant(variant: ConsequenceVariant): {
+		canPlace: boolean;
+		index: number;
+	} {
+		let m = this.getMechanics();
+		const rules = this.rules;
+		// Find first available slot for this variant
+		const slotIndex = rules.consequences.findIndex((c, i) => c.variant == variant);
+		// Check if variant exists
+		if (slotIndex == -1)
+			throw new Error(`Consequence variant "${variant}" does not exist in rules`);
+		// Check if can place
+		const canPlace = m.consequences[slotIndex] == null;
+
+		// Return info
+		return {
+			canPlace,
+			index: slotIndex
+		};
+	}
+
+	// ADD / REMOVE CONSEQUENCE
+
+	/**
+	 * Add a consequence by specifying its roll
+	 * @param consequence Consequence without variant
+	 */
+	addConsequenceByRoll(consequence: Omit<Consequence, 'variant'>) {
 		let m = this.getMechanics();
 		// Set shorthands
 		let text = consequence.text;
-		let roll = consequence.roll;
+		let roll = consequence?.roll;
 
 		// Check if input is valid
 		if (text.length == 0) throw new Error('Consequence text cannot be empty');
 		if (typeof roll === 'number' && roll < 1)
 			throw new Error('Consequence roll must be at least 1');
 
-		let variant =
-			this.rules.consequences.find((c) => c.roll == roll)?.variant ?? // Find consequence with matching roll
-			this.rules.consequences[0].variant; // else, return first variant
+		// Derive variant using findConsequenceSlotFromRoll
+		let slotInfo = this.findConsequenceSlotFromRoll(roll);
 
-		// Get existing consequences,
-		// - sort from lowest to highest roll
-		// - filter out null
-		// - add new consequence as last item
-		const consequencesToPlace = [
-			...m.consequences
-				.filter((c) => c !== null)
-				.sort((a, b) => this.rollToNumber(a.roll) - this.rollToNumber(b.roll)),
-			{ text, roll, variant }
-		];
-		// Place consequences
-		const newConsequences = this.placeConsequences(consequencesToPlace);
-		// Update and set mechanics
-		m = { ...m, consequences: newConsequences };
+		// Check if can place
+		if (!slotInfo.canPlace)
+			throw new Error('Consequence of this roll cannot be placed, all slots are full');
+		if (m.consequences[slotInfo.index] != null)
+			throw new Error('Internal error: Calculated consequence slot is already occupied');
+
+		// Place consequence and set mechanics
+		let variant = slotInfo.variant;
+		m.consequences[slotInfo.index] = { text, roll, variant };
 		this.setMechanics(m);
-		//
+	}
+
+	/**
+	 * Add a consequence by specifying its variant
+	 * @param consequence Consequence without roll
+	 * @throws Error if consequence text is empty, or if no available slot for the variant exists
+	 */
+	addConsequenceByVariant(consequence: Omit<Consequence, 'roll'>) {
+		let m = this.getMechanics();
+		// Set shorthands
+		let text = consequence.text;
+		let variant = consequence?.variant;
+		// Check if input is valid
+		if (text.length == 0) throw new Error('Consequence text cannot be empty');
+
+		// Use findConsequenceSlotFromVariant to get slot info
+		const slotInfo = this.findConsequenceSlotFromVariant(variant);
+
+		// Check if can place
+		if (!slotInfo.canPlace)
+			throw new Error(`No available slot for consequence variant "${variant}"`);
+
+		// Get roll from rules
+		let roll = this.rules.consequences[slotInfo.index].roll;
+
+		// Add consequence and set mechanics
+		m.consequences[slotInfo.index] = { text, variant, roll };
+		this.setMechanics(m);
+	}
+
+	// Removing and demoting consequences
+
+	/**
+	 * Check if a consequence can be demoted to the next lower severity slot.
+	 * @param target The consequence or its index to check for demotion
+	 * @returns An object containing:
+	 *   - canDemote: boolean indicating if the consequence can be demoted
+	 *   - nextVariant: the variant of the next lower severity slot, or null if cannot demote
+	 *   - nextIndex: the index of the next lower severity slot, or null if cannot demote
+	 */
+	checkDemoteConsequenceSlot(target: number | Consequence): {
+		canDemote: boolean;
+		nextVariant: ConsequenceVariant | null;
+		nextIndex: number | null;
+	} {
+		let m = this.getMechanics();
+		// Get index from target
+		const index =
+			typeof target == 'number' ? target : m.consequences.findIndex((c) => c?.text == target.text);
+		// Check if index is valid
+		if (index == -1) throw new Error('Consequence to demote not found');
+		// Get consequence to demote
+		const consequenceToDemote = m.consequences[index];
+		if (consequenceToDemote == null) throw new Error('Cannot demote null consequence');
+
+		// Find next lower slot in rules by variant
+		const sortedVariants = this.getSortedConsequenceVariants();
+		const currentVariantIndex = sortedVariants.findIndex((v) => v == consequenceToDemote.variant);
+		if (currentVariantIndex == -1)
+			throw new Error('Current consequence variant not found in rules');
+		// If already lowest variant, cannot demote
+		if (currentVariantIndex == 0) return { canDemote: false, nextVariant: null, nextIndex: null };
+		// Get next lower variant
+		const nextVariant = sortedVariants[currentVariantIndex - 1];
+		// Find next lower slot index in mechanics
+		const slotInfo = this.findConsequenceSlotFromVariant(nextVariant);
+		if (!slotInfo.canPlace) return { canDemote: false, nextVariant: null, nextIndex: null };
+		// Return info
+		return { canDemote: true, nextVariant, nextIndex: slotInfo.index };
+	}
+
+	/**
+	 * Demote a consequence to the next lower severity slot.
+	 * Looks if the next lower slot is available, and moves the consequence there.
+	 * @param target
+	 */
+	demoteConsequence(target: number | Consequence, newText?: string) {
+		let m = this.getMechanics();
+		// Get index from target
+		const index =
+			typeof target == 'number' ? target : m.consequences.findIndex((c) => c?.text == target.text);
+		// Check if index is valid
+		if (index == -1) throw new Error('Consequence to demote not found');
+		// Get consequence to demote
+		const consequenceToDemote = m.consequences[index];
+		if (consequenceToDemote == null) throw new Error('Cannot demote null consequence');
+		// Check if can demote
+		const demoteInfo = this.checkDemoteConsequenceSlot(index);
+		if (!demoteInfo.canDemote || demoteInfo.nextIndex == null || demoteInfo.nextVariant == null)
+			throw new Error('Consequence cannot be demoted, no available lower slot');
+		// Demote (remove and add  new at lower slot)
+		// Remove from current slot
+		m.consequences[index] = null;
+		// Add to new slot
+		m.consequences[demoteInfo.nextIndex] = {
+			text: newText || consequenceToDemote.text,
+			roll: this.rules.consequences[demoteInfo.nextIndex].roll,
+			variant: demoteInfo.nextVariant
+		};
+		// Set mechanics
+		this.setMechanics(m);
 	}
 
 	removeConsequence(target: number | Consequence) {
