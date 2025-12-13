@@ -74,14 +74,15 @@
 
 	// HELPER --> NULL functions as a flag for when slots are full
 	function calcSeverity(roll: number) {
-		// if (roll === 0) throw new Error('Roll not set');
 		if (!character.fn?.[AR_KEY]?.findConsequenceSlotFromRoll)
 			throw new Error('Character not configured for Arcane Rift properly');
 		// Calculate severity
 		return character.fn[AR_KEY].findConsequenceSlotFromRoll(roll);
 	}
 
-	let consequenceRoll: Consequence['roll'] = $derived(rollNum > 4 ? 'Despair' : rollNum);
+	let consequenceRoll: Consequence['roll'] = $derived(
+		rollNum >= despairValue ? 'Despair' : rollNum
+	);
 
 	let consequenceText: Consequence['text'] = $state(''); // also used for Aspect Short when needed
 	let aspectDescriptionText: string = $state(''); // only used when slots are full

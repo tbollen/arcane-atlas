@@ -388,7 +388,7 @@ export class ArcaneRiftCharacterController {
 		let m = this.getMechanics();
 		// Set shorthands
 		let text = consequence.text;
-		let roll = consequence?.roll;
+		let roll = consequence.roll;
 
 		// Check if input is valid
 		if (text.length == 0) throw new Error('Consequence text cannot be empty');
@@ -419,7 +419,7 @@ export class ArcaneRiftCharacterController {
 		let m = this.getMechanics();
 		// Set shorthands
 		let text = consequence.text;
-		let variant = consequence?.variant;
+		let variant = consequence.variant;
 		// Check if input is valid
 		if (text.length == 0) throw new Error('Consequence text cannot be empty');
 
@@ -460,7 +460,7 @@ export class ArcaneRiftCharacterController {
 		const index =
 			typeof target == 'number' ? target : m.consequences.findIndex((c) => c?.text == target.text);
 		// Check if index is valid
-		if (index == -1) return notFound;
+		if (index === -1) return notFound;
 		// Get consequence to demote
 		const consequenceToDemote = m.consequences[index];
 		if (consequenceToDemote == null) return notFound;
@@ -468,9 +468,9 @@ export class ArcaneRiftCharacterController {
 		// Find next lower slot in rules by variant
 		const sortedVariants = this.getSortedConsequenceVariants();
 		const currentVariantIndex = sortedVariants.findIndex((v) => v == consequenceToDemote.variant);
-		if (currentVariantIndex == -1) return notFound; // Should not happen!
+		if (currentVariantIndex === -1) return notFound; // Should not happen!
 		// If already lowest variant, cannot demote
-		if (currentVariantIndex == 0) return { canDemote: false, nextVariant: null, nextIndex: null };
+		if (currentVariantIndex === 0) return { canDemote: false, nextVariant: null, nextIndex: null };
 		// Get next lower variant
 		const nextVariant = sortedVariants[currentVariantIndex - 1];
 		// Find next lower slot index in mechanics
@@ -491,7 +491,7 @@ export class ArcaneRiftCharacterController {
 		const index =
 			typeof target == 'number' ? target : m.consequences.findIndex((c) => c?.text == target.text);
 		// Check if index is valid
-		if (index == -1) throw new Error('Consequence to demote not found');
+		if (index === -1) throw new Error('Consequence to demote not found');
 		// Get consequence to demote
 		const consequenceToDemote = m.consequences[index];
 		if (consequenceToDemote == null) throw new Error('Cannot demote null consequence');
