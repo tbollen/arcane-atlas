@@ -88,7 +88,7 @@
 	{@render children?.()}
 </section>
 <!-- FULL PAGE SPINNER -->
-{#if (spinner.isLoading && spinner.id === 'full') || true}
+{#if spinner.isLoading && spinner.id === 'full'}
 	<div
 		class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3.5 bg-primary/80"
 		aria-busy="true"
