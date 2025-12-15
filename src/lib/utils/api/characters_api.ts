@@ -29,14 +29,15 @@ const CHARACTER_API = {
 		return res;
 	},
 
-	async get(): Promise<Response & { characters: PrismaCharacterExtended[] }> {
+	async get(): Promise<{ response: Response; characters: PrismaCharacterExtended[] }> {
 		// logTrace('get');
-		const res = await fetch(API_BASE, { method: 'GET' });
-		const characters = await res.json();
-		if (!res.ok) {
-			throw new Error(`Error fetching characters: ${res.status} ${res.statusText}`);
+		const response = await fetch(API_BASE, { method: 'GET' });
+		if (!response.ok) {
+			throw new Error(`Error fetching characters: ${response.status} ${response.statusText}`);
 		}
-		return { ...res, characters };
+		const characters = await response.json();
+
+		return { response, characters };
 	}
 };
 

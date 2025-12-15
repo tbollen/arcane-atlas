@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
 	import Loader2Icon from '@lucide/svelte/icons/loader-2';
-	import type { ComponentProps } from 'svelte';
+	import { onMount, type ComponentProps } from 'svelte';
 
 	import ArcaneA from '$static/icons/Arcane-A.svg';
 
@@ -23,9 +23,13 @@
 
 	// TIMING for dots
 	let dotCycle: number = $state(0);
-	setInterval(() => {
-		dotCycle = (dotCycle + 1) % 4;
-	}, 500);
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			dotCycle = (dotCycle + 1) % 4;
+		}, 500);
+		return () => clearInterval(interval);
+	});
 </script>
 
 {#if variant === 'default'}
@@ -40,7 +44,7 @@
 		src="/animations/sprite-knight-slash--nobg.gif"
 		alt="Loading"
 		role="status"
-		class="{cn(variant, classVariants[variant], className)} size-24 scale-200 object-cover"
+		class="{cn(variant, classVariants[variant], className)} h-[6em] w-[6em] scale-200 object-cover"
 	/>
 	<p
 		class=" font-mono text-2xl {cn(

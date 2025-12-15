@@ -55,7 +55,7 @@
 	function populateActiveCharacter() {
 		// ACTIVE CHARACTER
 		// Clear active character if no user (not logged in)
-		if (!data.user || data.characters.length === 0) {
+		if (!data.user || !data.characters || data.characters.length === 0) {
 			activeCharacter.clear();
 			return;
 		}
@@ -88,7 +88,7 @@
 	{@render children?.()}
 </section>
 <!-- FULL PAGE SPINNER -->
-{#if spinner.isLoading && spinner.id === 'full'}
+{#if (spinner.isLoading && spinner.id === 'full') || true}
 	<div
 		class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3.5 bg-primary/80"
 		aria-busy="true"
