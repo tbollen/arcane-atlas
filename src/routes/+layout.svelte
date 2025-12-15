@@ -55,7 +55,7 @@
 	function populateActiveCharacter() {
 		// ACTIVE CHARACTER
 		// Clear active character if no user (not logged in)
-		if (!data.user) {
+		if (!data.user || !data.characters || data.characters.length === 0) {
 			activeCharacter.clear();
 			return;
 		}
@@ -90,10 +90,10 @@
 <!-- FULL PAGE SPINNER -->
 {#if spinner.isLoading && spinner.id === 'full'}
 	<div
-		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3.5 bg-primary/80"
+		class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3.5 bg-primary/80"
 		aria-busy="true"
 	>
-		<Spinner class="size-24 text-background" variant="A-Spinner" />
+		<Spinner class="size-24 text-background" variant="Knight" />
 		{#if spinner.message}
 			<p class="text-3xl text-background">{spinner.message}</p>
 		{/if}

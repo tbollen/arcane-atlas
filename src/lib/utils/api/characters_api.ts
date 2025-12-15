@@ -1,5 +1,6 @@
 const API_BASE = '/api/characters';
 import type { Character as PrismaCharacter } from '@prisma/client';
+import type { PrismaCharacterExtended } from '$lib/domain/characters/character.svelte';
 import { type CharacterPermissions } from '$lib/domain/characters/character.svelte';
 import type { UserID, CampaignID, CharacterID } from '$lib/domain/';
 
@@ -28,10 +29,15 @@ const CHARACTER_API = {
 		return res;
 	},
 
-	async get(): Promise<Response> {
+	async get(): Promise<PrismaCharacterExtended[]> {
 		// logTrace('get');
-		const res = await fetch(API_BASE, { method: 'GET' });
-		return res;
+		const response = await fetch(API_BASE, { method: 'GET' });
+		if (!response.ok) {
+			throw new Error(`Error fetching characters: ${response.status} ${response.statusText}`);
+		}
+		const characters = await response.json();
+
+		return characters;
 	}
 };
 
