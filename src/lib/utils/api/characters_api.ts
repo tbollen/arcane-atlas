@@ -29,7 +29,7 @@ const CHARACTER_API = {
 		return res;
 	},
 
-	async get(): Promise<{ response: Response; characters: PrismaCharacterExtended[] }> {
+	async get(): Promise<PrismaCharacterExtended[]> {
 		// logTrace('get');
 		const response = await fetch(API_BASE, { method: 'GET' });
 		if (!response.ok) {
@@ -37,7 +37,7 @@ const CHARACTER_API = {
 		}
 		const characters = await response.json();
 
-		return { response, characters };
+		return characters;
 	}
 };
 
