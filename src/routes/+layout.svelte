@@ -55,7 +55,7 @@
 	function populateActiveCharacter() {
 		// ACTIVE CHARACTER
 		// Clear active character if no user (not logged in)
-		if (!data.user) {
+		if (!data.user || data.characters.length === 0) {
 			activeCharacter.clear();
 			return;
 		}
