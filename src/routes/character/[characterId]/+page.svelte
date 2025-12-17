@@ -131,7 +131,6 @@
 		if (urlParams.get('edit') == '1' || isNewCharacter) {
 			isEditing = true;
 		}
-		console.warn(`MOUTNING page 'character/${characterID}' with edit=${isEditing}`); //DEBUG
 	});
 
 	// FUNCTIONS
@@ -242,7 +241,7 @@
 		<!-- PLAYDECK -->
 		{#if deck}
 			<!-- Ensure deck is loaded -->
-			<Deck {character} bind:deck config={deckConfig} />
+			<Deck {character} bind:deck config={deckConfig} cards={characterCardsAsStored} />
 		{:else}{/if}
 	{/if}
 {:catch error}<main class="content flex flex-col">
