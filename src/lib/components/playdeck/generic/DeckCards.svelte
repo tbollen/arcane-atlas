@@ -9,7 +9,7 @@
 	import Gamecard from '$lib/components/partials/gamecards/Gamecard.svelte';
 	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 
-	let { character = $bindable() }: WidgetComponentProps = $props();
+	let { character = $bindable(), cards }: WidgetComponentProps = $props();
 </script>
 
 <!-- 
@@ -21,11 +21,10 @@
 <Block.Root>
 	<Block.Title title="Cards" />
 	<Block.Content>
-		<p class="overflow-auto text-muted-foreground">This is a placeholder</p>
 		<ul>
-			{#each character.cardIds as cardId}
+			{#each cards as card}
 				<li class="mb-4">
-					{cardId}
+					{card.name}
 				</li>
 			{/each}
 			{#if character.cardIds.length === 0}
