@@ -1,6 +1,7 @@
 import type { LayoutServerLoad } from './$types';
 import { db } from '$lib/server/db.js';
 import { type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
+import { type User as PrismaUser } from '@prisma/client';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	// Load user's characters
@@ -17,7 +18,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		user: locals.user ?? null,
+		user: (locals.user as PrismaUser) ?? null,
 		characters: charactersFromDb
 	};
 };
