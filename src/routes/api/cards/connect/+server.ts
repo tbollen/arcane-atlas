@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	const dbCards = await db.card.findMany({
 		where: { id: { in: cardIds } },
-		include: { owner: true, editors: true, viewers: true }
+		include: { owner: true, editors: true, viewers: true, characters: true }
 	});
 	console.log('DB CARDS', dbCards);
 
@@ -39,9 +39,23 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				)
 		)
 	)
-		return new Response('Unauthorized, some of the selected cards belongs to another user', {
+		return new Response('Unauthorized, you do not have access to some of the selected cards', {
 			status: 401
 		});
+
+	// If one of the given cards is already connected to character, return error
+	const alreadyConnected = dbCards.filter((dbCard) =>
+		dbCard.characters.some((char) => char.id === characterId)
+	);
+	if (alreadyConnected.length > 0) {
+		const cardNames = alreadyConnected.map((card) => card.name).join(', ');
+		return new Response(
+			`The following cards are already connected to the character: ${cardNames}`,
+			{
+				status: 400
+			}
+		);
+	}
 
 	// Wrap updates in a db transaction (1 or many)
 	await db.$transaction(
@@ -75,7 +89,7 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 
 	const dbCards = await db.card.findMany({
 		where: { id: { in: cardIds } },
-		include: { owner: true, editors: true, viewers: true }
+		include: { owner: true, editors: true, viewers: true, characters: true }
 	});
 
 	// Check if all cards exist
@@ -93,9 +107,20 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 				)
 		)
 	)
-		return new Response('Unauthorized, some of the selected cards belongs to another user', {
+		return new Response('Unauthorized, you do not have access to some of the selected cards', {
 			status: 401
 		});
+
+	// If one of the given cards is not connected to character, return error
+	const notConnected = dbCards.filter(
+		(dbCard) => !dbCard.characters.some((char) => char.id === characterId)
+	);
+	if (notConnected.length > 0) {
+		const cardNames = notConnected.map((card) => card.name).join(', ');
+		return new Response(`The following cards are not connected to the character: ${cardNames}`, {
+			status: 400
+		});
+	}
 
 	// Wrap updates in a db transaction (1 or many)
 	await db.$transaction(
