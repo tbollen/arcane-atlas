@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type WidgetComponentProps } from './widget';
+	import { type WidgetComponentProps } from '../modules/widget';
 
 	let { character }: WidgetComponentProps = $props();
 </script>

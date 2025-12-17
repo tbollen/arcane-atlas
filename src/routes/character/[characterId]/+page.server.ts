@@ -2,6 +2,10 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 
+// Character and Cards types
+import { type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
+import { type PrismaCardExtended } from '$lib/domain/cards/cardStore.svelte';
+
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const characterId = params.characterId; // get id from slug (path)
 	// User must be logged in to see or create new characters
@@ -21,16 +25,24 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			where: { id: characterId },
 			include: { viewers: true, owner: true, cards: true, campaigns: true }
 		});
-		// If character is public or the user is a viewer, pass the character
-		if (character.public === true || character.viewers.some((viewer) => viewer.id === userId)) {
-			return { character };
+		// If user is not the owner, the viewer, or the character is not public, return NOTHING
+		if (
+			userId !== character.ownerId &&
+			character.public !== true &&
+			!character.viewers.some((viewer) => viewer.id === userId)
+		) {
+			return {};
 		}
-		// If the user is the owner, show all information
-		if (userId == character.ownerId) {
-			return { character };
-		}
-		// If the user is not the owner or a viewer, redirect to character page
-		return {};
+		// Get character's cards (with permissions)
+		const cards = await db.card.findMany({
+			where: { characters: { some: { id: character.id } } },
+			include: { owner: true, viewers: true, editors: true, characters: true }
+		});
+		// Return character data
+		return {
+			character: character as PrismaCharacterExtended,
+			cards: cards as PrismaCardExtended[]
+		};
 	} catch (error) {
 		return {};
 	}

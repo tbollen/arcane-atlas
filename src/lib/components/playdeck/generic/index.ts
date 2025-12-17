@@ -1,7 +1,7 @@
 import { GENERIC_KEY } from '$lib/gameSystems';
 
 // Widget stuff
-import { type SystemWidgetMap } from '../widget';
+import { type SystemWidgetMap } from '../modules/widget';
 
 // SVELTE COMPONENTS
 import PlayerBanner from './PlayerBanner.svelte';

@@ -3,11 +3,8 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import EditDialog from './EditDialog.svelte';
+	import EditDialog from './components/EditDialog.svelte';
 	import { Header } from '$lib/components/typography';
-
-	// Import partials
-	import GameSystemSelector from './GameSystemSelector.svelte';
 
 	// Spinner
 	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
@@ -26,15 +23,15 @@
 		recalculateDeckColumns,
 		setWidgetsEditMode,
 		widgetIDs
-	} from './';
-	import { GENERIC_KEY } from '$lib/gameSystems';
+	} from '.';
 	import {
 		recalculateWidgetColumns,
 		type DeckWidget,
 		type GridStackItemProps,
 		type MappedWidget,
 		type WidgetColumnsSettings
-	} from './widget';
+	} from './modules/widget';
+	import { type StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// Gridstack
 	//@ts-ignore
@@ -45,18 +42,20 @@
 	// Svelte
 	import { onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { defaultDeckConfig, type DeckConfig } from './deckConfig';
+	import { defaultDeckConfig, type DeckConfig } from './modules/deckConfig';
 	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
-	import AddWidgetDialog from '../../../routes/playdeck/AddWidgetDialog.svelte';
+	import AddWidgetDialog from './components/AddWidgetDialog.svelte';
 
 	let {
 		deck = $bindable(),
 		character,
-		config
+		config,
+		cards
 	}: {
 		deck: StoredDeck;
 		character: StoredCharacter;
 		config?: DeckConfig;
+		cards?: StoredCard[];
 	} = $props();
 
 	////////////////////////////////
@@ -505,7 +504,7 @@
 						<Icon icon="mdi:pencil" />
 					</button>
 				{/if}
-				<Component bind:character />
+				<Component bind:character {cards} />
 			</Grid>
 		{/if}
 	</div>

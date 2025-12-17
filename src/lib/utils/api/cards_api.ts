@@ -3,7 +3,7 @@ const API_BASE = '/api/cards';
 import type { card as PrismaCard } from '@prisma/client';
 import { logTrace } from '../debug/logtrace';
 import type { CardPermissions } from '$lib/domain/cards/cardStore.svelte';
-import type { CardID } from '$lib/domain';
+import type { CardID, CharacterID } from '$lib/domain';
 
 const CARD_API = {
 	async create(card: PrismaCard): Promise<Response> {
@@ -24,6 +24,51 @@ const CARD_API = {
 	async get(): Promise<Response> {
 		// logTrace('get');
 		const res = await fetch(API_BASE, { method: 'GET' });
+		return res;
+	},
+
+	async addToCharacter({
+		cards,
+		characterId
+	}: {
+		cards: PrismaCard[] | CardID[];
+		characterId: CharacterID;
+	}) {
+		// Return error when no cards are given
+		if (cards.length == 0) return new Response('No cards given', { status: 400 });
+		// Convert PrismaCard to CardID if needed
+		let cardIds: string[] =
+			typeof cards[0] === 'object'
+				? (cards as PrismaCard[]).map((card) => card.id)
+				: (cards as string[]);
+
+		// If multiple cards are given, all permissions must be given!
+		const res = await fetch(`${API_BASE}/connect`, {
+			method: 'POST',
+			body: JSON.stringify({ cardIds, characterId })
+		});
+		return res;
+	},
+
+	async removeFromCharacter({
+		cards,
+		characterId
+	}: {
+		cards: PrismaCard[] | CardID[];
+		characterId: CharacterID;
+	}) {
+		// Return error when no cards are given
+		if (cards.length == 0) return new Response('No cards given', { status: 400 });
+		// Convert PrismaCard to CardID if needed
+		let cardIds: string[] =
+			typeof cards[0] === 'object'
+				? (cards as PrismaCard[]).map((card) => card.id)
+				: (cards as string[]);
+
+		const res = await fetch(`${API_BASE}/connect`, {
+			method: 'DELETE',
+			body: JSON.stringify({ cardIds, characterId })
+		});
 		return res;
 	},
 

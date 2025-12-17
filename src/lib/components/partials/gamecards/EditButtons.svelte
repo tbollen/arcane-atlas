@@ -17,6 +17,8 @@
 		duplicate?: (card: StoredCard | Card) => any;
 		createFromTemplate?: (card: StoredCard | Card) => any;
 		delete?: (card: StoredCard) => any;
+		addToCharacter?: (card: StoredCard) => any;
+		removeFromCharacter?: (card: StoredCard) => any;
 	};
 
 	let {
@@ -40,7 +42,7 @@
 <div class="{className} flex flex-row flex-wrap gap-2">
 	{#each Object.entries(functions) as [fn, func]}
 		<!-- Options when user can edit -->
-		{#if fn === 'enlarge'}
+		{#if fn === 'enlarge' && func}
 			<!-- VIEW / ENLARGE -->
 			<Button
 				tooltip="Show card"
@@ -57,7 +59,7 @@
 			</Button>
 		{/if}
 		<!-- NAVIGATE -->
-		{#if fn === 'navigate'}
+		{#if fn === 'navigate' && func}
 			<Button
 				{size}
 				tooltip="Go to card page"
@@ -73,7 +75,7 @@
 			</Button>
 		{/if}
 		<!-- DOWNLOAD -->
-		{#if fn === 'download'}
+		{#if fn === 'download' && func}
 			<Button
 				{size}
 				tooltip="Download as JSON"
@@ -89,7 +91,7 @@
 			</Button>
 		{/if}
 		<!-- EDIT -->
-		{#if fn === 'edit' && user && card.clientPermission.canEdit}
+		{#if fn === 'edit' && user && card.clientPermission.canEdit && func}
 			<Button
 				{size}
 				variant="blossom"
@@ -139,7 +141,8 @@
 			</Button>
 		{/if}
 
-		{#if user?.id === card.ownerId && fn === 'delete'}
+		<!-- DELETE -->
+		{#if user?.id === card.ownerId && fn === 'delete' && func}
 			<Button
 				{size}
 				variant="destructive"
@@ -153,6 +156,41 @@
 				<Icon icon="mdi:trash" />
 				{#if !compact}
 					Delete
+				{/if}
+			</Button>
+		{/if}
+
+		<!-- ADD TO CHARACTER -->
+		{#if fn === 'addToCharacter' && user && func}
+			<Button
+				variant="advanced"
+				{size}
+				tooltip="Add card to character"
+				onclick={(e: Event) => {
+					e.stopPropagation();
+					func(card);
+				}}
+			>
+				<Icon icon="mdi:account-plus" />
+				{#if !compact}
+					Add to Character
+				{/if}
+			</Button>
+		{/if}
+		<!-- REMOVE FROM CHARACTER -->
+		{#if fn === 'removeFromCharacter' && user && func}
+			<Button
+				variant="destructive"
+				{size}
+				tooltip="Remove card from character"
+				onclick={(e: Event) => {
+					e.stopPropagation();
+					func(card);
+				}}
+			>
+				<Icon icon="mdi:account-remove" />
+				{#if !compact}
+					Remove from Character
 				{/if}
 			</Button>
 		{/if}
