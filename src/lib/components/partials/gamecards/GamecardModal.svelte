@@ -27,13 +27,13 @@
 	let {
 		card,
 		open = $bindable(false),
-		user,
-		functions
+		user = null,
+		functions = {}
 	}: {
 		card: StoredCard | Card | undefined;
 		open: boolean;
-		user: PrismaUser | null;
-		functions: EditButtonFunctions;
+		user?: PrismaUser | null;
+		functions?: EditButtonFunctions;
 	} = $props();
 </script>
 
