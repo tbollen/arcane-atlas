@@ -21,16 +21,21 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			where: { id: characterId },
 			include: { viewers: true, owner: true, cards: true, campaigns: true }
 		});
-		// If character is public or the user is a viewer, pass the character
-		if (character.public === true || character.viewers.some((viewer) => viewer.id === userId)) {
-			return { character };
+		// If user is not the owner, the viewer, or the character is not public, return NOTHING
+		if (
+			userId !== character.ownerId &&
+			character.public !== true &&
+			!character.viewers.some((viewer) => viewer.id === userId)
+		) {
+			return {};
 		}
-		// If the user is the owner, show all information
-		if (userId == character.ownerId) {
-			return { character };
-		}
-		// If the user is not the owner or a viewer, redirect to character page
-		return {};
+		// Get character's cards (with permissions)
+		const cards = await db.card.findMany({
+			where: { characters: { some: { id: character.id } } },
+			include: { owner: true, viewers: true, editors: true }
+		});
+		// Return character data
+		return { character, cards };
 	} catch (error) {
 		return {};
 	}
