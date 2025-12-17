@@ -21,6 +21,8 @@
 	// Improted functions
 	import { downloadCards } from '$lib/utils/cards/download';
 
+	type EditButtonFunctions = ComponentProps<typeof EditButtons>['functions'];
+
 	// PROPS
 	let {
 		card,
@@ -31,7 +33,7 @@
 		card: StoredCard | Card | undefined;
 		open: boolean;
 		user: PrismaUser | null;
-		functions?: ComponentProps<typeof EditButtons>['functions'];
+		functions: EditButtonFunctions;
 	} = $props();
 </script>
 
@@ -53,22 +55,7 @@
 				{#if card instanceof StoredCard}
 					<footer>
 						<!-- BUTTONS -->
-						<EditButtons
-							class="m-4 flex justify-end"
-							{card}
-							functions={{
-								navigate: (card) => {
-									goto(`/cards/${card.id}`);
-								},
-								download: (card) => {
-									downloadCards([card]);
-								},
-								edit: (card) => {
-									goto(`/cards/${card.id}?edit=1`);
-								}
-							}}
-							{user}
-						/>
+						<EditButtons class="m-4 flex justify-end" {card} {functions} {user} />
 					</footer>
 				{/if}
 			{:else}
