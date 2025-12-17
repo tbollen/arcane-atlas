@@ -14,21 +14,21 @@
 	const standardDisabledClasses =
 		'opacity-40 cursor-not-allowed active:scale-100';
 
-	export const disabledVariant = {
-		default: `${standardDisabledClasses} border border-gray-300 hover:bg-secondary`,
+	const disabledVariant = {
+		default: `${standardDisabledClasses} outline hover:bg-secondary`,
 		blossom: `${standardDisabledClasses} hover:bg-blossom-700`,
 		bold: `${standardDisabledClasses} hover:bg-obsidian-900`,
 		advanced: `${standardDisabledClasses} hover:bg-weave-500`,
 		destructive: `${standardDisabledClasses} hover:bg-threat-500`,
 		success: `${standardDisabledClasses} hover:bg-success-500`,
-		outline: `${standardDisabledClasses} hover:bg-background border border-gray-300`,
-		secondary: `${standardDisabledClasses} border border-gray-300 hover:bg-secondary`,
-		ghost: `${standardDisabledClasses} border border-gray-300 hover:bg-transparent`,
+		outline: `${standardDisabledClasses} hover:bg-background border`,
+		secondary: `${standardDisabledClasses} outline  hover:bg-secondary`,
+		ghost: `${standardDisabledClasses} outline hover:bg-transparent`,
 		link: `${standardDisabledClasses} hover:no-underline`
 	};
 
 	export const buttonVariants = tv({
-		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+		base: " cursor-pointer shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:ring-[3px] [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
 				default: 'bg-secondary text-secondary-foreground hover:bg-obsidian-200 active:scale-95',
