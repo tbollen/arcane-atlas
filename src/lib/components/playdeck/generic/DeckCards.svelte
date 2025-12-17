@@ -18,25 +18,44 @@
 
 	// Domains, classes and more...
 	import { cardTypes } from '$lib/domain/cards/cardTypes';
+	import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api';
 
 	// Svelte
 	import { onMount, type ComponentProps } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	// Dialog vars
 	let dialogCard: ComponentProps<typeof GamecardModal>['card'] = $state(undefined);
 	let open: boolean = $state(false);
 
 	let { character = $bindable(), cards }: WidgetComponentProps = $props();
-</script>
 
-<!-- 
-<div class="flex h-full w-full flex-col gap-1 overflow-auto bg-obsidian-500/5">
-	<Header variant="h3">Description</Header>
-	<p class="overflow-auto text-muted-foreground">{character.description}</p>
-</div> -->
+	// Remove function
+	function removeCardFromCharacter(card: StoredCard) {
+		const confirmed = confirm(
+			`Are you sure you want to remove the card from character "${character.name}"?`
+		);
+		if (confirmed) {
+			CARD_API.removeFromCharacter({
+				characterId: character.id,
+				cards: [card.id]
+			})
+				.then(() => {
+					// Remove card from local list
+					cards && (cards = cards.filter((c) => c.id !== card.id));
+				})
+				.catch((error) => {
+					toast.error(`Failed to remove card from character: ${error.message}`);
+				});
+			toast.success(`Removed card from character.`);
+			// Close dialog if open
+			open = false;
+		}
+	}
+</script>
 
 <Block.Root>
 	<Block.Title title="Cards" />
@@ -90,26 +109,8 @@
 						hover:text-white
 						"
 							variant="destructive"
-							onclick={(e: Event) => {
-								const confirmed = confirm(
-									`Are you sure you want to remove the card "${card.name}" from character "${character.name}"?`
-								);
-								if (confirmed) {
-									CARD_API.removeFromCharacter({
-										characterId: character.id,
-										cards: [card.id]
-									})
-										.then(() => {
-											// Remove card from local list
-											cards && (cards = cards.filter((c) => c.id !== card.id));
-										})
-										.catch((error) => {
-											toast.error(
-												`Failed to remove card "${card.name}" from character: ${error.message}`
-											);
-										});
-									toast.success(`Removed card "${card.name}" from character.`);
-								}
+							onclick={() => {
+								removeCardFromCharacter(card);
 							}}
 						>
 							<Icon icon="mdi:remove" />
@@ -122,4 +123,26 @@
 	<Block.Footer />
 </Block.Root>
 
-<GamecardModal bind:open card={dialogCard} />
+<!-- Modal for enlarging -->
+<GamecardModal
+	bind:open
+	card={dialogCard}
+	functions={{
+		removeFromCharacter:
+			dialogCard instanceof StoredCard
+				? (dialogCard) => removeCardFromCharacter(dialogCard as StoredCard)
+				: undefined,
+		edit:
+			dialogCard instanceof StoredCard
+				? (dialogCard) => {
+						goto(`/cards/${dialogCard.id}?edit=true`);
+					}
+				: undefined,
+		navigate:
+			dialogCard instanceof StoredCard
+				? (dialogCard) => {
+						goto(`/cards/${dialogCard.id}`);
+					}
+				: undefined
+	}}
+/>
