@@ -161,7 +161,7 @@
 		{/if}
 
 		<!-- ADD TO CHARACTER -->
-		{#if fn === 'addToCharacter' && user && func}
+		{#if fn === 'addToCharacter' && func}
 			<Button
 				variant="advanced"
 				{size}
@@ -178,7 +178,7 @@
 			</Button>
 		{/if}
 		<!-- REMOVE FROM CHARACTER -->
-		{#if fn === 'removeFromCharacter' && user && func}
+		{#if fn === 'removeFromCharacter' && func}
 			<Button
 				variant="destructive"
 				{size}
