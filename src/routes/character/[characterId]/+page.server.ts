@@ -2,6 +2,10 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 
+// Character and Cards types
+import { type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
+import { type PrismaCardExtended } from '$lib/domain/cards/cardStore.svelte';
+
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const characterId = params.characterId; // get id from slug (path)
 	// User must be logged in to see or create new characters
@@ -32,10 +36,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		// Get character's cards (with permissions)
 		const cards = await db.card.findMany({
 			where: { characters: { some: { id: character.id } } },
-			include: { owner: true, viewers: true, editors: true }
+			include: { owner: true, viewers: true, editors: true, characters: true }
 		});
 		// Return character data
-		return { character, cards };
+		return {
+			character: character as PrismaCharacterExtended,
+			cards: cards as PrismaCardExtended[]
+		};
 	} catch (error) {
 		return {};
 	}
