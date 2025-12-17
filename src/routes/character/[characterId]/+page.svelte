@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { getContext, onMount } from 'svelte';
-
 	// Class and type imports
 	import {
 		CharacterStore,
@@ -9,6 +6,9 @@
 		type PrismaCharacterExtended
 	} from '$lib/domain/characters/character.svelte.js';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte.js';
+
+	// Stores
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte.js';
 
 	// Utils
 	import { ck } from '$lib/utils/storage/keys.js';
@@ -40,12 +40,33 @@
 
 	// Svelte
 	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import { getContext, onMount } from 'svelte';
 
 	// Page init
 	const characterID = page.params.characterId;
 	let isNewCharacter: boolean = $derived(characterID == 'new');
 	// svelte-ignore state_referenced_locally
 	let isEditing: boolean = $state(isNewCharacter);
+
+	///////////////////////////////////////
+	// Active character
+	let characterIsResolved: boolean = $state(false);
+	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
+	$effect(() => {
+		// If the active character changes, and it's not the current character, redirect to that character's page
+		if (window && characterIsResolved && activeCharacter && activeCharacter.id !== characterID) {
+			// Ask for confirmation before redirecting
+			const confirm = window.confirm(
+				'The active character has changed. Do you want to switch to the new character?'
+			);
+			if (confirm) {
+				window.location.href = `/character/${activeCharacter.id}${isEditing ? '?edit=1' : ''}`;
+			}
+		}
+	});
+
+	///////////////////////////////////////
 
 	// Get props data
 	let { data } = $props();
@@ -98,6 +119,10 @@
 			deck = character.deck ?? fallbackDeck;
 			// Notify user
 			toast.success(`Loaded character: ${character.name}`);
+
+			// Set active character store
+			activeCharacterStore.set(character);
+			characterIsResolved = true;
 		});
 	});
 
@@ -106,6 +131,7 @@
 		if (urlParams.get('edit') == '1' || isNewCharacter) {
 			isEditing = true;
 		}
+		console.warn(`MOUTNING page 'character/${characterID}' with edit=${isEditing}`); //DEBUG
 	});
 
 	// FUNCTIONS
