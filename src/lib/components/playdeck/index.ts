@@ -2,22 +2,22 @@
 import { AR_KEY, GENERIC_KEY, type CharacterSystems } from '$lib/gameSystems';
 
 // Import placeholder widget
-import PlaceholderWidget from '$lib/components/playdeck/PlaceholderWidget.svelte';
+import PlaceholderWidget from './components/PlaceholderWidget.svelte';
 
 import {
 	type MappedWidget,
 	type WidgetMap,
 	type DeckWidget,
 	recalculateWidgetColumns
-} from '$lib/components/playdeck/widget';
+} from './modules/widget';
 
 // Import deck map definition helper
-import { defineDeckMap } from './modules';
+import { defineDeckMap } from './modules/modules';
 
 /////////////////////////////////////////////
 // Import and load all maps
-import { genericWidgetMap } from '$lib/components/playdeck/generic';
-import { arcaneRiftWidgetMap } from '$lib/components/playdeck/arcaneRift';
+import { genericWidgetMap } from './generic';
+import { arcaneRiftWidgetMap } from './arcaneRift';
 
 /////////////////////////////////////////////
 // COMPLETE WIDGET MAP

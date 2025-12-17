@@ -9,9 +9,6 @@
 	import Icon from '@iconify/svelte';
 	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
 
-	// Import Dialogs
-	import AddWidgetDialog from './AddWidgetDialog.svelte';
-
 	// Import classes
 	import {
 		StoredCharacter,
@@ -39,7 +36,7 @@
 
 	// API
 	import CHARACTER_API from '$lib/utils/api/characters_api.js';
-	import { defaultDeckConfig, type DeckConfig } from '$lib/components/playdeck/deckConfig';
+	import { defaultDeckConfig, type DeckConfig } from '$lib/components/playdeck/modules/deckConfig';
 
 	// Init character
 	let { data } = $props();
@@ -57,17 +54,6 @@
 
 	// Deck config
 	const deckConfig: DeckConfig = defaultDeckConfig;
-
-	// EDIT MODES
-	type EditMode = 'view' | 'editItems' | 'editDeck';
-	function toggleEditMode(mode: EditMode = 'view') {
-		editDeck = mode === 'editDeck';
-		editItems = mode === 'editItems';
-		// Also set edit mode in component
-		DeckComponent.toggleEditMode(mode);
-	}
-	let editDeck: boolean = $state(false);
-	let editItems: boolean = $state(false);
 
 	//////////////////////////
 	// DECK FUNCTIONS

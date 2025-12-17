@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type DeckItemProps } from './.';
+	import { type DeckItemProps } from '$lib/components/playdeck/modules/widget';
 
 	// Import UI components
 	import { Input } from '$lib/components/ui/input';

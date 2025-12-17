@@ -137,6 +137,7 @@
 {:then character}
 	<main class="content">
 		{#if isEditing}
+			<!-- CHARACTER EDITING -->
 			<img src={character.imageUrl} alt={character.name} />
 			<div class="mt-4 grid grid-cols-[max-content_1fr] gap-2">
 				<Label for="name">Name</Label>
@@ -175,6 +176,7 @@
 				{/if}
 			</div>
 		{:else}
+			<!-- PLAYDECK -->
 			<table class="mt-2 w-full">
 				<tbody>
 					<tr>

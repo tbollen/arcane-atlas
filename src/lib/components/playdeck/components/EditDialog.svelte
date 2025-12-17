@@ -12,10 +12,10 @@
 		GENERIC_KEY,
 		type CharacterMechanics
 	} from '$lib/gameSystems';
-	import { deckSystems, type DeckSystem } from '.';
+	import { deckSystems, type DeckSystem } from '..';
 
 	// WidgetMap things
-	import { widgetMap, widgetIDs, getWidget } from '.';
+	import { widgetMap, widgetIDs, getWidget } from '..';
 
 	// Import UI components
 	import { Label } from '$lib/components/ui/label';
@@ -25,7 +25,7 @@
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import Mastery from '../partials/arcaneRift/Mastery.svelte';
+	import Mastery from '$lib/components/partials/arcaneRift/Mastery.svelte';
 
 	let {
 		character = $bindable(),

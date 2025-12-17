@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { AR_KEY } from '$lib/gameSystems';
-	import { type WidgetComponentProps } from '../widget';
+	import { type WidgetComponentProps } from '../modules/widget';
 
 	// UI components
 	import { Button } from '$lib/components/ui/button';

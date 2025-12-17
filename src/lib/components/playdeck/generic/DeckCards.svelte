@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type WidgetComponentProps } from '../widget';
+	import { type WidgetComponentProps } from '../modules/widget';
 
 	// Import partial wrapper
 	import * as Block from '$lib/components/ui/block';
