@@ -1,7 +1,8 @@
+import type { LayoutServerLoad } from './$types';
 import { db } from '$lib/server/db.js';
 import { type PrismaCharacterExtended } from '$lib/domain/characters/character.svelte.js';
 
-export const load = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ locals }) => {
 	// Load user's characters
 	let charactersFromDb: PrismaCharacterExtended[];
 	try {
