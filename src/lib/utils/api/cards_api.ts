@@ -43,8 +43,30 @@ const CARD_API = {
 				: (cards as string[]);
 
 		// If multiple cards are given, all permissions must be given!
-		const res = await fetch(API_BASE, {
-			method: '_CONNECTCHARACTER',
+		const res = await fetch(`${API_BASE}/connect`, {
+			method: 'POST',
+			body: JSON.stringify({ cardIds, characterId })
+		});
+		return res;
+	},
+
+	async removeFromCharacter({
+		cards,
+		characterId
+	}: {
+		cards: PrismaCard[] | CardID[];
+		characterId: CharacterID;
+	}) {
+		// Return error when no cards are given
+		if (cards.length == 0) return new Response('No cards given', { status: 400 });
+		// Convert PrismaCard to CardID if needed
+		let cardIds: string[] =
+			typeof cards[0] === 'object'
+				? (cards as PrismaCard[]).map((card) => card.id)
+				: (cards as string[]);
+
+		const res = await fetch(`${API_BASE}/connect`, {
+			method: 'DELETE',
 			body: JSON.stringify({ cardIds, characterId })
 		});
 		return res;
