@@ -24,7 +24,6 @@
 		setWidgetsEditMode,
 		widgetIDs
 	} from '.';
-	import { GENERIC_KEY } from '$lib/gameSystems';
 	import {
 		recalculateWidgetColumns,
 		type DeckWidget,
@@ -32,6 +31,7 @@
 		type MappedWidget,
 		type WidgetColumnsSettings
 	} from './modules/widget';
+	import { type StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// Gridstack
 	//@ts-ignore
@@ -49,11 +49,13 @@
 	let {
 		deck = $bindable(),
 		character,
-		config
+		config,
+		cards
 	}: {
 		deck: StoredDeck;
 		character: StoredCharacter;
 		config?: DeckConfig;
+		cards?: StoredCard[];
 	} = $props();
 
 	////////////////////////////////
@@ -502,7 +504,7 @@
 						<Icon icon="mdi:pencil" />
 					</button>
 				{/if}
-				<Component bind:character />
+				<Component bind:character {cards} />
 			</Grid>
 		{/if}
 	</div>
