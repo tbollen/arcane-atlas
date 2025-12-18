@@ -165,6 +165,9 @@
 						<CardSearchbox
 							placeholder="Search and add cards..."
 							{cards}
+							cardFilters={{
+								disabledCardIDs: cards.filter((card) => card.isCharacterCard).map((card) => card.id)
+							}}
 							onCardSelect={async (card) => {
 								await verbose(
 									async () => {

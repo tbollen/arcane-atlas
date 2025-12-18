@@ -1,25 +1,39 @@
 <script lang="ts">
 	import * as InputGroup from '$lib/components/ui/input-group';
 	import Icon from '@iconify/svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { iconExists } from '@iconify/svelte';
 	import type { ComponentProps } from 'svelte';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 	import { cardTypes } from '$lib/domain/cards/cardTypes';
+	import type { CharacterSystems } from '$lib/gameSystems';
+	import { invalidate } from '$app/navigation';
 
 	type InputProps = ComponentProps<typeof InputGroup.Input>;
+	type CardFilter = {
+		disabledCardIDs?: StoredCard['id'][];
+		disableCharacterCards?: boolean;
+		systems?: CharacterSystems[];
+	};
 
 	let {
 		searchTerm = $bindable(''),
 		cards,
 		onCardSelect,
+		cardFilters,
 		...restProps
 	}: {
 		searchTerm?: string;
 		onCardSelect: (card: StoredCard) => void;
 		cards: StoredCard[];
+		cardFilters?: CardFilter;
 	} & InputProps = $props();
 
-	let filteredCards = $derived.by(() => {
+	$effect(() => {
+		console.log('FILTERS CHANGED', cardFilters);
+	});
+
+	let searchedCards: StoredCard[] = $derived.by(() => {
 		// Fallback if no options
 		if (!cards || cards.length === 0) return cards; // If not options are provided, return empty list
 		if (!searchTerm || searchTerm.trim() === '') return cards; // If no search term, return all options
@@ -28,7 +42,8 @@
 		// Matches properties with higher relevance first
 		const likelyMatches = cards.filter(
 			(card) =>
-				card.id.toLowerCase().includes(lowerSearch) || card.name.toLowerCase().includes(lowerSearch)
+				(lowerSearch.startsWith('card:') && card.id.toLowerCase().includes(lowerSearch)) ||
+				card.name.toLowerCase().includes(lowerSearch)
 		);
 		// Then include less relevant matches (filtering out those already included)
 		const possibleMatches = cards
@@ -37,10 +52,49 @@
 
 		// Finally include description matches (filtering out those already included)
 		const farfetchedMatches = cards
-			.filter((card) => card.description && card.description.toLowerCase().includes(lowerSearch))
+			.filter((card) => card.type.toLowerCase().includes(lowerSearch))
 			.filter((card) => ![...likelyMatches, ...possibleMatches].some((c) => c.id === card.id));
 		// Merge sorted
-		return [...likelyMatches, ...possibleMatches, ...farfetchedMatches];
+		let merged = [...likelyMatches, ...possibleMatches, ...farfetchedMatches];
+		return merged;
+	});
+
+	let [sortedCards, filteredOutCards]: [StoredCard[], StoredCard[]] = $derived.by(() => {
+		let filtered: StoredCard[] = [];
+
+		// Remove explicitly disabled cards (by ID)
+		if (cardFilters && cardFilters.disabledCardIDs) {
+			filtered = [
+				...filtered,
+				...searchedCards.filter((card) =>
+					cardFilters.disabledCardIDs!.some((disabledCardID) => disabledCardID === card.id)
+				)
+			];
+		}
+
+		// Remove cards that are already character cards (or the other way around)
+		// If disableCharacterCards is true, remove character cards, if false, remove non-character cards
+		if (cardFilters && cardFilters.disableCharacterCards !== undefined) {
+			filtered = [
+				...filtered,
+				...searchedCards.filter(
+					(card) => card.isCharacterCard === cardFilters.disableCharacterCards
+				)
+			];
+		}
+
+		// Remove cards that do not match the specified systems
+		if (cardFilters && cardFilters.systems) {
+			filtered = [
+				...filtered,
+				...searchedCards.filter((card) =>
+					card.systems.some((sys) => !cardFilters.systems!.includes(sys))
+				)
+			];
+		}
+		// Sort filtered to have valid cards first, then filtered out cards
+		let sorted = [...searchedCards.filter((card) => !filtered.includes(card)), ...filtered];
+		return [sorted, filtered];
 	});
 
 	// Holder for focussing
@@ -49,6 +103,11 @@
 
 	// Proxy selector (hover but default to only one)
 	let proxyCardSelector: number = $state(0);
+
+	// FUNCTIONS
+	function refreshFilters() {
+		// Trigger re-evaluation of derived stores
+	}
 </script>
 
 <div class="group relative">
@@ -63,17 +122,17 @@
 			list="search-options"
 			onkeydown={(e) => {
 				// If Enter is pressed and there is at least one filtered card, select the first one
-				if (e.key === 'Enter' && filteredCards.length > 0) {
-					if (filteredCards.length === 0) return;
+				if (e.key === 'Enter' && searchedCards.length > 0) {
+					if (searchedCards.length === 0) return;
 					// Prevent form submission
 					e.preventDefault();
-					onCardSelect(filteredCards[proxyCardSelector]);
+					onCardSelect(searchedCards[proxyCardSelector]);
 					searchTerm = '';
 				}
 				// Arrow key navigation
 				else if (e.key === 'ArrowDown') {
 					e.preventDefault();
-					proxyCardSelector = Math.min(proxyCardSelector + 1, filteredCards.length - 1);
+					proxyCardSelector = Math.min(proxyCardSelector + 1, searchedCards.length - 1);
 				} else if (e.key === 'ArrowUp') {
 					e.preventDefault();
 					proxyCardSelector = Math.max(proxyCardSelector - 1, 0);
@@ -88,22 +147,27 @@
 			class="pointer-events-none absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100"
 			class:hidden={searchTerm.trim() === ''}
 		>
-			{#if filteredCards.length > 0}
-				{#each filteredCards as card, index}
+			{#if sortedCards.length > 0}
+				{#each sortedCards as card, index}
 					{@const cardType = cardTypes.find((type) => type.name === card.type) || cardTypes[0]}
 					{@const icon = card.icon && iconExists(card.icon) ? card.icon : cardType.icon}
+					{@const isFilteredOut = filteredOutCards.some(
+						(filteredCard) => filteredCard.id === card.id
+					)}
 					<button
 						class="
 						grid w-full cursor-pointer grid-cols-[auto_1fr] items-center
 						justify-items-start gap-x-1 rounded-md py-2
-                        {proxyCardSelector === index ? 'bg-obsidian-500/10' : ''}
+                        {proxyCardSelector === index && !isFilteredOut ? 'bg-obsidian-500/10' : ''}
+						{isFilteredOut ? '!cursor-not-allowed opacity-50' : 'hover:bg-obsidian-500/10'}
 						"
+						disabled={isFilteredOut}
 						onclick={() => {
 							onCardSelect(card);
 							searchTerm = '';
 						}}
 						onmouseenter={() => {
-							proxyCardSelector = index;
+							if (!isFilteredOut) proxyCardSelector = index;
 						}}
 						onmouseleave={() => {
 							proxyCardSelector = 0;
@@ -141,5 +205,8 @@
 				>
 			</InputGroup.Addon>
 		{/if}
+		<InputGroup.Addon align="inline-end">
+			<InputGroup.Button onclick={refreshFilters}><Icon icon="mdi:refresh" /></InputGroup.Button>
+		</InputGroup.Addon>
 	</InputGroup.Root>
 </div>
