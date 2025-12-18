@@ -3,8 +3,11 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import EditDialog from './components/EditDialog.svelte';
 	import { Header } from '$lib/components/typography';
+
+	// Dialogs
+	import EditDialog from './components/EditDialog.svelte';
+	import AddWidgetDialog from './components/AddWidgetDialog.svelte';
 
 	// Spinner
 	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
@@ -44,7 +47,6 @@
 	import { toast } from 'svelte-sonner';
 	import { defaultDeckConfig, type DeckConfig } from './modules/deckConfig';
 	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
-	import AddWidgetDialog from './components/AddWidgetDialog.svelte';
 
 	let {
 		deck = $bindable(),

@@ -242,7 +242,9 @@
 		{#if deck}
 			<!-- Ensure deck is loaded -->
 			<Deck {character} bind:deck config={deckConfig} cards={characterCardsAsStored} />
-		{:else}{/if}
+		{:else}
+			Can't load deck...
+		{/if}
 	{/if}
 {:catch error}<main class="content flex flex-col">
 		<h1 class="mb-4 text-2xl font-semibold">Error loading character</h1>
