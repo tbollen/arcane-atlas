@@ -1,4 +1,7 @@
 <script lang="ts">
+	// Debugging
+	import { compareObjects } from '$lib/utils/debug/compareObjects';
+
 	// Import UI components
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -18,7 +21,6 @@
 	// Import necessary types and utils
 	import { type StoredCharacter } from '$lib/domain/characters/character.svelte';
 	import {
-		type DeckSystem,
 		type StoredDeck,
 		getWidget,
 		itemsToDeck,
@@ -27,13 +29,7 @@
 		setWidgetsEditMode,
 		widgetIDs
 	} from '.';
-	import {
-		recalculateWidgetColumns,
-		type DeckWidget,
-		type GridStackItemProps,
-		type MappedWidget,
-		type WidgetColumnsSettings
-	} from './modules/widget';
+	import { type DeckWidget, type GridStackItemProps } from './modules/widget';
 	import { type StoredCard } from '$lib/domain/cards/cardStore.svelte';
 
 	// Gridstack
@@ -46,7 +42,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { defaultDeckConfig, type DeckConfig } from './modules/deckConfig';
-	import { beforeNavigate, invalidateAll, onNavigate } from '$app/navigation';
+	import { beforeNavigate, invalidateAll } from '$app/navigation';
 
 	let {
 		deck = $bindable(),
@@ -66,22 +62,62 @@
 	let unsaved: boolean = $state(false);
 	let lastCharacterState = $state(character.toPrisma());
 
+	function checkSavedState() {
+		character.toPrisma();
+
+		// Compare without deck property
+		const { deck: _currentDeck, ...currentWithoutDeck } = character.toPrisma();
+		const { deck: _lastDeck, ...lastWithoutDeck } = lastCharacterState;
+		unsaved = JSON.stringify(currentWithoutDeck) !== JSON.stringify(lastWithoutDeck);
+		// Log the difference between the two states for debugging
+		console.log('Checking saved state:', compareObjects(currentWithoutDeck, lastWithoutDeck));
+	}
+
 	// Track changes to character
 	$effect(() => {
 		character.toPrisma();
-		unsaved = character.toPrisma() !== lastCharacterState;
+		checkSavedState();
 	});
 
 	////////////////////////////////
 	// DECK FUNCTIONS
 
 	// Edit Modes
-	let editDeck: boolean = $state(false);
-	let editItems: boolean = $state(false);
+	const editModes = [
+		{
+			name: 'Play',
+			value: 'play',
+			icon: 'mdi:play'
+		},
+		{
+			name: 'Content',
+			value: 'content',
+			icon: 'mdi:content-copy'
+		},
+		{
+			name: 'Layout',
+			value: 'layout',
+			icon: 'mdi:view-dashboard'
+		}
+	];
+	let editMode: (typeof editModes)[number]['value'] = $state(editModes[0].value);
+	function setEditMode(mode: string) {
+		const foundMode = editModes.find((m) => m.value === mode)?.value;
+		// Set mode or default to first mode
+		editMode = foundMode ?? editModes[0].value;
+		// Determine if layout editing is active
+		const editLayout = editMode === 'layout';
+		items = setWidgetsEditMode(items, editLayout);
+		// Update url params
+		const url = new URL(window.location.href);
+		url.searchParams.set('mode', editMode);
+		window.history.replaceState({}, '', url.toString());
+	}
+
 	const itemTailwindTargeter = '[&_.svlt-grid-item]';
 	const editItemsStyler = `${itemTailwindTargeter}:outline-2 ${itemTailwindTargeter}:outline-dashed ${itemTailwindTargeter}:outline-blossom-500`;
 
-	// Edit params
+	// Edit params for EditDialog
 	let edit: {
 		componentID: string;
 		editableProperties: string[];
@@ -91,12 +127,6 @@
 		editableProperties: [],
 		open: false
 	});
-
-	export function toggleEditMode(mode: 'view' | 'editItems' | 'editDeck' = 'view') {
-		editDeck = mode === 'editDeck';
-		editItems = mode === 'editItems';
-		items = setWidgetsEditMode(items, editDeck);
-	}
 
 	export function update() {
 		const _items = initDeck(deck, false);
@@ -192,6 +222,7 @@
 				// Set saved
 				unsaved = false;
 				lastCharacterState = character.toPrisma(); // update last saved state
+				checkSavedState();
 				// return the response for further handling
 				return response;
 			})
@@ -260,7 +291,6 @@
 	}
 
 	// set up items for active amount of columns (initially 1)
-	let isAdjusted: boolean = false;
 	let items: DeckWidget[] = $state(initDeck(deck, true));
 
 	function handleGridChange(event: any) {
@@ -331,8 +361,10 @@
 		recalculateGrid();
 		// Re-calculate grid on window resize
 		window.addEventListener('resize', recalculateGrid);
-		// Set editMode to 'view'
-		toggleEditMode('view');
+
+		// Get edit mode from params
+		const urlParams = new URLSearchParams(window.location.search);
+		setEditMode(urlParams.get('mode') ?? 'play');
 		// Set saved state
 		unsaved = false;
 	});
@@ -356,7 +388,7 @@
 </script>
 
 <!-- EDIT BAR -->
-<div id="Actions" class="my-4 flex flex-row items-center gap-8">
+<div id="Actions" class="mx-4 my-4 flex flex-row items-center gap-8">
 	<div class="flex flex-col">
 		<Header tag="h2" variant="h3">{character.name}'s Deck</Header>
 		<Button
@@ -370,35 +402,21 @@
 
 	<!-- Mode Toggle Buttons -->
 	<ButtonGroup.Root>
-		<Button
-			variant={!editDeck && !editItems ? 'bold' : 'ghost'}
-			tooltip="Hide editing options"
-			onclick={() => toggleEditMode('view')}
-		>
-			<Icon icon="mdi:play" />
-			Play
-		</Button>
-		<Button
-			variant={editItems ? 'bold' : 'ghost'}
-			onclick={() => toggleEditMode('editItems')}
-			tooltip="Edit information on the widgets"
-		>
-			<Icon icon="mdi:content-copy" />
-			Content
-		</Button>
-		<Button
-			variant={editDeck ? 'bold' : 'ghost'}
-			onclick={() => toggleEditMode('editDeck')}
-			tooltip="Edit the deck layout"
-		>
-			<Icon icon="mdi:view-dashboard" />
-			Layout
-		</Button>
+		{#each editModes as mode}
+			<Button
+				variant={editMode === mode.value ? 'bold' : 'ghost'}
+				onclick={() => setEditMode(mode.value)}
+				tooltip={`Switch to ${mode.name} mode`}
+			>
+				<Icon icon={mode.icon} />
+				{mode.name}
+			</Button>
+		{/each}
 	</ButtonGroup.Root>
 
 	<!-- Context Actions -->
 	<div id="contextActions" class="ml-auto flex flex-grow flex-wrap items-center justify-end gap-2">
-		{#if editDeck}
+		{#if editMode === 'content' || editMode === 'layout'}
 			<Button
 				size="sm"
 				onclick={() => (addWidgetDialog = true)}
@@ -410,7 +428,7 @@
 			</Button>
 		{/if}
 
-		{#if editItems}
+		{#if editMode === 'content'}
 			<Button
 				size="sm"
 				onclick={() => (edit.open = true)}
@@ -423,7 +441,7 @@
 		{/if}
 
 		<!-- Save Button -->
-		{#if editDeck || editItems || unsaved}
+		{#if editMode !== 'view' || unsaved}
 			<Button
 				size="sm"
 				onclick={saveDeck}
@@ -448,7 +466,7 @@
 		id="Deck"
 		bind:this={container}
 		class="outline-obisidian-500 rounded-2xl outline-1
-	{editItems ? editItemsStyler : ''}
+	{editMode === 'content' ? editItemsStyler : ''}
 	[&_.svlt-grid-item]:overflow-hidden [&_.svlt-grid-item]:rounded-lg [&_.svlt-grid-item]:outline-blossom-500
 	[&_.svlt-grid-resizer]:z-20 [&_.svlt-grid-resizer::after]:h-4! [&_.svlt-grid-resizer::after]:w-4! [&_.svlt-grid-resizer::after]:border-obsidian-50!"
 		style="width: {containerWidth}px !important;"
@@ -457,7 +475,7 @@
 			<Grid {items} on:change={handleGridChange} rowHeight={CELLSIZE} let:item let:dataItem {cols}>
 				{@const widget = dataItem as DeckWidget}
 				{@const Component = dataItem.component as DeckWidget['component']}
-				{#if editDeck}
+				{#if editMode === 'layout'}
 					<!-- Drag handle overlay -->
 					<div
 						id="overlay"
@@ -484,7 +502,7 @@
 						icon="mdi:arrow-expand"
 						class="absolute right-1 bottom-1 z-[11] scale-x-[-1] text-xl text-obsidian-50"
 					/>
-				{:else if editItems}
+				{:else if editMode === 'content'}
 					<button
 						id="overlay"
 						hidden={Object.keys(widget.characterProperties).length === 0}
