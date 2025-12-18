@@ -20,7 +20,7 @@ import {
 
 // ID Shorthands
 import type { UserID, CampaignID, CharacterID, CardID } from '..';
-import { clone } from '$lib/utils/serializing'
+import { clone } from '$lib/utils/serializing';
 import { checkDeckValidity, type StoredDeck } from '$lib/components/playdeck';
 
 // STORED DECK TYPE CHECK & CONVERSION
@@ -103,7 +103,7 @@ class Character {
 	systems: System[] = $state([]);
 	mechanics: CharacterMechanics = $state({ [GENERIC_KEY]: {} });
 
-	deck: StoredDeck = $state([])
+	deck: StoredDeck = $state([]);
 
 	// Controllers
 	rules: CharacterRules;
@@ -178,10 +178,9 @@ export type CharacterProperties = {
 	[GENERIC_KEY]?: GenericProperty[];
 } & SystemProperties<CharacterMechanics>;
 
-type GenericProperty = Exclude<
-	keyof Omit<Character, 'systems' | 'mechanics' | 'createdAt' | 'updatedAt'>,
-	undefined
->;
+type GenericProperty =
+	| Exclude<keyof Omit<Character, 'systems' | 'mechanics' | 'createdAt' | 'updatedAt'>, undefined>
+	| 'cards';
 type SystemProperties<T extends Character['mechanics']> = {
 	[K in Exclude<keyof T, typeof GENERIC_KEY>]?: Array<keyof NonNullable<T[K]>>;
 };
@@ -284,7 +283,7 @@ export class StoredCharacter extends Character {
 		return new StoredCharacter({
 			id: generatePrefixedUUID('character'),
 			ownerId: userId,
-			data: { ...data, deck: JSON.parse(JSON.stringify(toStoredDeck(data?.deck))) },
+			data: { ...data, deck: JSON.parse(JSON.stringify(toStoredDeck(data?.deck))) }
 		});
 	}
 }
@@ -329,7 +328,10 @@ export class CharacterStore {
 			id: newId,
 			ownerId: userId,
 			data: data
-				? { ...data, deck: data.deck ? JSON.parse(JSON.stringify(toStoredDeck(data.deck))) : undefined }
+				? {
+						...data,
+						deck: data.deck ? JSON.parse(JSON.stringify(toStoredDeck(data.deck))) : undefined
+					}
 				: undefined,
 			clientUserId: userId
 		});
