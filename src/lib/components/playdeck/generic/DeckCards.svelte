@@ -33,6 +33,9 @@
 
 	let { character = $bindable(), cards }: WidgetComponentProps = $props();
 
+	// Filter cards to only those belonging to this character
+	let characterCards = $derived(cards ? cards.filter((card) => card?.isCharacterCard) : []);
+
 	// Layout and size
 	let borderBoxSize: ResizeObserverSize[] = $state([]);
 	let height: number = $derived(borderBoxSize?.[0]?.blockSize ?? Infinity);
@@ -66,11 +69,18 @@
 <Block.Root bind:borderBoxSize>
 	<Block.Title title="Cards" />
 	<Block.Content>
-		<div class="mb-4 flex flex-row flex-wrap gap-1 overflow-y-auto">
-			{#if !cards || cards.length === 0}
-				<p class="text-sm text-muted-foreground">No game cards available.</p>
-			{:else}
-				{#each cards as card, index}
+		{#if !characterCards || characterCards.length === 0}
+			<div class="mb-4 flex h-full flex-col items-center justify-center gap-2">
+				<p class="text-sm text-muted-foreground">
+					No cards assigned to <strong>{character.name}</strong>.
+				</p>
+				<Button href="/cards" variant="bold" size="sm">
+					<Icon icon="mdi:cards-outline" class="mr-2" /> Manage Cards
+				</Button>
+			</div>
+		{:else}
+			<div class="mb-4 flex flex-row flex-wrap gap-1 overflow-y-auto">
+				{#each characterCards as card, index}
 					{@const cardType = cardTypes.find((type) => type.name === card.type) || cardTypes[0]}
 					{@const icon = card.icon && iconExists(card.icon) ? card.icon : cardType.icon}
 					{#if index > 0}
@@ -141,8 +151,8 @@
 						</div>
 					{/if}
 				{/each}
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</Block.Content>
 	<Block.Footer />
 </Block.Root>

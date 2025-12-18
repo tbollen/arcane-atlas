@@ -73,9 +73,13 @@
 	const user = data?.user === null ? undefined : (data.user as PrismaUser);
 
 	// Init cards from character
-	let characterCardsAsStored: StoredCard[] = data?.cards
-		? data.cards.map((card) => StoredCard.newCardFromPrisma({ card, user }))
-		: [];
+	let userCards: StoredCard[] = $derived(
+		data?.cards
+			? data.cards.map((card) =>
+					StoredCard.newCardFromPrisma({ card, user, character: data.character })
+				)
+			: []
+	);
 
 	// Init StoredCharacter instance as Promise
 	let characterPromise: Promise<StoredCharacter> = new Promise((resolve, reject) => {
@@ -241,7 +245,7 @@
 		<!-- PLAYDECK -->
 		{#if deck}
 			<!-- Ensure deck is loaded -->
-			<Deck {character} bind:deck config={deckConfig} cards={characterCardsAsStored} />
+			<Deck {character} bind:deck config={deckConfig} cards={userCards} />
 		{:else}
 			Can't load deck...
 		{/if}

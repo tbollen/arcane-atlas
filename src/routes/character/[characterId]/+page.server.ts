@@ -33,10 +33,17 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		) {
 			return {};
 		}
-		// Get character's cards (with permissions)
+		// Get all cards the user has access to
 		const cards = await db.card.findMany({
-			where: { characters: { some: { id: character.id } } },
-			include: { owner: true, viewers: true, editors: true, characters: true }
+			include: { editors: true, viewers: true, characters: true }, //Include all relational properties
+			where: {
+				OR: [
+					{ public: true }, // Get all public cards
+					{ viewers: { some: { id: locals.user?.id } } }, // Get all cards that the current user is a viewer of
+					{ editors: { some: { id: locals.user?.id } } }, // Get all cards that the current user is an editor of
+					{ ownerId: locals.user?.id } // Get all cards owned by the current user
+				]
+			}
 		});
 		// Return character data
 		return {
