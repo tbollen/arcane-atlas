@@ -26,6 +26,8 @@ export const genericWidgetMap: SystemWidgetMap = {
 		component: DeckCards,
 		name: 'Deck Cards',
 		initialLayout: { w: 3, h: 3, min: { w: 2, h: 2 }, max: { w: 6, h: 6 } },
-		characterProperties: {}
+		characterProperties: {
+			[GENERIC_KEY]: ['cards']
+		}
 	}
 };
