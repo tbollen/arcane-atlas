@@ -33,10 +33,16 @@
 
 	let { character = $bindable(), cards }: WidgetComponentProps = $props();
 
+	// Layout and size
+	let borderBoxSize: ResizeObserverSize[] = $state([]);
+	let height: number = $derived(borderBoxSize?.[0]?.blockSize ?? Infinity);
+
+	let showCompact: boolean = $derived(cards ? cards.length > 1 && height < 200 : height < 300);
+
 	// Remove function
 	function removeCardFromCharacter(card: StoredCard) {
 		const confirmed = confirm(
-			`Are you sure you want to remove the card from character "${character.name}"?`
+			`Are you sure you want to remove the card "${card.name}" from character "${character.name}"?`
 		);
 		if (confirmed) {
 			CARD_API.removeFromCharacter({
@@ -57,7 +63,7 @@
 	}
 </script>
 
-<Block.Root>
+<Block.Root bind:borderBoxSize>
 	<Block.Title title="Cards" />
 	<Block.Content>
 		<div class="mb-4 flex flex-row flex-wrap gap-1 overflow-y-auto">
@@ -70,52 +76,70 @@
 					{#if index > 0}
 						<hr class="w-full border-t border-obsidian-500/20" />
 					{/if}
-					<div class="flex w-full items-center py-1">
+					{#if showCompact}
 						<button
-							class="
-						grid
-						w-full
-						cursor-pointer grid-cols-[auto_1fr] items-center justify-items-start
-						gap-x-1
-						rounded-md
-						hover:bg-obsidian-500/10
-						"
+							class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md py-1 hover:bg-obsidian-500/10"
 							onclick={() => {
 								dialogCard = card;
 								open = true;
 							}}
 						>
-							<div class="row-span-2 p-2">
-								<Icon {icon} class="h-6 w-6" style="color: {card.style.color.icon};" />
-							</div>
+							<Icon {icon} class="h-5 w-5" style="color: {card.style.color.icon};" />
 							<p
 								class=" w-full max-w-full overflow-hidden text-left leading-tight font-semibold overflow-ellipsis whitespace-nowrap"
 								style="font-family: '{card.style.font.name}', 'Gotham', sans-serif;"
 							>
 								{card.name}
 							</p>
-							<p
-								class=" max-w-full overflow-hidden text-left text-sm overflow-ellipsis whitespace-nowrap text-muted-foreground"
-							>
-								{card.subtitle}
-							</p>
 						</button>
-						<Button
-							class="
+					{:else}
+						<div class="flex w-full items-center py-1">
+							<button
+								class="
+						grid
+						w-full cursor-pointer grid-cols-[auto_1fr] items-center
+						justify-items-start
+						gap-x-1
+						rounded-md
+						hover:bg-obsidian-500/10
+						"
+								onclick={() => {
+									dialogCard = card;
+									open = true;
+								}}
+							>
+								<div class="row-span-2 p-2">
+									<Icon {icon} class="h-6 w-6" style="color: {card.style.color.icon};" />
+								</div>
+								<p
+									class=" w-full max-w-full overflow-hidden text-left leading-tight font-semibold overflow-ellipsis whitespace-nowrap"
+									style="font-family: '{card.style.font.name}', 'Gotham', sans-serif;"
+								>
+									{card.name}
+								</p>
+								<p
+									class=" max-w-full overflow-hidden text-left text-sm overflow-ellipsis whitespace-nowrap text-muted-foreground"
+								>
+									{card.subtitle}
+								</p>
+							</button>
+							<Button
+								class="
 						not-hover:w-4!
 						not-hover:p-0!
 						not-hover:text-transparent
 						hover:w-8
 						hover:text-white
 						"
-							variant="destructive"
-							onclick={() => {
-								removeCardFromCharacter(card);
-							}}
-						>
-							<Icon icon="mdi:remove" />
-						</Button>
-					</div>
+								variant="destructive"
+								onclick={() => {
+									removeCardFromCharacter(card);
+								}}
+							>
+								<Icon icon="mdi:remove" />
+							</Button>
+						</div>
+					{/if}
 				{/each}
 			{/if}
 		</div>
