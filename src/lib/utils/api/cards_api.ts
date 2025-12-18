@@ -47,6 +47,9 @@ const CARD_API = {
 			method: 'POST',
 			body: JSON.stringify({ cardIds, characterId })
 		});
+		const responseText = await res.text();
+		if (!res.ok)
+			throw new Error(responseText ?? `Failed to add cards to character: ${res.statusText}`);
 		return res;
 	},
 
@@ -69,6 +72,9 @@ const CARD_API = {
 			method: 'DELETE',
 			body: JSON.stringify({ cardIds, characterId })
 		});
+		const responseText = await res.text();
+		if (!res.ok)
+			throw new Error(responseText ?? `Failed to remove cards from character: ${res.statusText}`);
 		return res;
 	},
 
