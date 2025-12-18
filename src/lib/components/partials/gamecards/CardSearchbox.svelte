@@ -9,15 +9,17 @@
 	type InputProps = ComponentProps<typeof InputGroup.Input>;
 
 	let {
-		searchTerm = $bindable(),
+		searchTerm: _searchTerm = $bindable(''),
 		cards,
 		onCardSelect,
 		...restProps
 	}: {
-		searchTerm: string;
+		searchTerm?: string;
 		onCardSelect: (card: StoredCard) => void;
 		cards: StoredCard[];
 	} & InputProps = $props();
+
+	let searchTerm = $derived(_searchTerm);
 
 	let filteredCards = $derived.by(() => {
 		// Fallback if no options
@@ -82,18 +84,21 @@
 				searchTerm = '';
 			}
 		}}
-		onblur={() => {
-			isFocussedOnInput = false;
+		onblurcapture={() => {
+			// Minor delay to allow click event to register
+			setTimeout(() => {
+				isFocussedOnInput = false;
+			}, 200);
 		}}
 		{...restProps}
 	/>
 	<!-- If searching, show the custom datalist -->
-	{#if searchTerm.trim() !== ''}
+	{#if searchTerm.trim() !== '' || isFocussedOnInput}
 		<div
 			id="customDatalist"
 			class=" absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 shadow-lg"
 		>
-			{#if isFocussedOnInput && filteredCards.length > 0}
+			{#if filteredCards.length > 0}
 				{#each filteredCards as card, index}
 					{@const cardType = cardTypes.find((type) => type.name === card.type) || cardTypes[0]}
 					{@const icon = card.icon && iconExists(card.icon) ? card.icon : cardType.icon}
@@ -104,8 +109,8 @@
                         {proxyCardSelector === index ? 'bg-obsidian-500/10' : ''}
 						"
 						onclick={() => {
-							searchTerm = '';
 							onCardSelect(card);
+							searchTerm = '';
 						}}
 						onmouseenter={() => {
 							proxyCardSelector = index;
