@@ -9,8 +9,8 @@
 	import SystemBadge from '$lib/components/ui/badge/systemBadge.svelte';
 
 	// Deck types and consts
-	import { widgetMap } from '$lib/components/playdeck';
-	import { type WidgetComponentProps } from '$lib/components/playdeck/widget';
+	import { widgetMap } from '..';
+	import { type WidgetComponentProps } from '../modules/widget';
 
 	// System Info
 	import { gameSystems } from '$lib/gameSystems';

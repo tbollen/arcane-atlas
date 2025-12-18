@@ -6,6 +6,7 @@ import {
 	type StoredCharacter,
 	type CharacterProperties
 } from '$lib/domain/characters/character.svelte';
+import type { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 import { type CharacterSystems } from '$lib/gameSystems';
 
 // Import Gridstack (svelte-grid) helpers
@@ -58,6 +59,7 @@ export type WidgetColumnsSettings = Record<number, GridStackItemProps>;
 
 export type WidgetComponentProps = {
 	character: StoredCharacter;
+	cards?: StoredCard[];
 };
 export type DeckWidgetComponent = Component<WidgetComponentProps>;
 

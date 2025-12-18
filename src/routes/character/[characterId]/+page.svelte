@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { getContext, onMount } from 'svelte';
+	// Class and type imports
+	import {
+		CharacterStore,
+		StoredCharacter,
+		type PrismaCharacterExtended
+	} from '$lib/domain/characters/character.svelte.js';
+	import { StoredCard } from '$lib/domain/cards/cardStore.svelte.js';
 
-	// Class imports
-	import { CharacterStore, StoredCharacter } from '$lib/domain/characters/character.svelte.js';
+	// Stores
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte.js';
 
 	// Utils
 	import { ck } from '$lib/utils/storage/keys.js';
@@ -22,20 +27,61 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { Header } from '$lib/components/typography';
+	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
 
-	// Get page data
+	// Deck imports
+	import Deck from '$lib/components/playdeck/Deck.svelte';
+	import { fallbackDeck, type StoredDeck } from '$lib/components/playdeck';
+	import {
+		defaultDeckConfig,
+		type DeckConfig
+	} from '$lib/components/playdeck/modules/deckConfig.js';
+
+	// Svelte
+	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import { getContext, onMount } from 'svelte';
+
+	// Page init
 	const characterID = page.params.characterId;
 	let isNewCharacter: boolean = $derived(characterID == 'new');
+	// svelte-ignore state_referenced_locally
 	let isEditing: boolean = $state(isNewCharacter);
+
+	///////////////////////////////////////
+	// Active character
+	let characterIsResolved: boolean = $state(false);
+	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
+	$effect(() => {
+		// If the active character changes, and it's not the current character, redirect to that character's page
+		if (window && characterIsResolved && activeCharacter && activeCharacter.id !== characterID) {
+			// Ask for confirmation before redirecting
+			const confirm = window.confirm(
+				'The active character has changed. Do you want to switch to the new character?'
+			);
+			if (confirm) {
+				window.location.href = `/character/${activeCharacter.id}${isEditing ? '?edit=1' : ''}`;
+			}
+		}
+	});
+
+	///////////////////////////////////////
+
+	// Get props data
 	let { data } = $props();
+	const user = data?.user === null ? undefined : (data.user as PrismaUser);
 
-	console.log(data.characters);
+	// Init cards from character
+	let userCards: StoredCard[] = $derived(
+		data?.cards
+			? data.cards.map((card) =>
+					StoredCard.newCardFromPrisma({ card, user, character: data.character })
+				)
+			: []
+	);
 
-	// Get store from context
-	const characterStore = getContext<CharacterStore>(ck.characterStore);
-
-	// Init StoredCharacter instance
+	// Init StoredCharacter instance as Promise
 	let characterPromise: Promise<StoredCharacter> = new Promise((resolve, reject) => {
 		if (!data.user?.id || data.user == null) {
 			reject(new Error('Client not logged in'));
@@ -63,6 +109,25 @@
 				reject(error);
 			}
 		}
+	});
+
+	////////////////////////
+	// DECK
+	let deck: StoredDeck | undefined = $state(); //local state to allow reactivity, without binding to character
+	// Deck config TODO: make editable and add sb entry
+	const deckConfig: DeckConfig = defaultDeckConfig;
+
+	// Character promise resolving
+	$effect(() => {
+		characterPromise.then((character) => {
+			deck = character.deck ?? fallbackDeck;
+			// Notify user
+			toast.success(`Loaded character: ${character.name}`);
+
+			// Set active character store
+			activeCharacterStore.set(character);
+			characterIsResolved = true;
+		});
 	});
 
 	onMount(() => {
@@ -132,11 +197,12 @@
 	<main class="content grid columns-1 place-items-center">
 		<p class="mb-4 text-2xl">Loading character...</p>
 		<code>ID: {characterID}</code>
-		<Spinner class="size-36" />
+		<Spinner class="size-36" variant="Knight" />
 	</main>
 {:then character}
-	<main class="content">
-		{#if isEditing}
+	{#if isEditing}
+		<main class="content">
+			<!-- CHARACTER EDITING -->
 			<img src={character.imageUrl} alt={character.name} />
 			<div class="mt-4 grid grid-cols-[max-content_1fr] gap-2">
 				<Label for="name">Name</Label>
@@ -174,29 +240,16 @@
 					</Button>
 				{/if}
 			</div>
+		</main>
+	{:else}
+		<!-- PLAYDECK -->
+		{#if deck}
+			<!-- Ensure deck is loaded -->
+			<Deck {character} bind:deck config={deckConfig} cards={userCards} />
 		{:else}
-			<table class="mt-2 w-full">
-				<tbody>
-					<tr>
-						<td>Name</td>
-						<td>{character.name}</td>
-					</tr>
-					<tr>
-						<td>Subtitle</td>
-						<td>{character.subtitle}</td>
-					</tr>
-					<tr>
-						<td>Description</td>
-						<td>{character.description}</td>
-					</tr>
-					<tr>
-						<td>Owner ID</td>
-						<td>{character.ownerId}</td>
-					</tr>
-				</tbody>
-			</table>
+			Can't load deck...
 		{/if}
-	</main>
+	{/if}
 {:catch error}<main class="content flex flex-col">
 		<h1 class="mb-4 text-2xl font-semibold">Error loading character</h1>
 		<p>{error}</p>

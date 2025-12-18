@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type WidgetComponentProps } from '../widget';
+	import { type WidgetComponentProps } from '../modules/widget';
 
 	// Import UI components
 	import { Input } from '$lib/components/ui/input';

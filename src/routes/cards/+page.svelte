@@ -5,7 +5,7 @@
 	import GamecardBack from '$lib/components/partials/gamecards/GamecardBack.svelte';
 
 	// Svelte stuff
-	import { onMount } from 'svelte';
+	import { onMount, type ComponentProps } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { expoOut } from 'svelte/easing';
@@ -17,12 +17,19 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import PrintDialog from './printDialog.svelte';
+	import EditButtons from '$lib/components/partials/gamecards/EditButtons.svelte';
 
 	// Toaster
 	import { toast } from 'svelte-sonner';
 
 	// API
 	import CARD_API from '$lib/utils/api/cards_api';
+
+	// Stores
+	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte';
+
+	// TYPES
+	import type { User as PrismaUser } from '@prisma/client';
 
 	// INIT CARDSTORE
 	import { getContext, setContext } from 'svelte';
@@ -60,6 +67,26 @@
 		name: 'Neovald',
 		image: 'https://robohash.org/Neovald'
 	};
+
+	////////////////
+	// MODAL INFO //
+	let card: ComponentProps<typeof GamecardModal>['card'] = $state();
+	let cardIsActiveCharacterCard: boolean | null = $derived.by(() => {
+		// If no active character, return null
+		const ac = activeCharacterStore.activeCharacter;
+		if (!ac) return null;
+
+		// If card is not a StoredCard, return null
+		if (!card || !(card instanceof StoredCard)) return null;
+		const _card = card as StoredCard;
+
+		// If the active character has this card, return true, else false
+		return (
+			data.db_cards.find((c) => c.id === _card.id && c.characters.some((ch) => ch.id === ac.id)) !==
+			undefined
+		);
+	});
+	let open: boolean = $state(false);
 
 	///////////////
 	// FUNCTIONS //
@@ -116,14 +143,77 @@
 		forceUIUpdate();
 	}
 
-	function viewCard(id: string) {
+	function viewCard(target: string | Card | StoredCard) {
 		// Navigate to viewer
-		goto(`${base}/cards/${id}`);
+		// goto(`${base}/cards/${id}`);
+		card = (typeof target === 'string' ? cardStore.getCard(target) : target) ?? undefined;
+		open = true;
 	}
 
-	function editCard(id: string) {
+	function editCard(target: string | StoredCard) {
+		if (typeof target !== 'string') {
+			target = target.id;
+		}
 		// Navigate to editor
-		goto(`${base}/cards/${id}?edit=1`);
+		goto(`${base}/cards/${target}?edit=1`);
+	}
+
+	async function addCardToCharacter(cards: StoredCard[]) {
+		// Check for active character
+		if (data.user === null) {
+			toast.error('You must be logged in to add cards to a character');
+			return;
+		}
+		const _activeCharacter = activeCharacterStore.activeCharacter;
+		if (!_activeCharacter) {
+			toast.error('No active character selected, please select one to add the card to');
+			return;
+		}
+		// Add card to character
+		const response = await CARD_API.addToCharacter({
+			cards: cards.map((card) => card.id),
+			characterId: _activeCharacter.id
+		});
+
+		if (response.ok) {
+			toast.success(
+				`${cards.length} cards added to character ${_activeCharacter.name} successfully`
+			);
+			invalidateAll();
+		} else {
+			console.error('API Response', response);
+			const errorMessage = await response.text();
+			toast.error(errorMessage || `Error adding cards to character ${_activeCharacter.name}`);
+		}
+	}
+
+	async function removeFromCharacter(cards: StoredCard[]) {
+		// Check for active character
+		if (data.user === null) {
+			toast.error('You must be logged in to remove cards from a character');
+			return;
+		}
+		const _activeCharacter = activeCharacterStore.activeCharacter;
+		if (!_activeCharacter) {
+			toast.error('No active character selected, please select one to remove the card from');
+			return;
+		}
+		// Remove card from character
+		const response = await CARD_API.removeFromCharacter({
+			cards: cards.map((card) => card.id),
+			characterId: _activeCharacter.id
+		});
+
+		if (response.ok) {
+			toast.success(
+				`${cards.length} cards removed from character ${_activeCharacter.name} successfully`
+			);
+			invalidateAll();
+		} else {
+			console.error('API Response', response);
+			const errorMessage = await response.text();
+			toast.error(errorMessage || `Error removing cards from character ${_activeCharacter.name}`);
+		}
 	}
 
 	async function duplicateCard(card: StoredCard) {
@@ -155,6 +245,18 @@
 		goto(`${base}/cards/new?edit=1`);
 	}
 
+	function checkIfActiveCharacterCard(card: StoredCard): boolean {
+		// If no active character, return null
+		const ac = activeCharacterStore.activeCharacter;
+		if (!ac) return false;
+
+		// If the active character has this card, return true, else false
+		return (
+			data.db_cards.find((c) => c.id === card.id && c.characters.some((ch) => ch.id === ac.id)) !==
+			undefined
+		);
+	}
+
 	// UI
 
 	let showTemplates = $state(false);
@@ -171,6 +273,7 @@
 	///////////////////////////
 	import SearchInput from '$lib/components/partials/SearchInput.svelte';
 	import { downloadCards } from '$lib/utils/cards/download';
+	import GamecardModal from '$lib/components/partials/gamecards/GamecardModal.svelte';
 	let enableFiltering: boolean = $state(false);
 	let searchTerm: string = $state('');
 	let filteredCards: string[] = [];
@@ -297,7 +400,11 @@
 			<!-- TEMPLATES -->
 			{#if showTemplates}
 				{#each cardStore.templates as card}
-					<button class="cardInViewer cardTemplate" class:imageView>
+					<button
+						class="cardInViewer cardTemplate"
+						class:imageView
+						ondblclick={() => viewCard(card)}
+					>
 						<!-- Edit Options -->
 						<Badge variant="advanced">
 							<Icon icon="mdi:clipboard-outline" />
@@ -305,7 +412,7 @@
 						</Badge>
 						{#if data.user}
 							<!-- Create from Template, only show if user is logged in -->
-							<div class="editOptions">
+							<div class="editOptions flex justify-center">
 								<Button
 									variant="advanced"
 									title="Create card from this template"
@@ -326,6 +433,7 @@
 				{/each}
 			{/if}
 			{#each renderedCards_sorted as card}
+				{@const isActiveCharacterCard = checkIfActiveCharacterCard(card)}
 				<button
 					class="cardInViewer"
 					class:imageView
@@ -357,7 +465,7 @@
 								Public
 							</Badge>
 						{/if}
-						{#if selectedCharacter && card.isCharacterCard}
+						{#if isActiveCharacterCard}
 							<!-- SHOW AVATAR IF CHARACTER CARD -->
 							<Avatar.Root class="ml-auto border-2 border-blossom-500 bg-secondary">
 								<Avatar.Image src={selectedCharacter.image} />
@@ -367,85 +475,28 @@
 					</div>
 					<!-- Edit Options -->
 					<div class="editOptions">
-						<!-- Options when user can edit -->
-						<Button
-							title="Show card"
-							size="icon"
-							onclick={(e) => {
-								e.stopPropagation();
-								viewCard(card.id);
+						<EditButtons
+							class=""
+							compact
+							{card}
+							user={(data.user as PrismaUser) ?? null}
+							functions={{
+								enlarge: () => viewCard(card.id),
+								download: () => downloadCards([card]),
+								edit: () => editCard(card),
+								duplicate: () => duplicateCard(card),
+								addToCharacter: isActiveCharacterCard
+									? undefined
+									: () => addCardToCharacter([card]),
+								removeFromCharacter: isActiveCharacterCard
+									? () => removeFromCharacter([card])
+									: undefined,
+								delete: () => deleteCard(card)
 							}}
-						>
-							<Icon icon="mdi:zoom-in" />
-						</Button>
-						<!-- DOWNLOAD -->
-						<Button
-							size="icon"
-							title="Download as JSON"
-							onclick={(e) => {
-								e.stopPropagation();
-								downloadCards([card]);
-							}}
-						>
-							<Icon icon="mdi:download" />
-						</Button>
-						<!-- USER NEEDS TO BE LOGGED IN -->
-						{#if data.user !== null}
-							<!-- IF USER CAN EDIT -->
-							{#if card.clientPermission.canEdit || card.ownerId === data.user?.id}
-								<!-- EDIT -->
-								<Button
-									size="icon"
-									variant="blossom"
-									title="Edit Card"
-									onclick={(e) => {
-										e.stopPropagation();
-										editCard(card.id);
-									}}
-								>
-									<Icon icon="mdi:pencil" />
-								</Button>
-								<!-- DUPLICATE - SMALL -->
-								<Button
-									variant="advanced"
-									size="icon"
-									title="Duplicate Card"
-									onclick={(e) => {
-										e.stopPropagation();
-										duplicateCard(card);
-									}}
-								>
-									<Icon icon="mdi:content-copy" />
-								</Button>
-							{:else}
-								<!-- DUPLICATE - LARGE -->
-								<Button
-									variant="advanced"
-									title="Create card from this template"
-									onclick={() => createFromTemplate(card)}
-								>
-									<Icon icon="mdi:content-copy" />
-									Create</Button
-								>
-							{/if}
-
-							{#if data.user?.id === card.ownerId}
-								<!-- DELETE -->
-								<Button
-									size="icon"
-									variant="destructive"
-									title="Delete Card"
-									color="threat"
-									onclick={(e) => {
-										e.stopPropagation();
-										deleteCard(card);
-									}}
-								>
-									<Icon icon="mdi:trash" />
-								</Button>
-							{/if}
-						{/if}
+						/>
 					</div>
+
+					<!-- CARDS -->
 					<div class="frontSideCard">
 						<Gamecard {card} />
 					</div>
@@ -465,6 +516,36 @@
 		</section>
 	{/if}
 </main>
+
+<!-- DIALOGS -->
+<GamecardModal
+	{card}
+	bind:open
+	user={(data.user as PrismaUser) ?? null}
+	functions={{
+		navigate: (card) => {
+			goto(`/cards/${card.id}`);
+		},
+		download: (card) => {
+			downloadCards([card]);
+		},
+		edit: (card) => {
+			goto(`/cards/${card.id}?edit=1`);
+		},
+		addToCharacter:
+			cardIsActiveCharacterCard === false
+				? undefined
+				: (card) => {
+						addCardToCharacter([card]);
+					},
+		removeFromCharacter:
+			cardIsActiveCharacterCard === true
+				? undefined
+				: (card) => {
+						removeFromCharacter([card]);
+					}
+	}}
+/>
 
 <style>
 	section#controls {
@@ -535,7 +616,7 @@
 		display: flex;
 		gap: 0.5rem;
 		justify-content: flex-start;
-		align-items: center;
+		align-items: start;
 		padding: 10px;
 		/* Styling */
 		font-size: 2em;
@@ -544,7 +625,7 @@
 
 	.cardInViewer:hover,
 	.cardInViewer:focus-visible {
-		z-index: 100;
+		z-index: 1;
 		transform: scale(0.8) translatex(-30%);
 	}
 
@@ -555,10 +636,6 @@
 		width: 100%;
 		z-index: 1;
 		/* Layout */
-		display: flex;
-		gap: 3px;
-		justify-content: center;
-		align-items: center;
 		padding: 10px;
 		/* Styling */
 		font-size: 2em;

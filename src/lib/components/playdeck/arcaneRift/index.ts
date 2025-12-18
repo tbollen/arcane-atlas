@@ -1,7 +1,7 @@
 import { AR_KEY } from '$lib/gameSystems';
 
 // Widget stuff
-import { type SystemWidgetMap } from '../widget';
+import { type SystemWidgetMap } from '../modules/widget';
 
 // SVELTE COMPONENTS
 import Aspects from './Aspects.svelte';

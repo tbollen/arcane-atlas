@@ -76,6 +76,16 @@
 			}
 		}
 	}
+
+	// DYNAMIC SETTING ACTIVE CHARACTER
+	$effect(() => {
+		// Whenever the user logs out, clear the active character
+		if (!data.user) {
+			activeCharacter.clear();
+		} else {
+			activeCharacter.setUser(data.user as PrismaUser);
+		}
+	});
 </script>
 
 <!-- TOASTER -->

@@ -5,6 +5,8 @@
 		StoredCharacter,
 		type CharacterProperties
 	} from '$lib/domain/characters/character.svelte';
+	import type { StoredCard } from '$lib/domain/cards/cardStore.svelte';
+
 	import {
 		AR_KEY,
 		characterMechanics,
@@ -12,10 +14,10 @@
 		GENERIC_KEY,
 		type CharacterMechanics
 	} from '$lib/gameSystems';
-	import { deckSystems, type DeckSystem } from '.';
+	import { deckSystems, type DeckSystem } from '..';
 
 	// WidgetMap things
-	import { widgetMap, widgetIDs, getWidget } from '.';
+	import { widgetMap, widgetIDs, getWidget } from '..';
 
 	// Import UI components
 	import { Label } from '$lib/components/ui/label';
@@ -25,14 +27,19 @@
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import Mastery from '../partials/arcaneRift/Mastery.svelte';
+	import Mastery from '$lib/components/partials/arcaneRift/Mastery.svelte';
+	import CardSearchbox from '$lib/components/partials/gamecards/CardSearchbox.svelte';
+	import CARD_API from '$lib/utils/api/cards_api';
+	import { invalidateAll } from '$app/navigation';
 
 	let {
 		character = $bindable(),
+		cards,
 		open = $bindable(false),
 		componentID
 	}: {
 		character: StoredCharacter;
+		cards?: StoredCard[];
 		open: boolean;
 		componentID: string;
 	} = $props();
@@ -149,6 +156,34 @@
 						bind:value={character.description}
 						placeholder="Description"
 					/>
+				{/if}
+				{#if isProperty('cards')}
+					<Label for="cards">Cards</Label>
+					{#if !cards || cards.length === 0}
+						<p class="text-sm text-muted-foreground">No cards available to add.</p>
+					{:else}
+						<CardSearchbox
+							placeholder="Search and add cards..."
+							{cards}
+							cardFilters={{
+								disabledCardIDs: cards.filter((card) => card.isCharacterCard).map((card) => card.id)
+							}}
+							onCardSelect={async (card) => {
+								await verbose(
+									async () => {
+										// Add card to character
+										const response = await CARD_API.addToCharacter({
+											characterId: character.id,
+											cards: [card.cardToPrisma()]
+										});
+									},
+									{ successMessage: `Added card "${card.name}" to character.` }
+								);
+								// Invalidate all to update character cards
+								invalidateAll();
+							}}
+						/>
+					{/if}
 				{/if}
 			{/if}
 			<!-- Arcane Rift -->
@@ -419,7 +454,7 @@
 					class="max-h-[600px] max-w-[450px]"
 					style="aspect-ratio: {widget.initialLayout.w}/{widget.initialLayout.h}"
 				>
-					<widget.component bind:character />
+					<widget.component bind:character {cards} />
 				</div>
 			{/if}
 		</div>
