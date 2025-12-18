@@ -9,7 +9,7 @@
 	type InputProps = ComponentProps<typeof InputGroup.Input>;
 
 	let {
-		searchTerm: _searchTerm = $bindable(''),
+		searchTerm = $bindable(''),
 		cards,
 		onCardSelect,
 		...restProps
@@ -18,8 +18,6 @@
 		onCardSelect: (card: StoredCard) => void;
 		cards: StoredCard[];
 	} & InputProps = $props();
-
-	let searchTerm = $derived(_searchTerm);
 
 	let filteredCards = $derived.by(() => {
 		// Fallback if no options
@@ -47,56 +45,48 @@
 
 	// Holder for focussing
 	let isFocussedOnInput: boolean = $state(false);
+	let isFocussedOnDropdown: boolean = $state(false);
 
 	// Proxy selector (hover but default to only one)
 	let proxyCardSelector: number = $state(0);
-
-	$effect(() => {
-		console.group('SearchInput Debug');
-		console.log('searchTerm:', searchTerm);
-		console.log('Given cards:', cards);
-		console.log('filteredOptions:', filteredCards);
-		console.groupEnd();
-	});
 </script>
 
-<InputGroup.Root>
-	<InputGroup.Input
-		value={searchTerm}
-		placeholder={restProps?.placeholder ?? 'Search for cards...'}
-		disabled={!cards || cards.length === 0}
-		oninput={(e) => {
-			// @ts-ignore
-			const _value = e.target?.value || '';
-			searchTerm = _value;
-		}}
-		list="search-options"
-		onfocus={() => {
-			isFocussedOnInput = true;
-		}}
-		onkeydown={(e) => {
-			// If Enter is pressed and there is at least one filtered card, select the first one
-			if (e.key === 'Enter' && filteredCards.length > 0) {
-				if (filteredCards.length === 0) return;
-				// Prevent form submission
-				e.preventDefault();
-				onCardSelect(filteredCards[0]);
-				searchTerm = '';
-			}
-		}}
-		onblurcapture={() => {
-			// Minor delay to allow click event to register
-			setTimeout(() => {
-				isFocussedOnInput = false;
-			}, 200);
-		}}
-		{...restProps}
-	/>
-	<!-- If searching, show the custom datalist -->
-	{#if searchTerm.trim() !== '' || isFocussedOnInput}
+<div class="group relative">
+	<InputGroup.Root>
+		<InputGroup.Input
+			value={searchTerm}
+			oninput={(e) => {
+				searchTerm = e.currentTarget.value;
+			}}
+			placeholder={restProps?.placeholder ?? 'Search for cards...'}
+			disabled={!cards || cards.length === 0}
+			list="search-options"
+			onkeydown={(e) => {
+				// If Enter is pressed and there is at least one filtered card, select the first one
+				if (e.key === 'Enter' && filteredCards.length > 0) {
+					if (filteredCards.length === 0) return;
+					// Prevent form submission
+					e.preventDefault();
+					onCardSelect(filteredCards[proxyCardSelector]);
+					searchTerm = '';
+				}
+				// Arrow key navigation
+				else if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					proxyCardSelector = Math.min(proxyCardSelector + 1, filteredCards.length - 1);
+				} else if (e.key === 'ArrowUp') {
+					e.preventDefault();
+					proxyCardSelector = Math.max(proxyCardSelector - 1, 0);
+				}
+			}}
+			{...restProps}
+		/>
+		<!-- Custom datalist - shown when focused within group and has search term -->
 		<div
 			id="customDatalist"
-			class=" absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 shadow-lg"
+			tabindex="-1"
+			class="pointer-events-none absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+			class:hidden={searchTerm.trim() === ''}
 		>
 			{#if filteredCards.length > 0}
 				{#each filteredCards as card, index}
@@ -139,17 +129,17 @@
 				<p class="p-2 text-sm text-muted-foreground">No cards found with term "{searchTerm}"</p>
 			{/if}
 		</div>
-	{/if}
-	<InputGroup.Addon>
-		<Icon icon="mdi:magnify" />
-	</InputGroup.Addon>
-	{#if searchTerm}
-		<InputGroup.Addon align="inline-end">
-			<InputGroup.Button
-				onclick={() => {
-					searchTerm = '';
-				}}><Icon icon="mdi:remove" /></InputGroup.Button
-			>
+		<InputGroup.Addon>
+			<Icon icon="mdi:magnify" />
 		</InputGroup.Addon>
-	{/if}
-</InputGroup.Root>
+		{#if searchTerm}
+			<InputGroup.Addon align="inline-end">
+				<InputGroup.Button
+					onclick={() => {
+						searchTerm = '';
+					}}><Icon icon="mdi:remove" /></InputGroup.Button
+				>
+			</InputGroup.Addon>
+		{/if}
+	</InputGroup.Root>
+</div>
