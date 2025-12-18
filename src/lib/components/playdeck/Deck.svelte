@@ -1,4 +1,7 @@
 <script lang="ts">
+	// Debugging
+	import { compareObjects } from '$lib/utils/debug/compareObjects';
+
 	// Import UI components
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -59,10 +62,21 @@
 	let unsaved: boolean = $state(false);
 	let lastCharacterState = $state(character.toPrisma());
 
+	function checkSavedState() {
+		character.toPrisma();
+
+		// Compare without deck property
+		const { deck: _currentDeck, ...currentWithoutDeck } = character.toPrisma();
+		const { deck: _lastDeck, ...lastWithoutDeck } = lastCharacterState;
+		unsaved = JSON.stringify(currentWithoutDeck) !== JSON.stringify(lastWithoutDeck);
+		// Log the difference between the two states for debugging
+		console.log('Checking saved state:', compareObjects(currentWithoutDeck, lastWithoutDeck));
+	}
+
 	// Track changes to character
 	$effect(() => {
 		character.toPrisma();
-		unsaved = character.toPrisma() !== lastCharacterState;
+		checkSavedState();
 	});
 
 	////////////////////////////////
@@ -208,6 +222,7 @@
 				// Set saved
 				unsaved = false;
 				lastCharacterState = character.toPrisma(); // update last saved state
+				checkSavedState();
 				// return the response for further handling
 				return response;
 			})
@@ -373,7 +388,7 @@
 </script>
 
 <!-- EDIT BAR -->
-<div id="Actions" class="my-4 flex flex-row items-center gap-8">
+<div id="Actions" class="mx-4 my-4 flex flex-row items-center gap-8">
 	<div class="flex flex-col">
 		<Header tag="h2" variant="h3">{character.name}'s Deck</Header>
 		<Button
