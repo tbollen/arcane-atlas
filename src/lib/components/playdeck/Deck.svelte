@@ -520,7 +520,7 @@
 	{character}
 	bind:open={addWidgetDialog}
 />
-<EditDialog bind:open={edit.open} componentID={edit.componentID} bind:character />
+<EditDialog bind:open={edit.open} {cards} componentID={edit.componentID} bind:character />
 
 <style lang="postcss">
 	:global(.svlt-grid-shadow) {
