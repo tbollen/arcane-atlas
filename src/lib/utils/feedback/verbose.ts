@@ -35,7 +35,12 @@ const defaultVerboseOptions: VerboseOptions = {
  * @returns The result of the executed function
  * @throws Rethrows any error encountered during function execution
  */
-export function verbose<T>(fn: () => T, options: Partial<VerboseOptions> = {}): T {
+export function verbose<T>(fn: () => T, options?: Partial<VerboseOptions>): T;
+export function verbose<T>(fn: () => Promise<T>, options?: Partial<VerboseOptions>): Promise<T>;
+export function verbose<T>(
+	fn: () => T | Promise<T>,
+	options: Partial<VerboseOptions> = {}
+): T | Promise<T> {
 	// Merge default options with provided options
 	options = { ...defaultVerboseOptions, ...options };
 
@@ -43,6 +48,30 @@ export function verbose<T>(fn: () => T, options: Partial<VerboseOptions> = {}): 
 	try {
 		const result = fn();
 
+		// Check if result is a Promise (async function)
+		if (result instanceof Promise) {
+			return result
+				.then((resolvedResult) => {
+					// Toasts a success message if provided
+					if (options?.successMessage) {
+						toast.success(options.successMessage, options.toastOptions);
+					}
+
+					// Logs success to console if enabled
+					if (options?.logToConsole && options?.successMessage) {
+						if (options?.debugOnly) console.debug('[verbose] Success:', options.successMessage);
+						else console.log('[verbose] Success:', options.successMessage);
+					}
+
+					return resolvedResult;
+				})
+				.catch((error) => {
+					handleError(error, options);
+					throw error;
+				});
+		}
+
+		// Synchronous path
 		// Toasts a success message if provided
 		if (options?.successMessage) {
 			toast.success(options.successMessage, options.toastOptions);
@@ -57,30 +86,31 @@ export function verbose<T>(fn: () => T, options: Partial<VerboseOptions> = {}): 
 		// Return the result of the function
 		return result;
 	} catch (error) {
-		const errorMsg = error instanceof Error ? error.message : String(error);
-		const fullErrorMessage = options?.errorMessage
-			? `${options.errorMessage}: ${errorMsg}`
-			: errorMsg;
-
-		// Toasts an error message if enabled
-		if (options?.showError) {
-			if (options?.errorAsType === 'warning')
-				toast.warning(fullErrorMessage, options?.toastOptions);
-			else if (options?.errorAsType === 'info') toast.info(fullErrorMessage, options?.toastOptions);
-			else if (options?.errorAsType === 'message')
-				toast.message(fullErrorMessage, options?.toastOptions);
-			else toast.error(fullErrorMessage, options.toastOptions);
-		}
-
-		// Logs error to console if enabled
-		if (options?.logToConsole) {
-			if (options?.errorAsType === 'warning') console.warn('[verbose] Warning:', error);
-			else if (options?.errorAsType === 'info') console.info('[verbose] Info:', error);
-			else if (options?.errorAsType === 'message') console.log('[verbose] Message:', error);
-			else console.error('[verbose] Error:', error);
-		}
-
-		// Rethrows the error
+		handleError(error, options);
 		throw error;
+	}
+}
+
+function handleError(error: unknown, options: Partial<VerboseOptions>) {
+	const errorMsg = error instanceof Error ? error.message : String(error);
+	const fullErrorMessage = options?.errorMessage
+		? `${options.errorMessage}: ${errorMsg}`
+		: errorMsg;
+
+	// Toasts an error message if enabled
+	if (options?.showError) {
+		if (options?.errorAsType === 'warning') toast.warning(fullErrorMessage, options?.toastOptions);
+		else if (options?.errorAsType === 'info') toast.info(fullErrorMessage, options?.toastOptions);
+		else if (options?.errorAsType === 'message')
+			toast.message(fullErrorMessage, options?.toastOptions);
+		else toast.error(fullErrorMessage, options.toastOptions);
+	}
+
+	// Logs error to console if enabled
+	if (options?.logToConsole) {
+		if (options?.errorAsType === 'warning') console.warn('[verbose] Warning:', error);
+		else if (options?.errorAsType === 'info') console.info('[verbose] Info:', error);
+		else if (options?.errorAsType === 'message') console.log('[verbose] Message:', error);
+		else console.error('[verbose] Error:', error);
 	}
 }
