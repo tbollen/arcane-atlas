@@ -7,13 +7,12 @@
     If the "item" snippet is provided, it will be used to render each item in the list with custom content and styling.
     If no "item" snippet is provided, the component falls back to default list item rendering.
     
-    @prop {Array} items - The array of items to be rendered in the list
-    @prop {Function} [onitemclick] - Optional callback function triggered when a list item is clicked. 
-                                                                        When not defined, list items will not respond to click events.
-    @prop {Function} [onitemhover] - Optional callback function triggered when a list item is hovered over.
-                                                                        When not defined, list items will not respond to hover events.
-    @prop {Function} [onitemfocus] - Optional callback function triggered when a list item receives focus.
-                                                                        When not defined, list items will not respond to focus events.
+    @prop list: Array<T> - The array of items to be displayed in the list.
+    @function increase - A function to move an item up in the list. If set to 'hidden', the increase button will not be shown.
+    @function decrease - A function to move an item down in the list. If set to 'hidden', the decrease button will not be shown.
+    @function remove - A function to remove an item from the list. If set to 'hidden', the remove button will not be shown.
+    @function onlistchange - A callback function that is called whenever the list changes, providing the affected item and its index.
+    @snippet item: T - A snippet to customize the rendering of each list
     
     @example
     ```svelte

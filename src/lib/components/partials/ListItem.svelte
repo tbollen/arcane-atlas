@@ -1,3 +1,32 @@
+<!-- 
+ @component ListItem
+
+ A flexible list item component that can display an icon, main text, sub text, and an optional handle button. Very useful in combination with the EditList component.
+
+ @prop item: T (optional) - The item associated with this list item, useful for typing and functions.
+ @prop onItemClick: () => void (optional) - Function to be called when the item is clicked.
+ @prop icon: string | object | snippet (optional) - The icon to display. An object may be provided with 'icon', 'class', and 'style' properties.
+ @prop mainText: string | object | snippet - The main text to display. An object may be provided with 'text', 'class', and 'style' properties.
+ @prop subText: string | object | snippet (optional) - The sub text to display. An object may be provided with 'text', 'class', and 'style' properties.
+ @prop handle: object | () => void (optional) - An object defining the handle function. When passing an object, the handle can be customized with 'click', 'class', 'variant', 'icon', and 'left' properties. If a function is provided, it will be used as the click handler with default styling.
+
+ @example
+ ```svelte
+ <ListItem
+	 mainText={{ text: 'Item Name', class: 'text-lg font-bold' }}
+	 subText="This is a subtext"
+	 icon={{ icon: 'mdi:star', class: 'text-yellow-500' }}
+	 onItemClick={() => console.log('Item clicked')}
+	 handle={{
+		 click: () => console.log('Handle clicked'),
+		 class: 'custom-handle-class',
+		 variant: 'destructive',
+		 icon: 'mdi:delete',
+		 left: false
+	 }}
+		  />
+``` 
+  -->
 <script lang="ts">
 	import { Button, type ButtonVariant } from '$lib/components/ui/button/';
 	import Icon, { iconExists } from '@iconify/svelte';
