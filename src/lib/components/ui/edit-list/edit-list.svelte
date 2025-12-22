@@ -1,3 +1,29 @@
+<!--
+    @component Edit List
+    
+    A custom list component that renders a collection of items.
+    
+    This component uses a snippet called "item" to override the default rendering of list items.
+    If the "item" snippet is provided, it will be used to render each item in the list with custom content and styling.
+    If no "item" snippet is provided, the component falls back to default list item rendering.
+    
+    @prop {Array} items - The array of items to be rendered in the list
+    @prop {Function} [onitemclick] - Optional callback function triggered when a list item is clicked. 
+                                                                        When not defined, list items will not respond to click events.
+    @prop {Function} [onitemhover] - Optional callback function triggered when a list item is hovered over.
+                                                                        When not defined, list items will not respond to hover events.
+    @prop {Function} [onitemfocus] - Optional callback function triggered when a list item receives focus.
+                                                                        When not defined, list items will not respond to focus events.
+    
+    @example
+    ```svelte
+    <List items={myItems}>
+        {#snippet item(data)}
+            <div class="custom-item">{data.name}</div>
+        {/snippet}
+    </List>
+    ```
+-->
 <script lang="ts" generics="T">
 	// Import UI components
 	import { Button } from '$lib/components/ui/button/index.js';
