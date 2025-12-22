@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { Button, type ButtonVariant } from '$lib/components/ui/button/';
 	import Icon, { iconExists } from '@iconify/svelte';
+	// Tailwind classes
+	import type { ClassValue } from 'clsx';
+	import { cn } from '$lib/utils';
 
 	// Types and Utils
 	import type { WithElementRef } from '$lib/utils';
 	import type { HTMLAttributes } from 'svelte/elements';
 
 	type Div = WithElementRef<HTMLAttributes<HTMLDivElement>>;
-	type ClassedString = string | { text: string; class: Div['class'] };
+	type ExtendedString = string | { text: string; class?: ClassValue; style?: Div['style'] };
+	type ExtendedIcon = string | { icon: string; class?: ClassValue; style?: Div['style'] };
 
 	type ListItemProps<T> = Div & {
 		// specifiy item for typing and functions
@@ -15,14 +19,14 @@
 		// Item click
 		onItemClick?: () => void;
 		// Content
-		icon?: string | import('svelte').Snippet;
-		mainText: ClassedString | import('svelte').Snippet;
-		subText?: ClassedString | import('svelte').Snippet;
+		icon?: ExtendedIcon | import('svelte').Snippet;
+		mainText: ExtendedString | import('svelte').Snippet;
+		subText?: ExtendedString | import('svelte').Snippet;
 		// Handle (object with info or plain function, using defaults)
 		handle?:
 			| {
 					click: () => void;
-					class?: Div['class'];
+					class?: ClassValue;
 					variant?: ButtonVariant;
 					icon?: string;
 					left?: boolean;
@@ -44,13 +48,14 @@
 	// ICON stuff
 	let validIcon = $derived.by(() => {
 		if (!icon) return null;
-		if (typeof icon === 'string' && iconExists(icon as string)) return icon;
+		if (typeof icon === 'object') return icon.icon;
+		if (typeof icon === 'string' && iconExists(icon)) return icon;
 		return null;
 	});
 	let hasIcon = $derived(validIcon !== null || (icon !== undefined && typeof icon === 'function'));
 
 	// Derived grid layout
-	let gridLayout = $derived(`
+	let gridLayout: ClassValue = $derived(`
         ${icon !== undefined ? 'grid-cols-[auto_1fr]' : 'grid-cols-[1fr]'}
         ${subText ? 'grid-rows-[auto_auto]' : 'grid-rows-[auto]'}
         `);
@@ -62,9 +67,16 @@
 
 {#snippet content()}
 	<!-- ICON, either as a string or as a snippet -->
-	<div class="row-span-2 {hasIcon ? 'p-2' : ''}">
+	<div
+		class={cn(
+			'row-span-2 h-full',
+			hasIcon ? 'aspect-square p-2' : '',
+			icon && typeof icon === 'object' ? icon?.class ?? '' : ''
+		)}
+		style={typeof icon === 'object' ? icon?.style ?? '' : ''}
+	>
 		{#if validIcon}
-			<Icon icon={validIcon} class="h-6 w-6" />
+			<Icon icon={validIcon} class="h-full w-full" />
 		{:else if icon && typeof icon === 'function'}
 			{@render icon()}
 		{/if}
@@ -75,13 +87,15 @@
 		{@render mainText()}
 	{:else if mainText !== undefined}
 		{@const text = typeof mainText === 'string' ? mainText : mainText.text}
-		{@const textClass = typeof mainText === 'object' ? mainText.class : ''}
+		{@const textStyle = typeof mainText === 'object' ? mainText?.style ?? '' : ''}
+		{@const textClass = typeof mainText === 'object' ? mainText?.class ?? '' : ''}
 		<p
-			class="{textClass}
-            {subText ? '' : 'row-span-2 '}
-            w-full max-w-full
-            overflow-hidden text-left leading-tight
-            font-semibold overflow-ellipsis whitespace-nowrap"
+			class={cn(
+				'w-full max-w-full overflow-hidden text-left leading-tight font-semibold overflow-ellipsis whitespace-nowrap',
+				subText ? '' : 'row-span-2 ',
+				textClass
+			)}
+			style={textStyle ?? ''}
 		>
 			{text}
 		</p>
@@ -92,9 +106,14 @@
 		{@render subText()}
 	{:else if subText !== undefined}
 		{@const text = typeof subText === 'string' ? subText : subText.text}
-		{@const textClass = typeof subText === 'object' ? subText.class : ''}
+		{@const textStyle = typeof subText === 'object' ? subText?.style ?? '' : ''}
+		{@const textClass = typeof subText === 'object' ? subText?.class ?? '' : ''}
 		<p
-			class="{textClass} max-w-full overflow-hidden text-left text-sm overflow-ellipsis whitespace-nowrap text-muted-foreground"
+			class={cn(
+				'max-w-full overflow-hidden text-left text-sm overflow-ellipsis whitespace-nowrap text-muted-foreground',
+				textClass
+			)}
+			style={textStyle ?? ''}
 		>
 			{text}
 		</p>
@@ -105,20 +124,22 @@
 	<!-- CONTENT as Button or Div -->
 	{#if onItemClick !== undefined}
 		<button
-			class="
-            grid {gridLayout} w-full cursor-pointer items-center
-            justify-items-start gap-x-1 rounded-md hover:bg-obsidian-500/10
-            "
+			class={cn(
+				'grid w-full cursor-pointer items-center justify-items-start gap-x-1 gap-y-0.5 rounded-lg p-1 hover:bg-obsidian-500/10',
+				gridLayout,
+				className
+			)}
 			onclick={onItemClick}
 		>
 			{@render content()}
 		</button>
 	{:else}
 		<div
-			class="
-            grid {gridLayout} w-full items-center justify-items-start
-            gap-x-1
-            "
+			class={cn(
+				'grid w-full items-center justify-items-start gap-x-1 gap-y-0.5 p-1',
+				gridLayout,
+				className
+			)}
 		>
 			{@render content()}
 		</div>
@@ -132,13 +153,10 @@
 			typeof handle === 'function' ? 'destructive' : handle.variant ?? 'destructive'}
 		{@const handleIcon = typeof handle === 'function' ? 'mdi:remove' : handle.icon ?? 'mdi:remove'}
 		<Button
-			class="
-            not-hover:w-4!
-            not-hover:p-0!
-            not-hover:text-transparent
-            hover:w-8
-            hover:text-white
-            "
+			class={cn(
+				'not-hover:w-4! not-hover:p-0! not-hover:text-transparent hover:w-8 hover:text-white',
+				handleClass
+			)}
 			variant={handleVariant}
 			onclick={clickFunc}
 		>
