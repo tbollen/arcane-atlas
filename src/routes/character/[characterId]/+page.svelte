@@ -56,6 +56,7 @@
 	$effect(() => {
 		// If the active character changes, and it's not the current character, redirect to that character's page
 		if (window && characterIsResolved && activeCharacter && activeCharacter.id !== characterID) {
+if (characterID === 'new' && isNewCharacter) return; // Don't redirect if creating new character
 			// Ask for confirmation before redirecting
 			const confirm = window.confirm(
 				'The active character has changed. Do you want to switch to the new character?'
