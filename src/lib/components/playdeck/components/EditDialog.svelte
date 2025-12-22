@@ -16,6 +16,9 @@
 	} from '$lib/gameSystems';
 	import { deckSystems, type DeckSystem } from '..';
 
+	// API
+	import CARD_API from '$lib/utils/api/cards_api';
+
 	// WidgetMap things
 	import { widgetMap, widgetIDs, getWidget } from '..';
 
@@ -29,7 +32,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import Mastery from '$lib/components/partials/arcaneRift/Mastery.svelte';
 	import CardSearchbox from '$lib/components/partials/gamecards/CardSearchbox.svelte';
-	import CARD_API from '$lib/utils/api/cards_api';
+	import EditList from '$lib/components/ui/edit-list/edit-list.svelte';
+
+	// Svelte
 	import { invalidateAll } from '$app/navigation';
 
 	let {
@@ -202,40 +207,21 @@
 						<!-- ASPECTS -->
 						<Header variant="h3">Aspects</Header>
 						{#if character.mechanics[AR_KEY]?.aspects && character.mechanics[AR_KEY]?.aspects?.length > 0}
-							<div id="aspects" class="flex flex-col gap-0">
-								{#each character.mechanics[AR_KEY]?.aspects || [] as aspect, index}
-									<div
-										class="flex flex-row items-center gap-4 border-obsidian-500 py-2 [:not(:first-child)]:border-t-2"
-									>
-										<div class="flex grow flex-col justify-center gap-1">
-											<p class="font-bold">{aspect.short}</p>
-											<p>{aspect.description}</p>
-										</div>
-
-										<Button
-											size="icon"
-											disabled={index == 0}
-											onclick={() =>
-												verbose(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
-										>
-											<Icon icon="mdi:arrow-up" /></Button
-										>
-										<Button
-											size="icon"
-											disabled={index == character.mechanics[AR_KEY]?.aspects?.length - 1}
-											onclick={() =>
-												verbose(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
-										>
-											<Icon icon="mdi:arrow-down" /></Button
-										>
-										<Button
-											size="icon"
-											onclick={() => verbose(() => character.fn[AR_KEY]!.removeAspect(index))}
-											><Icon icon="mdi:close" /></Button
-										>
+							<EditList
+								list={character.mechanics[AR_KEY].aspects}
+								increase={(index) =>
+									verbose(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
+								decrease={(index) =>
+									verbose(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
+								remove={(index) => verbose(() => character.fn[AR_KEY]!.removeAspect(index))}
+							>
+								{#snippet item(aspect, index)}
+									<div class="flex flex-col justify-center gap-1">
+										<p class="font-bold">{aspect.short}</p>
+										<p>{aspect.description}</p>
 									</div>
-								{/each}
-							</div>
+								{/snippet}
+							</EditList>
 						{/if}
 						<div id="addAspect" class="flex flex-col gap-2 p-2">
 							<Input placeholder="Short name..." bind:value={newAspectInput.short} />
