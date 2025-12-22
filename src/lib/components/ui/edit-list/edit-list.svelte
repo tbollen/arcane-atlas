@@ -9,10 +9,10 @@
 
 	type ListProps<T> = WithElementRef<HTMLAttributes<HTMLDivElement>> & {
 		list: Array<T>;
-		increase?: ((fromIndex: number, toIndex?: number) => void) | 'hidden';
-		decrease?: ((fromIndex: number, toIndex?: number) => void) | 'hidden';
-		remove?: ((index: number) => void) | 'hidden';
-		onchange?: (index?: number) => void | number;
+		increase?: ((fromIndex: number, toIndex?: number) => void | T) | 'hidden';
+		decrease?: ((fromIndex: number, toIndex?: number) => void | T) | 'hidden';
+		remove?: ((index: number) => void | T) | 'hidden';
+		onlistchange?: (item?: T, index?: number) => void | T;
 		item?: import('svelte').Snippet<[T, number]>;
 	};
 
@@ -26,15 +26,27 @@
 	}
 
 	function _decrease(index: number) {
+		let item = list[index];
 		moveInList(index, index - 1);
+		return item;
 	}
 
 	function _increase(index: number) {
+		let item = list[index];
 		moveInList(index, index + 1);
+		return item;
 	}
 
 	function _remove(index: number) {
+		let item = list[index];
 		list.splice(index, 1);
+		return item;
+	}
+
+	function _onlistchange(target?: T, index?: number) {
+		if (target) return target;
+		if (index !== undefined) return list[index];
+		return;
 	}
 
 	let {
@@ -44,7 +56,7 @@
 		increase = _increase,
 		decrease = _decrease,
 		remove = _remove,
-		onchange = () => {},
+		onlistchange = _onlistchange,
 		item,
 		...restProps
 	}: ListProps<T> = $props();
@@ -72,7 +84,7 @@
 					disabled={index == 0}
 					onclick={() => {
 						decrease(index, index - 1);
-						onchange(index);
+						onlistchange(listItem, index);
 					}}
 				>
 					<Icon icon="mdi:arrow-up" /></Button
@@ -84,7 +96,7 @@
 					disabled={index == list.length - 1}
 					onclick={() => {
 						increase(index, index + 1);
-						onchange(index);
+						onlistchange(listItem, index);
 					}}
 				>
 					<Icon icon="mdi:arrow-down" /></Button
@@ -96,7 +108,7 @@
 					size="icon"
 					onclick={() => {
 						remove(index);
-						onchange(index);
+						onlistchange(listItem, index);
 					}}><Icon icon="mdi:close" /></Button
 				>
 			{/if}
