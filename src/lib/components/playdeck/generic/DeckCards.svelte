@@ -26,6 +26,7 @@
 	// Svelte
 	import { onMount, type ComponentProps } from 'svelte';
 	import { goto } from '$app/navigation';
+	import ListItem from '$lib/components/partials/ListItem.svelte';
 
 	// Dialog vars
 	let dialogCard: ComponentProps<typeof GamecardModal>['card'] = $state(undefined);
@@ -87,68 +88,31 @@
 						<hr class="w-full border-t border-obsidian-500/20" />
 					{/if}
 					{#if showCompact}
-						<button
-							class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md py-1 hover:bg-obsidian-500/10"
-							onclick={() => {
+						<ListItem
+							mainText={{ text: card.name, class: 'text-sm font-semibold' }}
+							icon={{ icon, class: 'p-0.25', style: `color: ${card.style.color.icon};` }}
+							onItemClick={() => {
 								dialogCard = card;
 								open = true;
 							}}
-						>
-							<Icon {icon} class="h-5 w-5" style="color: {card.style.color.icon};" />
-							<p
-								class=" w-full max-w-full overflow-hidden text-left leading-tight font-semibold overflow-ellipsis whitespace-nowrap"
-								style="font-family: '{card.style.font.name}', 'Gotham', sans-serif;"
-							>
-								{card.name}
-							</p>
-						</button>
+							handle={{
+								click: () => removeCardFromCharacter(card),
+								class: 'max-h-6! max-w-6! p-0!'
+							}}
+						/>
 					{:else}
-						<div class="flex w-full items-center py-1">
-							<button
-								class="
-						grid
-						w-full cursor-pointer grid-cols-[auto_1fr] items-center
-						justify-items-start
-						gap-x-1
-						rounded-md
-						hover:bg-obsidian-500/10
-						"
-								onclick={() => {
-									dialogCard = card;
-									open = true;
-								}}
-							>
-								<div class="row-span-2 p-2">
-									<Icon {icon} class="h-6 w-6" style="color: {card.style.color.icon};" />
-								</div>
-								<p
-									class=" w-full max-w-full overflow-hidden text-left leading-tight font-semibold overflow-ellipsis whitespace-nowrap"
-									style="font-family: '{card.style.font.name}', 'Gotham', sans-serif;"
-								>
-									{card.name}
-								</p>
-								<p
-									class=" max-w-full overflow-hidden text-left text-sm overflow-ellipsis whitespace-nowrap text-muted-foreground"
-								>
-									{card.subtitle}
-								</p>
-							</button>
-							<Button
-								class="
-						not-hover:w-4!
-						not-hover:p-0!
-						not-hover:text-transparent
-						hover:w-8
-						hover:text-white
-						"
-								variant="destructive"
-								onclick={() => {
-									removeCardFromCharacter(card);
-								}}
-							>
-								<Icon icon="mdi:remove" />
-							</Button>
-						</div>
+						<ListItem
+							mainText={card.name}
+							subText={card.subtitle}
+							icon={{ icon, style: `color: ${card.style.color.icon};` }}
+							onItemClick={() => {
+								dialogCard = card;
+								open = true;
+							}}
+							handle={{
+								click: () => removeCardFromCharacter(card)
+							}}
+						/>
 					{/if}
 				{/each}
 			</div>
