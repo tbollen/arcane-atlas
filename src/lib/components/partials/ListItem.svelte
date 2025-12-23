@@ -4,7 +4,7 @@
  A flexible list item component that can display an icon, main text, sub text, and an optional handle button. Very useful in combination with the EditList component.
 
  @prop item: T (optional) - The item associated with this list item, useful for typing and functions.
- @prop onItemClick: () => void (optional) - Function to be called when the item is clicked.
+ @prop onclick: () => void (optional) - Function to be called when the item is clicked.
  @prop icon: string | object | snippet (optional) - The icon to display. An object may be provided with 'icon', 'class', and 'style' properties.
  @prop mainText: string | object | snippet - The main text to display. An object may be provided with 'text', 'class', and 'style' properties.
  @prop subText: string | object | snippet (optional) - The sub text to display. An object may be provided with 'text', 'class', and 'style' properties.
@@ -16,7 +16,7 @@
 	 mainText={{ text: 'Item Name', class: 'text-lg font-bold' }}
 	 subText="This is a subtext"
 	 icon={{ icon: 'mdi:star', class: 'text-yellow-500' }}
-	 onItemClick={() => console.log('Item clicked')}
+	 onclick={() => console.log('Item clicked')}
 	 handle={{
 		 click: () => console.log('Handle clicked'),
 		 class: 'custom-handle-class',
@@ -36,17 +36,16 @@
 
 	// Types and Utils
 	import type { WithElementRef } from '$lib/utils';
-	import type { HTMLAttributes } from 'svelte/elements';
+	import type { HTMLAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-	type Div = WithElementRef<HTMLAttributes<HTMLDivElement>>;
-	type ExtendedString = string | { text: string; class?: ClassValue; style?: Div['style'] };
-	type ExtendedIcon = string | { icon: string; class?: ClassValue; style?: Div['style'] };
+	type ExtendedString = string | { text: string; class?: ClassValue; style?: string };
+	type ExtendedIcon = string | { icon: string; class?: ClassValue; style?: string };
 
-	type ListItemProps<T> = Div & {
+	type ListItemProps<T> = {
 		// specifiy item for typing and functions
 		item?: T;
 		// Item click
-		onItemClick?: () => void;
+		onclick?: () => void;
 		// Content
 		icon?: ExtendedIcon | import('svelte').Snippet;
 		mainText: ExtendedString | import('svelte').Snippet;
@@ -61,17 +60,20 @@
 					left?: boolean;
 			  }
 			| (() => void);
+		class?: string;
+		ref?: HTMLElement | null;
 	};
 
 	let {
 		class: className,
 		ref = $bindable(null),
 		item = $bindable(undefined),
-		onItemClick,
 		icon,
 		mainText,
 		subText,
-		handle
+		handle,
+		onclick,
+		...restProps
 	}: ListItemProps<any> = $props();
 
 	// ICON stuff
@@ -151,14 +153,15 @@
 
 <div class="flex w-full {flexDirection} items-center gap-2 py-1">
 	<!-- CONTENT as Button or Div -->
-	{#if onItemClick !== undefined}
+	{#if onclick !== undefined}
 		<button
 			class={cn(
 				'grid w-full cursor-pointer items-center justify-items-start gap-x-1 gap-y-0.5 rounded-lg p-1 hover:bg-obsidian-500/10',
 				gridLayout,
 				className
 			)}
-			onclick={onItemClick}
+			{onclick}
+			{...restProps}
 		>
 			{@render content()}
 		</button>
@@ -169,6 +172,7 @@
 				gridLayout,
 				className
 			)}
+			{...restProps}
 		>
 			{@render content()}
 		</div>
