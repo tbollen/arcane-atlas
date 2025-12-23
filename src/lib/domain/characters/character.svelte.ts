@@ -178,7 +178,7 @@ export type CharacterProperties = {
 	[GENERIC_KEY]?: GenericProperty[];
 } & SystemProperties<CharacterMechanics>;
 
-type GenericProperty =
+export type GenericProperty =
 	| Exclude<keyof Omit<Character, 'systems' | 'mechanics' | 'createdAt' | 'updatedAt'>, undefined>
 	| 'cards';
 type SystemProperties<T extends Character['mechanics']> = {
