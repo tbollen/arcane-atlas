@@ -74,7 +74,7 @@
 		handle,
 		onclick,
 		...restProps
-	}: ListItemProps<any> = $props();
+	}: ListItemProps<any> & WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
 
 	// ICON stuff
 	let validIcon = $derived.by(() => {
@@ -154,17 +154,18 @@
 <div class="flex w-full {flexDirection} items-center gap-2 py-1">
 	<!-- CONTENT as Button or Div -->
 	{#if onclick !== undefined}
-		<button
+		<div
 			class={cn(
 				'grid w-full cursor-pointer items-center justify-items-start gap-x-1 gap-y-0.5 rounded-lg p-1 hover:bg-obsidian-500/10',
 				gridLayout,
 				className
 			)}
+			role="button"
 			{onclick}
 			{...restProps}
 		>
 			{@render content()}
-		</button>
+		</div>
 	{:else}
 		<div
 			class={cn(

@@ -3,6 +3,8 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { iconExists } from '@iconify/svelte';
+	import ListItem from '$lib/components/partials/ListItem.svelte';
+
 	import type { ComponentProps } from 'svelte';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 	import { cardTypes } from '$lib/domain/cards/cardTypes';
@@ -154,40 +156,28 @@
 					{@const isFilteredOut = filteredOutCards.some(
 						(filteredCard) => filteredCard.id === card.id
 					)}
-					<button
-						class="
-						grid w-full cursor-pointer grid-cols-[auto_1fr] items-center
-						justify-items-start gap-x-1 rounded-md py-2
-                        {proxyCardSelector === index && !isFilteredOut ? 'bg-obsidian-500/10' : ''}
-						{isFilteredOut ? '!cursor-not-allowed opacity-50' : 'hover:bg-obsidian-500/10'}
-						"
-						disabled={isFilteredOut}
-						onclick={() => {
-							onCardSelect(card);
-							searchTerm = '';
+					<ListItem
+						icon={{ icon, style: `color: ${card.style.color.icon}` }}
+						class="hover:bg-unset {isFilteredOut
+							? '!cursor-not-allowed opacity-50'
+							: proxyCardSelector === index
+								? 'bg-obsidian-500/10'
+								: ''}"
+						mainText={{
+							text: card.name,
+							style: `font-family: '${card.style.font.name}', 'Gotham', sans-serif;`
 						}}
+						subText={card.subtitle}
+						onclick={isFilteredOut
+							? undefined
+							: () => {
+									onCardSelect(card);
+									searchTerm = '';
+								}}
 						onmouseenter={() => {
-							if (!isFilteredOut) proxyCardSelector = index;
+							proxyCardSelector = index;
 						}}
-						onmouseleave={() => {
-							proxyCardSelector = 0;
-						}}
-					>
-						<div class="row-span-2 p-2">
-							<Icon {icon} class="h-6 w-6" style="color: {card.style.color.icon};" />
-						</div>
-						<p
-							class=" w-full max-w-full overflow-hidden text-left leading-tight font-semibold overflow-ellipsis whitespace-nowrap"
-							style="font-family: '{card.style.font.name}', 'Gotham', sans-serif;"
-						>
-							{card.name}
-						</p>
-						<p
-							class=" max-w-full overflow-hidden text-left text-sm overflow-ellipsis whitespace-nowrap text-muted-foreground"
-						>
-							{card.subtitle}
-						</p>
-					</button>
+					/>
 				{/each}
 			{:else}
 				<p class="p-2 text-sm text-muted-foreground">No cards found with term "{searchTerm}"</p>
