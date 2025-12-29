@@ -3,8 +3,14 @@
 
 // TYPES AND FUNCTIONS PER MEHCANICS
 // Consequences
-type ConsequenceVariant = 'mild' | 'moderate' | 'severe' | 'extreme';
+export type ConsequenceVariant = 'mild' | 'moderate' | 'severe' | 'extreme';
 const severityOrder: ConsequenceVariant[] = ['mild', 'moderate', 'severe', 'extreme'];
+export const consequenceSeverityExamples: Record<ConsequenceVariant, string[]> = {
+	mild: ['Bruised ribs', 'Cut hand', 'Fatigued'],
+	moderate: ['Sprained ankle', 'Deep cut', 'Temporary blindness'],
+	severe: ['Cracked ribs', 'Torn muscle', 'Concussion'],
+	extreme: ['Broken bone', 'Internal bleeding', 'Severe trauma']
+};
 export type ConsequenceRoll = number | 'Despair';
 export type Consequence = { text: string; roll: ConsequenceRoll; variant: ConsequenceVariant };
 
