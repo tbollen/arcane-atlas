@@ -101,6 +101,10 @@ export const systemKeys: SystemKey[] = Object.keys({} as CardMechanics) as Syste
 
 export type SystemInfo = {
 	name: string;
+	description: string;
+	icon: string;
+	url?: string;
+	creator?: string;
 	locked?: boolean;
 	version?: string;
 	cardMechanics: Object;
@@ -116,6 +120,8 @@ import { arcaneRiftSystemInfo } from '$lib/gameSystems/ArcaneRift/ar_systemInfo'
 // Create a "generic" system without mechanics or specific functions
 const genericSystem: SystemInfo = {
 	name: 'Generic',
+	description: 'Basic mechanics that fit with any game system.',
+	icon: 'mdi:dice-multiple',
 	locked: true,
 	cardMechanics: {}
 };
