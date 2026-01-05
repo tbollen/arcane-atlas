@@ -114,9 +114,7 @@
 				{/snippet}
 			</EditList>
 		{:else}
-			<div class="flex flex-col pt-2">
-				<ListItem variant="skeleton" />
-			</div>
+			<p class="mt-2 text-sm text-muted-foreground">No cards added to character yet.</p>
 		{/if}
 	{/if}
 </div>
