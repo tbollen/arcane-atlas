@@ -48,7 +48,7 @@
 		addition?: HeadingType;
 	} = $props();
 
-	const htmlTag = tag || (variant == 'subtitle' ? variant : 'p');
+	const htmlTag = tag || (variant !== 'subtitle' ? variant : 'p');
 </script>
 
 <svelte:element
