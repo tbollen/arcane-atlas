@@ -92,7 +92,7 @@
 	<!-- {#if character.mechanics[AR_KEY]?.aspects?.length == 0} -->
 	{#each characterConsequences as _consequence, i}
 		<!-- Reverse order when limitedList (very low height) -->
-		{@const index = limitedList || compactList ? characterConsequences.length - 1 - i : i}
+		{@const index = characterConsequences.length - 1 - i}
 		{@const consequence = characterConsequences[index]}
 		{@const rule = rules[index]}
 
