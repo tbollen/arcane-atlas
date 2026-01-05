@@ -159,30 +159,57 @@ class Character {
 			this.rules
 		);
 	}
+	removeSystem(system: System) {
+		this._removeSystem(system, false);
+	}
+
+	removeSystemAndData(system: System) {
+		const confirm = window.confirm(
+			`Are you sure you want to remove all mechanics data for the "${system}" system? This action cannot be undone.`
+		);
+		if (!confirm) return;
+		this._removeSystem(system, true);
+	}
+
+	private _removeSystem(system: System, removeMechanicsData: boolean = false) {
+		if (!this.systems.includes(system)) {
+			console.error(`System "${system}" is not assigned to character`);
+			throw new Error('System not assigned to character');
+		}
+		this.systems = this.systems.filter((s) => s !== system);
+		// Remove rules and mechanics data if enabled
+		if (removeMechanicsData) {
+			// Remove mechanics
+			let newMechanics = { ...this.mechanics };
+			delete newMechanics[system];
+			this.mechanics = newMechanics;
+			// Remove rules
+			let newRules = { ...this.rules };
+			delete newRules[system];
+			this.rules = newRules;
+			// Remove from Campaigns that use this system (TODO)
+		}
+	}
 }
 /**
  * @name CharacterProperties
  * @description Helper type that describes the properties of a character that can be updated.
- * "Default" propeties, such as name, are stored under the [GENERIC_KEY].
+ * "General" propeties, such as name, are stored under the [GENERIC_KEY] using the "general" key.
  * Other, system-specific properties are stored under their System Key.
- * 
+ *
  * The objects contains only the 'keys' as strings in an array under their system key.
  * @example
  * ```ts
- * {
-	 [GENERIC_KEY]: ['name', 'subtitle', 'description', ...],
-	 ...
- }
+ *
  */
 export type CharacterProperties = {
-	[GENERIC_KEY]?: GenericProperty[];
+	[GENERIC_KEY]?: ('general' | 'cards' | 'systems')[]; // General properties, character cards and game systems
 } & SystemProperties<CharacterMechanics>;
 
-type GenericProperty =
-	| Exclude<keyof Omit<Character, 'systems' | 'mechanics' | 'createdAt' | 'updatedAt'>, undefined>
-	| 'cards';
 type SystemProperties<T extends Character['mechanics']> = {
-	[K in Exclude<keyof T, typeof GENERIC_KEY>]?: Array<keyof NonNullable<T[K]>>;
+	[K in keyof T as NonNullable<T[K]> extends Record<string, never> ? never : K]?: Array<
+		keyof NonNullable<T[K]>
+	>;
 };
 
 export class StoredCharacter extends Character {

@@ -28,6 +28,25 @@
 		}
 	});
 
+	export const tooltipVariants = tv({
+		variants: {
+			variant: {
+				default: 'bg-secondary text-secondary-foreground',
+				blossom: 'bg-blossom-700 text-primary-foreground',
+				bold: 'bg-obsidian-900 text-primary-foreground',
+				advanced: 'bg-weave-500 text-primary-foreground',
+				destructive: 'bg-threat-500 text-white',
+				success: 'bg-success-500 text-white',
+				outline: 'bg-background text-foreground border',
+				secondary: 'bg-secondary text-secondary-foreground',
+				triumph: 'bg-[#ffbf00] text-black'
+			}
+		},
+		defaultVariants: {
+			variant: 'default'
+		}
+	});
+
 	export type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
 </script>
 
@@ -35,25 +54,48 @@
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 
+	// Tooltip
+	import * as Tooltip from '$lib/components/ui/tooltip';
+
 	let {
 		ref = $bindable(null),
 		href,
 		class: className,
 		variant = 'default',
+		tooltip,
 		children,
 		...restProps
 	}: WithElementRef<HTMLAnchorAttributes> & {
+		tooltip?: string;
 		variant?: BadgeVariant;
 	} = $props();
 </script>
 
-<svelte:element
-	this={href ? 'a' : 'span'}
-	bind:this={ref}
-	data-slot="badge"
-	{href}
-	class={cn(badgeVariants({ variant }), className)}
-	{...restProps}
->
-	{@render children?.()}
-</svelte:element>
+{#snippet badge()}
+	<svelte:element
+		this={href ? 'a' : 'span'}
+		bind:this={ref}
+		data-slot="badge"
+		{href}
+		class={cn(badgeVariants({ variant }), className)}
+		{...restProps}
+	>
+		{@render children?.()}
+	</svelte:element>
+{/snippet}
+
+{#if tooltip}
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{@render badge()}
+			</Tooltip.Trigger>
+			<Tooltip.Content
+				arrowClasses={cn(tooltipVariants({ variant }))}
+				class={cn(tooltipVariants({ variant }))}>{tooltip}</Tooltip.Content
+			>
+		</Tooltip.Root>
+	</Tooltip.Provider>
+{:else}
+	{@render badge()}
+{/if}

@@ -25,5 +25,9 @@
 </script>
 
 <Badge bind:ref {href} class="{tailwindClass} {className}" {...restProps}>
-	{@render children?.()}
+	{#if children}
+		{@render children?.()}
+	{:else}
+		{gameSystems[gameSystem].name}
+	{/if}
 </Badge>

@@ -91,7 +91,7 @@
 						<ListItem
 							mainText={{ text: card.name, class: 'text-sm font-semibold' }}
 							icon={{ icon, class: 'p-0.25', style: `color: ${card.style.color.icon};` }}
-							onItemClick={() => {
+							onclick={() => {
 								dialogCard = card;
 								open = true;
 							}}
@@ -105,7 +105,7 @@
 							mainText={card.name}
 							subText={card.subtitle}
 							icon={{ icon, style: `color: ${card.style.color.icon};` }}
-							onItemClick={() => {
+							onclick={() => {
 								dialogCard = card;
 								open = true;
 							}}

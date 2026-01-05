@@ -28,7 +28,9 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Header } from '$lib/components/typography';
-	import CharacterCard from '$lib/components/partials/character/CharacterCard.svelte';
+
+	// Partials
+	import { CharacterGeneralFields } from '$lib/components/partials/character/edit/';
 
 	// Deck imports
 	import Deck from '$lib/components/playdeck/Deck.svelte';
@@ -42,6 +44,8 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { getContext, onMount } from 'svelte';
+	import CharacterCards from '$lib/components/partials/character/edit/CharacterCards.svelte';
+	import CharacterGameSystems from '$lib/components/partials/character/edit/CharacterGameSystems.svelte';
 
 	// Page init
 	const characterID = page.params.characterId;
@@ -56,6 +60,7 @@
 	$effect(() => {
 		// If the active character changes, and it's not the current character, redirect to that character's page
 		if (window && characterIsResolved && activeCharacter && activeCharacter.id !== characterID) {
+			if (characterID === 'new' && isNewCharacter) return; // Don't redirect if creating new character
 			// Ask for confirmation before redirecting
 			const confirm = window.confirm(
 				'The active character has changed. Do you want to switch to the new character?'
@@ -202,18 +207,14 @@
 {:then character}
 	{#if isEditing}
 		<main class="content">
-			<!-- CHARACTER EDITING -->
-			<img src={character.imageUrl} alt={character.name} />
-			<div class="mt-4 grid grid-cols-[max-content_1fr] gap-2">
-				<Label for="name">Name</Label>
-				<Input id="name" bind:value={character.name} />
-				<Label for="subtitle">Subtitle</Label>
-				<Input id="subtitle" bind:value={character.subtitle} />
-				<Label for="description">Description</Label>
-				<Textarea id="description" rows={3} bind:value={character.description} />
-				<Label for="image">Image</Label>
-				<Input id="image" bind:value={character.imageUrl} />
+			<div class="mb-6 flex flex-col gap-6">
+				<!-- CHARACTER EDITING -->
+				<CharacterGeneralFields {character} />
+				<CharacterCards {character} cards={userCards} />
+				<CharacterGameSystems {character} />
 			</div>
+
+			<!-- BUTTONS & CONTROLS -->
 			<div class="flex flex-row">
 				{#if isNewCharacter}
 					<Button

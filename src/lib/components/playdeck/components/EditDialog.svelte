@@ -12,7 +12,8 @@
 		characterMechanics,
 		gameSystems,
 		GENERIC_KEY,
-		type CharacterMechanics
+		type CharacterMechanics,
+		type CharacterSystems
 	} from '$lib/gameSystems';
 	import { deckSystems, type DeckSystem } from '..';
 
@@ -30,12 +31,26 @@
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import * as ButtonGroup from '$lib/components/ui/button-group/';
+	import * as Accordion from '$lib/components/ui/accordion/';
 	import Mastery from '$lib/components/partials/arcaneRift/Mastery.svelte';
 	import CardSearchbox from '$lib/components/partials/gamecards/CardSearchbox.svelte';
 	import EditList from '$lib/components/ui/edit-list/edit-list.svelte';
 
+	// Character Edit Partials
+	import {
+		CharacterGeneralFields,
+		CharacterCards,
+		CharacterAspects
+	} from '$lib/components/partials/character/edit';
+	import { characterEditComponentDict } from '$lib/components/partials/character/edit'; // As component dictionary
+	import type { CharacterEditProps } from '$lib/components/partials/character/edit/propsType';
+
 	// Svelte
 	import { invalidateAll } from '$app/navigation';
+	import ListItem from '$lib/components/partials/ListItem.svelte';
+	import type { Component } from 'svelte';
+	import InfoTooltip from '$lib/components/partials/InfoTooltip.svelte';
 
 	let {
 		character = $bindable(),
@@ -98,9 +113,50 @@
 			Object.keys(propertiesToShow).length > 1 // if only one system, don't show tabs
 	);
 
-	///////////////////////////////////
-	// VARS FOR INPUTS
-	let newAspectInput = $state({ short: '', description: '' });
+	// FILTERED COMPONENT DICT
+	let filteredCharacterEditComponentDict = $derived.by(() => {
+		// If no properties are defined, return full dict
+		if (!propertiesToShow) return characterEditComponentDict;
+		// Set empty dict to populate
+		const filteredDict: typeof characterEditComponentDict = {};
+		// Per system, add in the entires that are set in propertiesToShow
+		for (const systemKey in propertiesToShow) {
+			const props = propertiesToShow[systemKey as DeckSystem];
+			if (!props) continue;
+			const systemComponents: (typeof characterEditComponentDict)[DeckSystem] = {};
+			for (const propertyKey of props) {
+				const _key = propertyKey as keyof (typeof characterEditComponentDict)[DeckSystem];
+				const component = characterEditComponentDict[systemKey as DeckSystem]?.[_key];
+				if (component) {
+					systemComponents[_key] = component;
+				}
+			}
+			if (Object.keys(systemComponents).length > 0) {
+				filteredDict[systemKey as DeckSystem] = systemComponents;
+			}
+		}
+		return filteredDict;
+	});
+
+	// Checks if there are multiple "properties" to show from the filtered dict, which toggles accordion headers
+	let showMultipleHeaders: boolean = $derived.by(() => {
+		let count = 0;
+		for (const systemKey in filteredCharacterEditComponentDict) {
+			const properties = filteredCharacterEditComponentDict[systemKey as DeckSystem];
+			count += properties ? Object.keys(properties).length : 0;
+			if (count > 1) return true;
+		}
+		return false;
+	});
+
+	// ACCORDION MANAGEMENT
+	let openAccordionItems: string[] = $derived.by(() => {
+		// Close all tabs if no properties are specified
+		if (!propertiesToShow) return [];
+		const props = propertiesToShow[editSystemTab];
+		if (!props) return [];
+		return props.map((p) => `${editSystemTab}:${p}`);
+	});
 </script>
 
 <Dialog.Root
@@ -121,328 +177,86 @@
 			<Dialog.Title><Header variant="h2">Edit {widget?.name}</Header></Dialog.Title>
 			<Dialog.Description>
 				{#if showMultipleSystems}
-					<!-- TABS -->
-					{#each deckSystems as system}
-						<Button
-							variant={editSystemTab === system ? 'bold' : 'secondary'}
-							onclick={() => (editSystemTab = system)}>{gameSystems[system].name}</Button
-						>
-					{/each}
+					<ButtonGroup.Root>
+						<!-- TABS -->
+						{#each deckSystems as system}
+							<Button
+								variant={editSystemTab === system ? 'bold' : 'secondary'}
+								onclick={() => (editSystemTab = system)}>{gameSystems[system].name}</Button
+							>
+						{/each}
+					</ButtonGroup.Root>
 				{/if}
 				<!-- END TABS -->
 			</Dialog.Description>
 		</Dialog.Header>
-		<div
-			id="inputWrapper"
-			class="
-                flex flex-col
-                gap-2 overflow-y-scroll px-2 text-start
-                [&>Label:not(:first-child)]:mt-6
-                "
-		>
-			<!-- Generic system properties -->
-			{#if editSystemTab == GENERIC_KEY}
-				{#if isProperty('name')}
-					<Label for="name">Character Name</Label>
-					<Input bind:value={character.name} placeholder="Character Name" />
-				{/if}
-				{#if isProperty('subtitle')}
-					<Label for="subtitle">Subtitle</Label>
-					<Input bind:value={character.subtitle} placeholder="Subtitle" />
-				{/if}
-				{#if isProperty('imageUrl')}
-					<Label for="image">Image URL</Label>
-					<Input bind:value={character.imageUrl} placeholder="Image URL" />
-				{/if}
-				{#if isProperty('description')}
-					<Label for="description">Description</Label>
-					<Textarea
-						class="h-max !resize-y"
-						bind:value={character.description}
-						placeholder="Description"
-					/>
-				{/if}
-				{#if isProperty('cards')}
-					<Label for="cards">Cards</Label>
-					{#if !cards || cards.length === 0}
-						<p class="text-sm text-muted-foreground">No cards available to add.</p>
-					{:else}
-						<CardSearchbox
-							placeholder="Search and add cards..."
-							{cards}
-							cardFilters={{
-								disabledCardIDs: cards.filter((card) => card.isCharacterCard).map((card) => card.id)
-							}}
-							onCardSelect={async (card) => {
-								await verbose(
-									async () => {
-										// Add card to character
-										const response = await CARD_API.addToCharacter({
-											characterId: character.id,
-											cards: [card.cardToPrisma()]
-										});
-									},
-									{ successMessage: `Added card "${card.name}" to character.` }
-								);
-								// Invalidate all to update character cards
-								invalidateAll();
-							}}
-						/>
-					{/if}
-				{/if}
-			{/if}
-			<!-- Arcane Rift -->
-			{#if editSystemTab == AR_KEY}
-				{#if !hasMechanics(AR_KEY) || !character.mechanics[AR_KEY] || !character.fn[AR_KEY]}
-					Character does not have Arcane Rift mechanics
-					<Button
-						onclick={() => {
-							character.addSystem(AR_KEY);
-						}}
-					>
-						Add Arcane Rift
-					</Button>
-				{:else}
-					{#if isProperty('aspects', AR_KEY)}
-						<!-- ASPECTS -->
-						<Header variant="h3">Aspects</Header>
-						{#if character.mechanics[AR_KEY]?.aspects && character.mechanics[AR_KEY]?.aspects?.length > 0}
-							<EditList
-								list={character.mechanics[AR_KEY].aspects}
-								increase={(index) =>
-									verbose(() => character.fn[AR_KEY]!.moveAspect(index, index + 1))}
-								decrease={(index) =>
-									verbose(() => character.fn[AR_KEY]!.moveAspect(index, index - 1))}
-								remove={(index) => verbose(() => character.fn[AR_KEY]!.removeAspect(index))}
-							>
-								{#snippet item(aspect, index)}
-									<div class="flex flex-col justify-center gap-1">
-										<p class="font-bold">{aspect.short}</p>
-										<p>{aspect.description}</p>
-									</div>
-								{/snippet}
-							</EditList>
-						{/if}
-						<div id="addAspect" class="flex flex-col gap-2 p-2">
-							<Input placeholder="Short name..." bind:value={newAspectInput.short} />
-							<Textarea
-								placeholder="Aspect Description..."
-								bind:value={newAspectInput.description}
-							/>
-							<Button
-								onclick={() => {
-									verbose(() => {
-										character.fn[AR_KEY]!.addAspect(newAspectInput);
-										newAspectInput = { short: '', description: '' };
-									});
-								}}><Icon icon="mdi:plus" /> Add</Button
-							>
-						</div>
-					{/if}
-					{#if isProperty('consequences', AR_KEY)}
-						<!-- CONSEQUENCES -->
-						<Header variant="h3">Consequences</Header>
-						<p class="text-sm text-muted-foreground">
-							Consequences are added and removed on the go. You can edit them in the widget itself
-						</p>
-					{/if}
-					{#if isProperty('stressTracks', AR_KEY)}
-						<!-- STRESS TRACKS -->
-						<Header variant="h3">Stress Tracks</Header>
-						<p class="text-sm text-muted-foreground">
-							Adjust the maximum values for each stress track below
-						</p>
-						<div
-							class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-x-8 gap-y-4"
-						>
-							{#each character.mechanics[AR_KEY].stressTracks as stressTrack}
-								{@const rules = character.mechanics[AR_KEY].rules.stressTracks}
-								<div class="flex flex-row items-center gap-4">
-									<!-- TRACK INFO -->
-									<div class="min-w-0 flex-1">
-										<Header variant="h4">{stressTrack.variant} Stress</Header>
-										<p
-											class="text-sm text-muted-foreground {stressTrack.max >= rules.maxAllowed
-												? 'text-amber-600'
-												: ''}"
-										>
-											Max value: {stressTrack.max} / {rules.maxAllowed}
-										</p>
-									</div>
-									<!-- Value controls -->
-									<div
-										id="char-{stressTrack.variant}-valuecontrol"
-										class="flex w-max flex-shrink-0 items-center gap-2"
+
+		<!-- NEW, DYNAMIC COMPONENT RENDERING -->
+		<div class="flex flex-col overflow-y-auto px-2">
+			{#if showMultipleHeaders}
+				<Accordion.Root type="multiple" value={openAccordionItems} class="mb-2">
+					{#each Object.entries(filteredCharacterEditComponentDict) as [systemKey, properties]}
+						{#if systemKey == editSystemTab}
+							{#if !character.systems.includes(systemKey as CharacterSystems)}
+								{@const systemInfo = gameSystems[systemKey as CharacterSystems]}
+								<!-- System adding -->
+								<div class="flex flex-col items-center gap-4 p-4">
+									Character does not have {systemInfo.name} mechanics
+									<Button
+										variant="bold"
+										onclick={() => {
+											verbose(() => character.addSystem(systemKey as CharacterSystems));
+										}}
 									>
-										<Button
-											variant="bold"
-											disabled={stressTrack.max <= 1}
-											onclick={() =>
-												verbose(() =>
-													character.fn[AR_KEY]!.setStressTrackMax(
-														stressTrack.variant,
-														stressTrack.max - 1
-													)
-												)}><Icon icon="mdi:minus" /></Button
-										>
-										<div
-											class="h-8 w-max border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
-										>
-											{stressTrack.max}
-										</div>
-										<Button
-											variant="bold"
-											disabled={stressTrack.max >= rules.maxAllowed}
-											onclick={() =>
-												verbose(() =>
-													character.fn[AR_KEY]!.setStressTrackMax(
-														stressTrack.variant,
-														stressTrack.max + 1
-													)
-												)}><Icon icon="mdi:plus" /></Button
-										>
-									</div>
+										<Icon icon="mdi:plus" /> Add {systemInfo.name}
+									</Button>
 								</div>
-							{/each}
-						</div>
-					{/if}
-					{#if isProperty('stats', AR_KEY)}
-						<!-- STATS -->
-						<Header variant="h3">Stats</Header>
-						<Header variant="h4">Characteristics</Header>
-						{#if character.mechanics[AR_KEY]}
-							<!-- SUM INDICATOR -->
-							<p class="text-sm text-muted-foreground">
-								Total sum: {Object.values(character.mechanics[AR_KEY].stats.characteristics)
-									.map((c) => c.value)
-									.reduce((sum, val) => sum + val, 0)} /
-								{character.mechanics[AR_KEY].rules.characteristics.maxSum}
-							</p>
-							<!-- CHARACTERISTICS -->
-							<div class="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-8">
-								{#each Object.values(character.mechanics[AR_KEY].stats.characteristics) as char, index}
-									{@const rules = character.mechanics[AR_KEY].rules.characteristics}
-									{@const maxSumReached =
-										Object.values(character.mechanics[AR_KEY].stats.characteristics)
-											.map((c) => c.value)
-											.reduce((sum, val) => sum + val, 0) >= rules.maxSum}
-									<div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
-										<p
-											id="char-{char.name}"
-											class=" col-span-full text-center font-semibold uppercase"
-										>
-											{char.name}
-										</p>
-										<div
-											id="char-{char.name}-value"
-											class=" col-span-full rounded-lg bg-obsidian-200 py-3 text-center text-xl"
-										>
-											{char.value}
-										</div>
-										<Button
-											variant={char.value <= rules.minValue ? 'ghost' : 'secondary'}
-											disabled={char.value <= rules.minValue}
-											onclick={() =>
-												verbose(() =>
-													character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value - 1)
-												)}
-										>
-											<Icon icon="mdi:minus" />
-										</Button>
-										<Button
-											variant={char.value >= rules.maxValue || maxSumReached
-												? 'ghost'
-												: 'secondary'}
-											disabled={char.value >= rules.maxValue || maxSumReached}
-											onclick={() =>
-												verbose(() =>
-													character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value + 1)
-												)}
-										>
-											<Icon icon="mdi:plus" />
-										</Button>
-									</div>
+							{:else}
+								{#each Object.entries(properties) as [propertyKey, content]}
+									{@const Component = content.component}
+									<Accordion.Item value="{systemKey}:{propertyKey}">
+										<Accordion.Trigger>
+											<Header variant="h3">
+												<InfoTooltip
+													icon="mdi:information-outline"
+													class="ml-2 inline-block align-middle text-muted-foreground"
+												>
+													{content.description}
+												</InfoTooltip>
+												{content.name}
+											</Header>
+										</Accordion.Trigger>
+										<Accordion.Content class="overflow-visible">
+											<Component {character} {cards} />
+										</Accordion.Content>
+									</Accordion.Item>
 								{/each}
-							</div>
-							<!-- SKILLS -->
-							<div id="Skills">
-								<Header variant="h4">Skills</Header>
-								<!-- SUM INDICATOR -->
-								<p class="text-sm text-muted-foreground">
-									Total sum: {Object.values(character.mechanics[AR_KEY].stats.skills)
-										.map((c) => c.value)
-										.reduce((sum, val) => sum + val, 0)} /
-									{character.mechanics[AR_KEY].rules.skills.maxSum}
-								</p>
-								<section class="mb-4 grid grid-cols-[repeat(auto-fill,minmax(22rem,1fr))] gap-8">
-									{#each Object.values(character.mechanics[AR_KEY].stats.characteristics) as char, index}
-										{@const rules = character.mechanics[AR_KEY].rules.skills}
-										{@const sum = Object.values(character.mechanics[AR_KEY].stats.skills)
-											.map((s) => s.value)
-											.reduce((sum, val) => sum + val, 0)}
-										{@const maxSumReached = sum >= rules.maxSum}
-										<!-- GO THROUGH SKILLS FOR EACH CHARACTERISTIC -->
-										<div
-											id="charskills-{char.name}"
-											class="grid grid-cols-[1fr_2fr] gap-x-4 gap-y-1"
-										>
-											<h5
-												class="col-span-2 bg-obsidian-800 pl-3 font-semibold text-white uppercase"
-											>
-												{char.name}
-											</h5>
-											{#each Object.values(character.mechanics[AR_KEY].stats.skills) as skill, skillIndex}
-												{#if skill.characteristic == char.name}
-													<!-- Name -->
-													<p class="font-semibold">{skill.name}</p>
-													<!-- Value controls -->
-													<div
-														id="char-{skill.name}-valuecontrol"
-														class="flex w-max items-center gap-2"
-													>
-														<Button
-															variant="bold"
-															disabled={skill.value <= 0}
-															onclick={() =>
-																verbose(() =>
-																	character.fn[AR_KEY]!.updateSkill(skill, skill.value - 1)
-																)}><Icon icon="mdi:minus" /></Button
-														>
-														<Mastery
-															value={skill.value}
-															max={rules.maxMastery}
-															class="h-8 w-max border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
-														/>
-														<Button
-															variant="bold"
-															disabled={skill.value >= rules.maxMastery || maxSumReached}
-															onclick={() =>
-																verbose(() =>
-																	character.fn[AR_KEY]!.updateSkill(skill, skill.value + 1)
-																)}><Icon icon="mdi:plus" /></Button
-														>
-													</div>
-												{/if}
-											{/each}
-										</div>
-									{/each}
-								</section>
-							</div>
+							{/if}
 						{/if}
-					{/if}
-				{/if}
+					{/each}
+				</Accordion.Root>
+			{:else}
+				<!-- Render first available component (and only one) -->
+				{@const Component = Object.values(Object.values(filteredCharacterEditComponentDict)[0])[0]
+					.component}
+				<Component {character} {cards} />
 			{/if}
-			<!-- WIDGET -->
-			{#if widget}
+		</div>
+
+		<!-- WIDGET -->
+		{#if widget}
+			<div class="flex w-full flex-col items-center justify-center gap-2 px-2 pb-4">
 				<Label for="previewComponent">Preview</Label>
 				<div
 					id="previewComponent"
-					class="max-h-[600px] max-w-[450px]"
-					style="aspect-ratio: {widget.initialLayout.w}/{widget.initialLayout.h}"
+					class="max-h-[45vh]!"
+					style="aspect-ratio: {widget.initialLayout.w}/{widget.initialLayout
+						.h} !important; width: {widget.initialLayout.w * 150}px; height: {widget.initialLayout
+						.h * 150}px; "
 				>
 					<widget.component bind:character {cards} />
 				</div>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>
