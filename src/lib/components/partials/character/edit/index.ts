@@ -7,6 +7,7 @@ import CharacterGameSystems from './CharacterGameSystems.svelte';
 import CharacterAspects from './arcaneRift/CharacterAspects.svelte';
 import CharacterStressTrack from './arcaneRift/CharacterStressTrack.svelte';
 import CharacterStats from './arcaneRift/CharacterStats.svelte';
+import CharacterConsequences from './arcaneRift/CharacterConsequences.svelte';
 
 // SYSTEM KEYS
 import { GENERIC_KEY, AR_KEY } from '$lib/gameSystems/index.js';
@@ -62,6 +63,11 @@ export const characterEditComponentDict: EditComponentDict = {
 			name: 'Stats',
 			description: 'Manage the skills and characteristics for your Arcane Rift character.',
 			component: CharacterStats
+		},
+		consequences: {
+			name: 'Consequences',
+			description: 'Manage the consequences your Arcane Rift character can face.',
+			component: CharacterConsequences
 		}
 	}
 } as const;
