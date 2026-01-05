@@ -14,13 +14,13 @@ export const genericWidgetMap: SystemWidgetMap = {
 		component: PlayerBanner,
 		name: 'Banner',
 		initialLayout: { w: 3, h: 1, max: { w: 12, h: 3 }, min: { w: 2, h: 1 } },
-		characterProperties: { [GENERIC_KEY]: ['name', 'subtitle', 'imageUrl'] }
+		characterProperties: { [GENERIC_KEY]: ['general'] }
 	},
 	['description']: {
 		component: CharacterDescription,
 		name: 'Description',
 		initialLayout: { w: 3, h: 2 },
-		characterProperties: { [GENERIC_KEY]: ['name', 'description'] }
+		characterProperties: { [GENERIC_KEY]: ['general'] }
 	},
 	['cards']: {
 		component: DeckCards,

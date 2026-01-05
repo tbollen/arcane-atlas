@@ -4,12 +4,13 @@
 	import { Button } from '$lib/components/ui/button';
 	import { iconExists } from '@iconify/svelte';
 	import ListItem from '$lib/components/partials/ListItem.svelte';
+	import GamecardModal from './GamecardModal.svelte';
 
 	import type { ComponentProps } from 'svelte';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 	import { cardTypes } from '$lib/domain/cards/cardTypes';
 	import type { CharacterSystems } from '$lib/gameSystems';
-	import { invalidate } from '$app/navigation';
+	import { goto, invalidate, invalidateAll, onNavigate } from '$app/navigation';
 
 	type InputProps = ComponentProps<typeof InputGroup.Input>;
 	type CardFilter = {
@@ -22,11 +23,13 @@
 		searchTerm = $bindable(''),
 		cards,
 		onCardSelect,
+		onRemoveCard,
 		cardFilters,
 		...restProps
 	}: {
 		searchTerm?: string;
 		onCardSelect: (card: StoredCard) => void;
+		onRemoveCard?: (card: StoredCard) => void;
 		cards: StoredCard[];
 		cardFilters?: CardFilter;
 	} & InputProps = $props();
@@ -108,12 +111,30 @@
 
 	// FUNCTIONS
 	function refreshFilters() {
-		// Trigger re-evaluation of derived stores
+		invalidateAll();
 	}
+
+	// Modal viewing
+	let modalCard: StoredCard | undefined = $state();
+	let openModal: boolean = $state(false);
+	function viewCardInModal(card: StoredCard) {
+		modalCard = card;
+		openModal = true;
+	}
+
+	// Datalist placement
+	let inputLocation;
 </script>
 
 <div class="group relative">
-	<InputGroup.Root>
+	<InputGroup.Root
+		onfocusin={() => {
+			isFocussedOnInput = true;
+		}}
+		onfocusout={() => {
+			isFocussedOnInput = false;
+		}}
+	>
 		<InputGroup.Input
 			value={searchTerm}
 			oninput={(e) => {
@@ -146,8 +167,9 @@
 		<div
 			id="customDatalist"
 			tabindex="-1"
-			class="pointer-events-none absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100"
-			class:hidden={searchTerm.trim() === ''}
+			class="pointer-events-none absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100
+			"
+			class:hidden={searchTerm.trim() === '' && !isFocussedOnInput}
 		>
 			{#if sortedCards.length > 0}
 				{#each sortedCards as card, index}
@@ -163,6 +185,11 @@
 							: proxyCardSelector === index
 								? 'bg-obsidian-500/10'
 								: ''}"
+						handle={{
+							click: () => viewCardInModal(card),
+							variant: 'bold',
+							icon: 'mdi:eye'
+						}}
 						mainText={{
 							text: card.name,
 							style: `font-family: '${card.style.font.name}', 'Gotham', sans-serif;`
@@ -196,7 +223,23 @@
 			</InputGroup.Addon>
 		{/if}
 		<InputGroup.Addon align="inline-end">
-			<InputGroup.Button onclick={refreshFilters}><Icon icon="mdi:refresh" /></InputGroup.Button>
+			<InputGroup.Button tooltip="Reload cards" onclick={refreshFilters}
+				><Icon icon="mdi:refresh" /></InputGroup.Button
+			>
 		</InputGroup.Addon>
 	</InputGroup.Root>
 </div>
+
+<GamecardModal
+	bind:open={openModal}
+	card={modalCard}
+	functions={{
+		navigate: () => {
+			if (modalCard) {
+				goto(`/cards/${modalCard.id}`);
+			}
+		},
+		removeFromCharacter: modalCard?.isCharacterCard && onRemoveCard ? onRemoveCard : undefined,
+		addToCharacter: !modalCard?.isCharacterCard ? onCardSelect : undefined
+	}}
+/>
