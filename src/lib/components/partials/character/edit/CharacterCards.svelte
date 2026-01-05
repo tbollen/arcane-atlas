@@ -11,6 +11,9 @@
 	import CARD_API from '$lib/utils/api/cards_api.js';
 	import { verbose } from '$lib/utils/feedback/verbose';
 
+	// Prop type
+	import type { CharacterEditProps } from '$lib/components/partials/character/edit/propsType.js';
+
 	// Card and Icon
 	import { cardTypes } from '$lib/domain/cards/cardTypes';
 
@@ -18,8 +21,7 @@
 	import { invalidateAll } from '$app/navigation';
 
 	// Props
-	let { character, cards }: { character: StoredCharacter; cards: StoredCard[] | undefined } =
-		$props();
+	let { character, cards }: CharacterEditProps = $props();
 
 	function iconFromCard(card: StoredCard) {
 		if (card.icon) return card.icon;
@@ -49,6 +51,21 @@
 			cardFilters={{
 				disabledCardIDs: cards.filter((card) => card.isCharacterCard).map((card) => card.id)
 			}}
+			onRemoveCard={async (card) => {
+				await verbose(
+					async () => {
+						// Remove card from character
+						const response = await CARD_API.removeFromCharacter({
+							characterId: character.id,
+							cards: [card.id]
+						});
+					},
+					{ successMessage: `Removed card "${card.name}" from character.` }
+				);
+				// Invalidate all to update character cards
+				rerender(); // Force rerender to update list
+				invalidateAll();
+			}}
 			onCardSelect={async (card) => {
 				await verbose(
 					async () => {
@@ -65,34 +82,41 @@
 			}}
 		/>
 		<!-- OVERVIEW OF CARDS -->
-		<EditList
-			list={cards.filter((card) => card.isCharacterCard)}
-			increase="hidden"
-			decrease="hidden"
-			remove={(index) => {
-				const card = cards.filter((card) => card.isCharacterCard)[index];
-				verbose(
-					async () => {
-						// Remove card from character
-						const response = await CARD_API.removeFromCharacter({
-							characterId: character.id,
-							cards: [card.id]
-						});
-					},
-					{ successMessage: `Removed card "${card.name}" from character.` }
-				);
-				// Invalidate all to update character cards
-				rerender(); // Force rerender to update list
-				invalidateAll();
-			}}
-		>
-			{#snippet item(card: StoredCard, index: number)}
-				<ListItem
-					mainText={card.name}
-					subText={card.type}
-					icon={{ icon: iconFromCard(card), style: `color: ${card.style.color.icon}` }}
-				/>
-			{/snippet}
-		</EditList>
+		{#if cards.filter((card) => card.isCharacterCard).length > 0}
+			<EditList
+				class="max-h-96 overflow-y-auto"
+				list={cards.filter((card) => card.isCharacterCard)}
+				increase="hidden"
+				decrease="hidden"
+				remove={(index) => {
+					const card = cards.filter((card) => card.isCharacterCard)[index];
+					verbose(
+						async () => {
+							// Remove card from character
+							const response = await CARD_API.removeFromCharacter({
+								characterId: character.id,
+								cards: [card.id]
+							});
+						},
+						{ successMessage: `Removed card "${card.name}" from character.` }
+					);
+					// Invalidate all to update character cards
+					rerender(); // Force rerender to update list
+					invalidateAll();
+				}}
+			>
+				{#snippet item(card: StoredCard, index: number)}
+					<ListItem
+						mainText={card.name}
+						subText={card.type}
+						icon={{ icon: iconFromCard(card), style: `color: ${card.style.color.icon}` }}
+					/>
+				{/snippet}
+			</EditList>
+		{:else}
+			<div class="flex flex-col pt-2">
+				<ListItem variant="skeleton" />
+			</div>
+		{/if}
 	{/if}
 </div>

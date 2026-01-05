@@ -8,72 +8,62 @@
 	import * as Dialog from '$lib/components/ui/dialog/';
 
 	// Types and Utils
-	import { StoredCharacter, type GenericProperty } from '$lib/domain/characters/character.svelte';
+	import { StoredCharacter } from '$lib/domain/characters/character.svelte';
+	import type { CharacterEditProps } from './propsType';
 
-	let { character, properties }: { character: StoredCharacter; properties?: GenericProperty[] } =
-		$props();
-
-	const isProperty = (prop: GenericProperty): boolean => {
-		if (!properties || properties.length === 0) return true;
-		return properties.includes(prop);
-	};
+	let { character }: CharacterEditProps = $props();
 
 	let openAvatarDialog = $state(false);
 </script>
 
 <div class="flex flex-col [&>*:not(:first-child)]:mt-4">
-	{#if isProperty('name')}
-		<div class="[&>*:not(:first-child)]:mt-1">
-			<Label for="name">Character Name</Label>
-			<Input bind:value={character.name} placeholder="Character Name" />
-		</div>
-	{/if}
-	{#if isProperty('subtitle')}
-		<div class="[&>*:not(:first-child)]:mt-1">
-			<Label for="subtitle">Subtitle</Label>
-			<Input bind:value={character.subtitle} placeholder="Subtitle" />
-		</div>
-	{/if}
-
-	{#if isProperty('description')}
-		<div class="[&>*:not(:first-child)]:mt-1">
-			<Label for="description">Description</Label>
-			<Textarea
-				class="h-max !resize-y"
-				bind:value={character.description}
-				placeholder="Description"
-			/>
-		</div>
-	{/if}
-	{#if isProperty('imageUrl')}
-		<div class="grid grid-cols-[max-content_1fr] items-start gap-4 gap-x-3 gap-y-1">
-			<Button
-				class=" col-start-1 row-span-2 h-16 w-16 cursor-pointer rounded-full p-0 outline-1 outline-obsidian-500"
-				onclick={() => (openAvatarDialog = true)}
-				variant="ghost"
-			>
-				{@render avatar()}
-			</Button>
-			<Label class="mt-auto" for="image">Image URL</Label>
-			<Input class="align-start" bind:value={character.imageUrl} placeholder="Image URL" />
-		</div>
-		<Dialog.Root bind:open={openAvatarDialog}>
-			<Dialog.Portal>
-				<Dialog.Content class="justify-items-center">
-					<Dialog.Title class="mb-4 text-center text-2xl font-semibold"
-						>Character Avatar</Dialog.Title
-					>
-					<div class="h-82 w-82 overflow-hidden rounded-full outline-2 outline-obsidian-500">
-						{@render avatar()}
-					</div>
-					<div class="flex w-full flex-col gap-2">
-						<Label for="image">Image URL</Label>
-						<Input bind:value={character.imageUrl} placeholder="Image URL" />
-					</div>
-				</Dialog.Content>
-			</Dialog.Portal>
-		</Dialog.Root>
-	{/if}
+	<!-- Name -->
+	<div class="[&>*:not(:first-child)]:mt-1">
+		<Label for="name">Character Name</Label>
+		<Input bind:value={character.name} placeholder="Character Name" />
+	</div>
+	<!-- Subtitle -->
+	<div class="[&>*:not(:first-child)]:mt-1">
+		<Label for="subtitle">Subtitle</Label>
+		<Input bind:value={character.subtitle} placeholder="Subtitle" />
+	</div>
+	<!-- Description -->
+	<div class="[&>*:not(:first-child)]:mt-1">
+		<Label for="description">Description</Label>
+		<Textarea
+			class="h-max !resize-y"
+			bind:value={character.description}
+			placeholder="Description"
+		/>
+	</div>
+	<!-- Image URL / Avatar -->
+	<div class="grid grid-cols-[max-content_1fr] items-start gap-4 gap-x-3 gap-y-1">
+		<Button
+			class=" col-start-1 row-span-2 h-16 w-16 cursor-pointer rounded-full p-0 outline-1 outline-obsidian-500"
+			onclick={() => (openAvatarDialog = true)}
+			variant="ghost"
+		>
+			{@render avatar()}
+		</Button>
+		<Label class="mt-auto" for="image">Image URL</Label>
+		<Input class="align-start" bind:value={character.imageUrl} placeholder="Image URL" />
+	</div>
+	<!-- Avatar Dialog -->
+	<Dialog.Root bind:open={openAvatarDialog}>
+		<Dialog.Portal>
+			<Dialog.Content class="justify-items-center">
+				<Dialog.Title class="mb-4 text-center text-2xl font-semibold">Character Avatar</Dialog.Title
+				>
+				<div class="h-82 w-82 overflow-hidden rounded-full outline-2 outline-obsidian-500">
+					{@render avatar()}
+				</div>
+				<div class="flex w-full flex-col gap-2">
+					<Label for="image">Image URL</Label>
+					<Input bind:value={character.imageUrl} placeholder="Image URL" />
+				</div>
+			</Dialog.Content>
+		</Dialog.Portal>
+	</Dialog.Root>
 </div>
 
 {#snippet avatar()}
