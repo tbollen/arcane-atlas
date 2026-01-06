@@ -24,6 +24,8 @@
 	import Icon from '@iconify/svelte';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import * as ButtonGroup from '$lib/components/ui/button-group';
+	import { Header } from '$lib/components/typography';
 
 	// Deck imports
 	import Deck from '$lib/components/playdeck/Deck.svelte';
@@ -32,17 +34,23 @@
 		defaultDeckConfig,
 		type DeckConfig
 	} from '$lib/components/playdeck/modules/deckConfig.js';
+	import EditDialog from '$lib/components/playdeck/components/EditDialog.svelte';
+	import AddWidgetDialog from '$lib/components/playdeck/components/AddWidgetDialog.svelte';
 
 	// Svelte
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import { beforeNavigate } from '$app/navigation';
 
 	// Page init
 	const characterID = page.params.characterId;
 	let isNewCharacter: boolean = $derived(characterID == 'new');
 	// svelte-ignore state_referenced_locally
 	let isEditing: boolean = $state(isNewCharacter);
+
+	// Edit mode type - specific modes with autocomplete, but allows any string
+	type EditMode = 'play' | 'content' | 'layout' | (string & {});
 
 	///////////////////////////////////////
 	// Active character
@@ -113,6 +121,54 @@
 	// Deck config TODO: make editable and add sb entry
 	const deckConfig: DeckConfig = defaultDeckConfig;
 
+	// Edit Modes
+	const editModes = [
+		{
+			name: 'Play',
+			value: 'play',
+			icon: 'mdi:play'
+		},
+		{
+			name: 'Content',
+			value: 'content',
+			icon: 'mdi:content-copy'
+		},
+		{
+			name: 'Layout',
+			value: 'layout',
+			icon: 'mdi:view-dashboard'
+		}
+	];
+	let editMode: EditMode = $state(editModes[0].value);
+
+	function setEditMode(mode: EditMode) {
+		const foundMode = editModes.find((m) => m.value === mode)?.value;
+		// Set mode or default to first mode
+		editMode = foundMode ?? editModes[0].value;
+		// Update url params
+		const url = new URL(window.location.href);
+		url.searchParams.set('mode', editMode);
+		window.history.replaceState({}, '', url.toString());
+	}
+
+	// Dialog state
+	let addWidgetDialog: boolean = $state(false);
+	let editLayoutDialog: boolean = $state(false);
+	let editDialog: {
+		componentID: string;
+		editableProperties: string[];
+		open: boolean;
+	} = $state({
+		componentID: '',
+		editableProperties: [],
+		open: false
+	});
+
+	// Unsaved tracking
+	let unsaved: boolean = $state(false);
+	let deckRef: Deck | undefined = $state();
+	let currentLayout: DeckConfig['layouts'][number] | undefined = $state();
+
 	// Character promise resolving
 	$effect(() => {
 		characterPromise.then((character) => {
@@ -130,6 +186,20 @@
 		const urlParams = new URLSearchParams(window.location.search);
 		if (urlParams.get('edit') == '1' || isNewCharacter) {
 			isEditing = true;
+		}
+		// Get edit mode from params
+		setEditMode(urlParams.get('mode') ?? 'play');
+	});
+
+	beforeNavigate((navigation) => {
+		// Warn if unsaved changes
+		if (unsaved) {
+			const confirmLeave = confirm(
+				'You have unsaved changes in your deck. Do you want to leave without saving?'
+			);
+			if (!confirmLeave) {
+				navigation.cancel();
+			}
 		}
 	});
 
@@ -187,6 +257,35 @@
 				}, 500);
 			});
 	}
+
+	async function handleSaveDeck(character: StoredCharacter) {
+		if (!character) {
+			console.error('No character selected');
+			toast.error("Can't save deck: No character selected");
+			throw new Error('No character selected');
+		}
+		if (!deck) {
+			console.error('No deck found');
+			toast.error("Can't save deck: No deck found");
+			throw new Error('No deck found');
+		}
+
+		// Start saving
+		spinner.set('save', 'Saving...');
+
+		// Update character's deck
+		character.deck = deck;
+
+		// Convert to PrismaCharacter
+		const prismaCharacter = character.toPrisma();
+
+		// Create or update based on whether it's a new character
+		if (isNewCharacter) {
+			createCharacter(prismaCharacter);
+		} else {
+			saveCharacter(prismaCharacter);
+		}
+	}
 </script>
 
 {#await characterPromise}
@@ -196,13 +295,119 @@
 		<Spinner class="size-36" variant="Knight" />
 	</main>
 {:then character}
+	<!-- TOP BAR / EDIT BAR -->
+	<div id="Actions" class="mx-4 my-4 flex flex-row items-center gap-8">
+		<div class="flex flex-col">
+			<Header tag="h2" variant="h3">{character.name}'s Deck</Header>
+			<Button
+				size="xs"
+				class="inline-block w-max"
+				variant="ghost"
+				onclick={() => (editLayoutDialog = true)}
+			>
+				{#if currentLayout}
+					{currentLayout.name} ({currentLayout.columns})
+				{:else}
+					Layout
+				{/if}
+			</Button>
+		</div>
+
+		<!-- Mode Toggle Buttons -->
+		<ButtonGroup.Root>
+			{#each editModes as mode}
+				<Button
+					variant={editMode === mode.value ? 'bold' : 'ghost'}
+					onclick={() => setEditMode(mode.value)}
+				>
+					<Icon icon={mode.icon} />
+					{mode.name}
+				</Button>
+			{/each}
+		</ButtonGroup.Root>
+
+		<!-- Context Actions -->
+		<div
+			id="contextActions"
+			class="ml-auto flex flex-grow flex-wrap items-center justify-end gap-2"
+		>
+			{#if editMode === 'content' || editMode === 'layout'}
+				<Button
+					size="sm"
+					onclick={() => (addWidgetDialog = true)}
+					variant="bold"
+					tooltip="Add a new widget to the deck"
+				>
+					<Icon icon="mdi:plus" />
+					Add Widget
+				</Button>
+			{/if}
+
+			{#if editMode === 'content'}
+				<Button
+					size="sm"
+					onclick={() => (editDialog.open = true)}
+					variant="secondary"
+					tooltip="See all character fields"
+				>
+					<Icon icon="mdi:format-list-bulleted" />
+					Edit Character
+				</Button>
+			{/if}
+
+			<!-- Save Button -->
+			{#if editMode !== 'play' || unsaved}
+				<Button
+					size="sm"
+					onclick={() => handleSaveDeck(character)}
+					disabled={!unsaved}
+					variant="blossom"
+					spinner={{ id: 'save' }}
+				>
+					{#if unsaved}
+						<Icon icon="mdi:floppy" />
+						{isNewCharacter ? 'Create' : 'Save'}
+					{:else}
+						<Icon icon="mdi:check" />
+						Saved
+					{/if}
+				</Button>
+			{/if}
+		</div>
+	</div>
+
 	<!-- PLAYDECK -->
 	{#if deck}
 		<!-- Ensure deck is loaded -->
-		<Deck {character} bind:deck config={deckConfig} cards={userCards} />
+		<Deck
+			bind:this={deckRef}
+			{character}
+			bind:deck
+			config={deckConfig}
+			cards={userCards}
+			{editMode}
+			bind:unsaved
+			bind:editDialog
+			bind:currentLayout
+		/>
 	{:else}
 		Can't load deck...
 	{/if}
+
+	<!-- DIALOGS -->
+	<AddWidgetDialog
+		onAdd={(widgets) => {
+			if (deckRef) deckRef.addToDeck(widgets);
+		}}
+		{character}
+		bind:open={addWidgetDialog}
+	/>
+	<EditDialog
+		bind:open={editDialog.open}
+		cards={userCards}
+		componentID={editDialog.componentID}
+		{character}
+	/>
 {:catch error}<main class="content flex flex-col">
 		<h1 class="mb-4 text-2xl font-semibold">Error loading character</h1>
 		<p>{error}</p>
