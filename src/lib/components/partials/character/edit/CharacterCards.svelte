@@ -39,52 +39,54 @@
 	}
 </script>
 
-<div>
+<div class=" w-[99%] overflow-y-visible px-0">
 	{#if !cards || cards.length === 0}
 		<p class="text-sm text-muted-foreground">No cards available to add.</p>
 	{:else if showList}
-		<!-- SEARCHBOX -->
-		<CardSearchbox
-			placeholder="Search and add cards..."
-			{cards}
-			cardFilters={{
-				disabledCardIDs: cards.filter((card) => card.isCharacterCard).map((card) => card.id)
-			}}
-			onRemoveCard={async (card) => {
-				await verbose(
-					async () => {
-						// Remove card from character
-						const response = await CARD_API.removeFromCharacter({
-							characterId: character.id,
-							cards: [card.id]
-						});
-					},
-					{ successMessage: `Removed card "${card.name}" from character.` }
-				);
-				// Invalidate all to update character cards
-				rerender(); // Force rerender to update list
-				invalidateAll();
-			}}
-			onCardSelect={async (card) => {
-				await verbose(
-					async () => {
-						// Add card to character
-						const response = await CARD_API.addToCharacter({
-							characterId: character.id,
-							cards: [card.cardToPrisma()]
-						});
-					},
-					{ successMessage: `Added card "${card.name}" to character.` }
-				);
-				// Invalidate all to update character cards
-				invalidateAll();
-			}}
-		/>
+		<div class="sticky top-0 z-10 bg-background">
+			<!-- SEARCHBOX -->
+			<CardSearchbox
+				placeholder="Search and add cards..."
+				{cards}
+				cardFilters={{
+					disabledCardIDs: cards.filter((card) => card.isCharacterCard).map((card) => card.id)
+				}}
+				onRemoveCard={async (card) => {
+					await verbose(
+						async () => {
+							// Remove card from character
+							const response = await CARD_API.removeFromCharacter({
+								characterId: character.id,
+								cards: [card.id]
+							});
+						},
+						{ successMessage: `Removed card "${card.name}" from character.` }
+					);
+					// Invalidate all to update character cards
+					rerender(); // Force rerender to update list
+					invalidateAll();
+				}}
+				onCardSelect={async (card) => {
+					await verbose(
+						async () => {
+							// Add card to character
+							const response = await CARD_API.addToCharacter({
+								characterId: character.id,
+								cards: [card.cardToPrisma()]
+							});
+						},
+						{ successMessage: `Added card "${card.name}" to character.` }
+					);
+					// Invalidate all to update character cards
+					invalidateAll();
+				}}
+			/>
+		</div>
 		<!-- OVERVIEW OF CARDS -->
 		{#if cards.filter((card) => card.isCharacterCard).length > 0}
+			{@const list = cards.filter((card) => card.isCharacterCard)}
 			<EditList
-				class="max-h-96 overflow-y-auto"
-				list={cards.filter((card) => card.isCharacterCard)}
+				{list}
 				increase="hidden"
 				decrease="hidden"
 				remove={(index) => {
