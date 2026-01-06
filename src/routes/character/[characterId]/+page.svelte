@@ -6,12 +6,12 @@
 		type PrismaCharacterExtended
 	} from '$lib/domain/characters/character.svelte.js';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte.js';
+	import { characterMechanics } from '$lib/gameSystems';
 
 	// Stores
 	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte.js';
 
 	// Utils
-	import { ck } from '$lib/utils/storage/keys.js';
 	import type { UserID, CharacterID } from '$lib/domain/';
 	import { toast } from 'svelte-sonner';
 	import type { User as PrismaUser, Character as PrismaCharacter } from '@prisma/client';
@@ -24,13 +24,6 @@
 	import Icon from '@iconify/svelte';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Header } from '$lib/components/typography';
-
-	// Partials
-	import { CharacterGeneralFields } from '$lib/components/partials/character/edit/';
 
 	// Deck imports
 	import Deck from '$lib/components/playdeck/Deck.svelte';
@@ -43,9 +36,7 @@
 	// Svelte
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import { getContext, onMount } from 'svelte';
-	import CharacterCards from '$lib/components/partials/character/edit/CharacterCards.svelte';
-	import CharacterGameSystems from '$lib/components/partials/character/edit/CharacterGameSystems.svelte';
+	import { onMount } from 'svelte';
 
 	// Page init
 	const characterID = page.params.characterId;
@@ -205,51 +196,12 @@
 		<Spinner class="size-36" variant="Knight" />
 	</main>
 {:then character}
-	{#if isEditing}
-		<main class="content">
-			<div class="mb-6 flex flex-col gap-6">
-				<!-- CHARACTER EDITING -->
-				<CharacterGeneralFields {character} />
-				<CharacterCards {character} cards={userCards} />
-				<CharacterGameSystems {character} />
-			</div>
-
-			<!-- BUTTONS & CONTROLS -->
-			<div class="flex flex-row">
-				{#if isNewCharacter}
-					<Button
-						variant="success"
-						spinner={{ id: 'create' }}
-						onclick={() => createCharacter(character.toPrisma())}
-					>
-						<Icon icon="mdi:sparkles" />Create
-					</Button>
-				{:else}
-					<Button
-						variant="success"
-						spinner={{ id: 'save' }}
-						onclick={() => saveCharacter(character.toPrisma())}
-					>
-						<Icon icon="mdi:floppy" />Save
-					</Button>
-					<Button
-						variant="destructive"
-						spinner={{ id: 'delete' }}
-						onclick={() => deleteCharacter(character.toPrisma())}
-					>
-						<Icon icon="mdi:delete" />Delete
-					</Button>
-				{/if}
-			</div>
-		</main>
+	<!-- PLAYDECK -->
+	{#if deck}
+		<!-- Ensure deck is loaded -->
+		<Deck {character} bind:deck config={deckConfig} cards={userCards} />
 	{:else}
-		<!-- PLAYDECK -->
-		{#if deck}
-			<!-- Ensure deck is loaded -->
-			<Deck {character} bind:deck config={deckConfig} cards={userCards} />
-		{:else}
-			Can't load deck...
-		{/if}
+		Can't load deck...
 	{/if}
 {:catch error}<main class="content flex flex-col">
 		<h1 class="mb-4 text-2xl font-semibold">Error loading character</h1>
