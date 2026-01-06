@@ -2,6 +2,7 @@
 import CharacterGeneralFields from './CharacterGeneralFields.svelte';
 import CharacterCards from './CharacterCards.svelte';
 import CharacterGameSystems from './CharacterGameSystems.svelte';
+import CharacterEditAccordion from './CharacterEditAccordion.svelte';
 
 // Arcane Rift Specific
 import CharacterAspects from './arcaneRift/CharacterAspects.svelte';
@@ -17,7 +18,13 @@ import type { CharacterProperties } from '$lib/domain/characters/character.svelt
 import type { CharacterEditProps } from '$lib/components/partials/character/edit/propsType';
 import type { Component } from 'svelte';
 
-export { CharacterGeneralFields, CharacterCards, CharacterGameSystems, CharacterAspects };
+export {
+	CharacterGeneralFields,
+	CharacterCards,
+	CharacterGameSystems,
+	CharacterAspects,
+	CharacterEditAccordion
+};
 
 // Type helper to convert CharacterProperties to accordion dictionary structure
 type EditComponentDict = {

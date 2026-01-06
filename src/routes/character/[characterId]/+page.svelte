@@ -6,7 +6,7 @@
 		type PrismaCharacterExtended
 	} from '$lib/domain/characters/character.svelte.js';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte.js';
-	import { characterMechanics } from '$lib/gameSystems';
+	import { gameSystems } from '$lib/gameSystems';
 
 	// Stores
 	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte.js';
@@ -16,6 +16,7 @@
 	import { toast } from 'svelte-sonner';
 	import type { User as PrismaUser, Character as PrismaCharacter } from '@prisma/client';
 	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
+	import { characterEditComponentDict } from '$lib/components/partials/character/edit';
 
 	// API
 	import CHARACTER_API from '$lib/utils/api/characters_api';
@@ -34,7 +35,7 @@
 		defaultDeckConfig,
 		type DeckConfig
 	} from '$lib/components/playdeck/modules/deckConfig.js';
-	import EditDialog from '$lib/components/playdeck/components/EditDialog.svelte';
+	import EditDialog from './EditDialog.svelte';
 	import AddWidgetDialog from '$lib/components/playdeck/components/AddWidgetDialog.svelte';
 
 	// Svelte
@@ -42,6 +43,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { beforeNavigate } from '$app/navigation';
+	import CharacterEditAccordion from '$lib/components/partials/character/edit/CharacterEditAccordion.svelte';
 
 	// Page init
 	const characterID = page.params.characterId;
@@ -137,6 +139,11 @@
 			name: 'Layout',
 			value: 'layout',
 			icon: 'mdi:view-dashboard'
+		},
+		{
+			name: 'Edit',
+			value: 'edit',
+			icon: 'mdi:pencil'
 		}
 	];
 	let editMode: EditMode = $state(editModes[0].value);
@@ -168,6 +175,10 @@
 	let unsaved: boolean = $state(false);
 	let deckRef: Deck | undefined = $state();
 	let currentLayout: DeckConfig['layouts'][number] | undefined = $state();
+
+	// Edit Accordion stuff
+	let openAccordionItems: string[] = $state([]);
+	let listedAccordionItems: typeof characterEditComponentDict = $state({});
 
 	// Character promise resolving
 	$effect(() => {
@@ -343,30 +354,21 @@
 				</Button>
 			{/if}
 
-			{#if editMode === 'content'}
-				<Button
-					size="sm"
-					onclick={() => (editDialog.open = true)}
-					variant="secondary"
-					tooltip="See all character fields"
-				>
-					<Icon icon="mdi:format-list-bulleted" />
-					Edit Character
-				</Button>
-			{/if}
-
-			<!-- Save Button -->
-			{#if editMode !== 'play' || unsaved}
+			<!-- Save/Create Button -->
+			{#if isNewCharacter || editMode !== 'play' || unsaved}
 				<Button
 					size="sm"
 					onclick={() => handleSaveDeck(character)}
-					disabled={!unsaved}
+					disabled={!isNewCharacter && !unsaved}
 					variant="blossom"
 					spinner={{ id: 'save' }}
 				>
-					{#if unsaved}
+					{#if isNewCharacter}
+						<Icon icon="mdi:plus-circle" />
+						Create
+					{:else if unsaved}
 						<Icon icon="mdi:floppy" />
-						{isNewCharacter ? 'Create' : 'Save'}
+						Save
 					{:else}
 						<Icon icon="mdi:check" />
 						Saved
@@ -376,8 +378,56 @@
 		</div>
 	</div>
 
+	{#snippet accordion()}
+		<CharacterEditAccordion
+			{character}
+			cards={userCards}
+			showHeaders={true}
+			autoOpenItems={true}
+			bind:openItems={openAccordionItems}
+			bind:listedItems={listedAccordionItems}
+		/>
+	{/snippet}
+
 	<!-- PLAYDECK -->
-	{#if deck}
+	{#if isNewCharacter || editMode === 'edit'}
+		<div id="editCharacterGrid" class="mx-auto grid max-w-[1200px] grid-cols-[auto_1fr] px-2">
+			<div id="editBreadcrumbs" class="mr-4 flex flex-col border-r-1 border-threat-500 pr-4 pl-2">
+				{#each Object.entries(listedAccordionItems) as [systemKey, propertyComponents]}
+					<Header tag="h3" variant="h4" class="mt-4 mb-2">
+						{gameSystems[systemKey as keyof typeof gameSystems].name}
+					</Header>
+					{#each Object.entries(propertyComponents) as [propertyKey, content]}
+						<Button
+							size="sm"
+							variant={openAccordionItems.includes(`${systemKey}:${propertyKey}`)
+								? 'bold'
+								: 'ghost'}
+							class="justify-start"
+							onclick={() => {
+								const itemId = `${systemKey}:${propertyKey}`;
+								if (openAccordionItems.includes(itemId)) {
+									openAccordionItems = openAccordionItems.filter((id) => id !== itemId);
+								} else {
+									openAccordionItems = [...openAccordionItems, itemId];
+									setTimeout(() => {
+										const element = document.getElementById(itemId);
+										if (element) {
+											element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+											toast.info(`Navigated to ${content.name}`);
+										}
+									}, 200); // Wait for accordion animation
+								}
+							}}
+						>
+							{content.name}
+						</Button>
+					{/each}
+				{/each}
+			</div>
+			{@render accordion()}
+		</div>
+	{:else if deck}
 		<!-- Ensure deck is loaded -->
 		<Deck
 			bind:this={deckRef}
