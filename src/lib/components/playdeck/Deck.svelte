@@ -406,7 +406,6 @@
 			<Button
 				variant={editMode === mode.value ? 'bold' : 'ghost'}
 				onclick={() => setEditMode(mode.value)}
-				tooltip={`Switch to ${mode.name} mode`}
 			>
 				<Icon icon={mode.icon} />
 				{mode.name}

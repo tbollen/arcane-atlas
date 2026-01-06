@@ -40,7 +40,6 @@
 </script>
 
 <div>
-	<Label for="cards" class="mb-2">Cards</Label>
 	{#if !cards || cards.length === 0}
 		<p class="text-sm text-muted-foreground">No cards available to add.</p>
 	{:else if showList}
