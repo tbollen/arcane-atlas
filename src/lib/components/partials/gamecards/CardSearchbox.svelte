@@ -1,16 +1,15 @@
 <script lang="ts">
 	import * as InputGroup from '$lib/components/ui/input-group';
 	import Icon from '@iconify/svelte';
-	import { Button } from '$lib/components/ui/button';
 	import { iconExists } from '@iconify/svelte';
 	import ListItem from '$lib/components/partials/ListItem.svelte';
 	import GamecardModal from './GamecardModal.svelte';
 
-	import type { ComponentProps } from 'svelte';
+	import { onMount, type ComponentProps } from 'svelte';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte';
 	import { cardTypes } from '$lib/domain/cards/cardTypes';
 	import type { CharacterSystems } from '$lib/gameSystems';
-	import { goto, invalidate, invalidateAll, onNavigate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 
 	type InputProps = ComponentProps<typeof InputGroup.Input>;
 	type CardFilter = {
@@ -104,7 +103,6 @@
 
 	// Holder for focussing
 	let isFocussedOnInput: boolean = $state(false);
-	let isFocussedOnDropdown: boolean = $state(false);
 
 	// Proxy selector (hover but default to only one)
 	let proxyCardSelector: number = $state(0);
@@ -122,8 +120,14 @@
 		openModal = true;
 	}
 
-	// Datalist placement
-	let inputLocation;
+	onMount(() => {
+		proxyCardSelector = 0;
+		// Prevent from showing datalist onMount
+		isFocussedOnInput = false;
+		setTimeout(() => {
+			isFocussedOnInput = false;
+		}, 10);
+	});
 </script>
 
 <div class="group relative">
@@ -163,53 +167,7 @@
 			}}
 			{...restProps}
 		/>
-		<!-- Custom datalist - shown when focused within group and has search term -->
-		<div
-			id="customDatalist"
-			tabindex="-1"
-			class="pointer-events-none absolute top-[100%] right-0 left-0 z-50 mt-2 max-h-[50vh] overflow-y-auto rounded-xl border border-foreground/10 bg-background p-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100
-			"
-			class:hidden={searchTerm.trim() === '' && !isFocussedOnInput}
-		>
-			{#if sortedCards.length > 0}
-				{#each sortedCards as card, index}
-					{@const cardType = cardTypes.find((type) => type.name === card.type) || cardTypes[0]}
-					{@const icon = card.icon && iconExists(card.icon) ? card.icon : cardType.icon}
-					{@const isFilteredOut = filteredOutCards.some(
-						(filteredCard) => filteredCard.id === card.id
-					)}
-					<ListItem
-						icon={{ icon, style: `color: ${card.style.color.icon}` }}
-						class="hover:bg-unset {isFilteredOut
-							? '!cursor-not-allowed opacity-50'
-							: proxyCardSelector === index
-								? 'bg-obsidian-500/10'
-								: ''}"
-						handle={{
-							click: () => viewCardInModal(card),
-							variant: 'bold',
-							icon: 'mdi:eye'
-						}}
-						mainText={{
-							text: card.name,
-							style: `font-family: '${card.style.font.name}', 'Gotham', sans-serif;`
-						}}
-						subText={card.subtitle}
-						onclick={isFilteredOut
-							? undefined
-							: () => {
-									onCardSelect(card);
-									searchTerm = '';
-								}}
-						onmouseenter={() => {
-							proxyCardSelector = index;
-						}}
-					/>
-				{/each}
-			{:else}
-				<p class="p-2 text-sm text-muted-foreground">No cards found with term "{searchTerm}"</p>
-			{/if}
-		</div>
+
 		<InputGroup.Addon>
 			<Icon icon="mdi:magnify" />
 		</InputGroup.Addon>
@@ -227,6 +185,55 @@
 				><Icon icon="mdi:refresh" /></InputGroup.Button
 			>
 		</InputGroup.Addon>
+		<!-- Custom datalist - shown when focused within group and has search term -->
+		<div
+			id="customDatalist"
+			tabindex="-1"
+			class="pointer-events-none absolute top-[100%] right-0 left-0 z-50 mt-2 flex max-h-[50vh] flex-col rounded-xl border border-foreground/10 bg-background opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100
+			"
+			class:hidden={searchTerm.trim() === '' && !isFocussedOnInput}
+		>
+			<div class="overflow-y-auto p-2">
+				{#if sortedCards.length > 0}
+					{#each sortedCards as card, index}
+						{@const cardType = cardTypes.find((type) => type.name === card.type) || cardTypes[0]}
+						{@const icon = card.icon && iconExists(card.icon) ? card.icon : cardType.icon}
+						{@const isFilteredOut = filteredOutCards.some(
+							(filteredCard) => filteredCard.id === card.id
+						)}
+						<ListItem
+							icon={{ icon, style: `color: ${card.style.color.icon}` }}
+							class="hover:bg-unset {isFilteredOut
+								? '!cursor-not-allowed opacity-50'
+								: proxyCardSelector === index
+									? 'bg-obsidian-500/10'
+									: ''}"
+							handle={{
+								click: () => viewCardInModal(card),
+								variant: 'bold',
+								icon: 'mdi:eye'
+							}}
+							mainText={{
+								text: card.name,
+								style: `font-family: '${card.style.font.name}', 'Gotham', sans-serif;`
+							}}
+							subText={card.subtitle}
+							onclick={isFilteredOut
+								? undefined
+								: () => {
+										onCardSelect(card);
+										searchTerm = '';
+									}}
+							onmouseenter={() => {
+								proxyCardSelector = index;
+							}}
+						/>
+					{/each}
+				{:else}
+					<p class="p-2 text-sm text-muted-foreground">No cards found with term "{searchTerm}"</p>
+				{/if}
+			</div>
+		</div>
 	</InputGroup.Root>
 </div>
 

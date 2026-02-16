@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Svelte
 	import { goto, invalidateAll } from '$app/navigation';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	// Types
 	import type { WidthLayout } from '../../../routes/+layout.svelte';
 	// Stores
@@ -33,15 +34,16 @@
 	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
 
 	interface BaseRoute {
-		path: string;
-		name: string;
-		icon: string;
+		path: string; // Path to direct to. If "checkPath" is not provided, this will be used for active state checking as well (uses "startsWith" logic)
+		checkPath?: string; // Optional path to check for active state, defaults to path if not provided (uses "startsWith" logic)
+		name: string; // Display name of the route
+		icon: string; // Iconify icon string for the route
 		visibility?: boolean | 'drawerOnly';
 		description: string;
 		requiresLogin?: boolean;
-		disabled?: boolean;
+		blockActive?: (url: string, params: URLSearchParams) => boolean;
 	}
-	const routes: Array<BaseRoute> = [
+	const routes: Array<BaseRoute> = $derived([
 		{
 			path: '/',
 			name: 'Home',
@@ -61,7 +63,12 @@
 			icon: 'mdi:account',
 			path: 'character',
 			description: 'Character management and details',
-			requiresLogin: true
+			requiresLogin: true,
+			blockActive(url, params) {
+				const mode = params.get('mode');
+				if (!mode || mode === 'edit') return false; //If mode is edit, allow active state
+				return true; // otherwise, block active state to avoid conflict playdeck.
+			}
 		},
 
 		{
@@ -73,10 +80,16 @@
 
 		{
 			name: 'Playdeck',
-			path: 'playdeck',
+			path: activeCharacter ? `character/${activeCharacter.id}?mode=play` : 'playdeck',
+			checkPath: 'character/', // prevent complications with the derived path above
 			icon: 'mdi:view-dashboard',
 			description: 'Playdeck management and gameplay',
-			requiresLogin: true
+			requiresLogin: true,
+			blockActive(url, params) {
+				const mode = params.get('mode');
+				if (mode && mode === 'edit') return true; //If a mode is specified and it's not edit, block active state
+				return false; // otherwise, allow active state to avoid conflict character.
+			}
 		},
 
 		{
@@ -85,7 +98,7 @@
 			icon: 'mdi:information-outline',
 			description: 'How to use Arcane Atlas'
 		}
-	];
+	] satisfies Array<BaseRoute>);
 
 	// General routes accessible to all users
 	const generalRoutes: Array<BaseRoute> = [
@@ -144,6 +157,7 @@
 		]
 	} satisfies Record<string, Array<BaseRoute>>);
 
+	////////////////////////////////////////////
 	// Accept and handle server data
 	let {
 		data,
@@ -160,6 +174,8 @@
 
 	// CURRENT ROUTE / ACTIVE LINK HANDLING
 	let currentRoute: string = $derived(page.route.id ?? '/');
+	let searchParams = $derived(new SvelteURLSearchParams(page.url.search));
+
 	// Determine current mode based on route, find first
 	let currentMode: keyof typeof tabbedRoutes = $derived(
 		!data?.user
@@ -171,6 +187,27 @@
 				) ?? Object.keys(tabbedRoutes)[0]
 	) as keyof typeof tabbedRoutes;
 
+	// Function for active path checking
+	function pathIsActive(route: BaseRoute): boolean {
+		const checkPath = route.checkPath ?? route.path;
+		// If blockActive is provided, check FIRST if the path is allowed to be active
+		if (route.blockActive) {
+			console.warn(
+				'Route:',
+				route.name,
+				'URL Params:',
+				searchParams.toString(),
+				'Block Active:',
+				route.blockActive(currentRoute, searchParams)
+			);
+			if (route.blockActive(currentRoute, searchParams)) return false; //If blocked, can not be active
+			// If not blocked, check the "startsWith" logic as usual
+		}
+		// Check if URL starts with the route path (or checkPath if provided)
+		return currentRoute.startsWith(`/${checkPath}`);
+	}
+
+	// Helper functions
 	function closeDrawer() {
 		drawerOpen = false;
 	}
@@ -228,7 +265,7 @@ px-4 py-2 print:hidden"
 					<!-- BaseRoute -->
 					<Link
 						href="/{route.path}"
-						active={currentRoute == `/${route.path}`}
+						active={pathIsActive(route)}
 						tooltip={route.description}
 						variant="line"
 						onclick={closeDrawer}
@@ -359,7 +396,7 @@ px-4 py-2 print:hidden"
 							>
 								<Link
 									href="/{route.path}"
-									active={currentRoute == `/${route.path}`}
+									active={pathIsActive(route)}
 									variant="lineLeft"
 									class="w-max justify-start"
 									onclick={closeDrawer}

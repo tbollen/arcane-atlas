@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Header } from '$lib/components/typography';
 	import Mastery from '$lib/components/partials/arcaneRift/Mastery.svelte';
+	import { NumberBox } from '$lib/components/ui/number-box';
 
 	// Utils
 	import { AR_KEY } from '$lib/gameSystems';
@@ -31,33 +32,26 @@
 				Object.values(character.mechanics[AR_KEY].stats.characteristics)
 					.map((c) => c.value)
 					.reduce((sum, val) => sum + val, 0) >= rules.maxSum}
-			<div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
-				<p id="char-{char.name}" class=" col-span-full text-center font-semibold uppercase">
-					{char.name}
-				</p>
-				<div
-					id="char-{char.name}-value"
-					class=" col-span-full rounded-lg bg-obsidian-200 py-3 text-center text-xl"
-				>
-					{char.value}
-				</div>
-				<Button
-					variant={char.value <= rules.minValue ? 'ghost' : 'secondary'}
-					disabled={char.value <= rules.minValue}
-					onclick={() =>
-						verbose(() => character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value - 1))}
-				>
-					<Icon icon="mdi:minus" />
-				</Button>
-				<Button
-					variant={char.value >= rules.maxValue || maxSumReached ? 'ghost' : 'secondary'}
-					disabled={char.value >= rules.maxValue || maxSumReached}
-					onclick={() =>
-						verbose(() => character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value + 1))}
-				>
-					<Icon icon="mdi:plus" />
-				</Button>
-			</div>
+			<NumberBox
+				variant="box"
+				label={{ text: char.name, class: 'uppercase' }}
+				value={char.value}
+				min={rules.minValue}
+				max={rules.maxValue}
+				onIncrease={() =>
+					verbose(() => character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value + 1))}
+				onDecrease={() =>
+					verbose(() => character.fn[AR_KEY]!.updateCharacteristic(char.name, char.value - 1))}
+				disabled={{
+					increase: char.value >= rules.maxValue || maxSumReached
+				}}
+			>
+				{#snippet customValue(val)}
+					<div class="col-span-full rounded-lg bg-obsidian-200 py-3 text-center text-xl">
+						{val}
+					</div>
+				{/snippet}
+			</NumberBox>
 		{/each}
 	</div>
 	<!-- SKILLS -->
@@ -87,27 +81,26 @@
 							<!-- Name -->
 							<p class="font-semibold">{skill.name}</p>
 							<!-- Value controls -->
-							<div id="char-{skill.name}-valuecontrol" class="flex w-max items-center gap-2">
-								<Button
-									variant="bold"
-									disabled={skill.value <= 0}
-									onclick={() =>
-										verbose(() => character.fn[AR_KEY]!.updateSkill(skill, skill.value - 1))}
-									><Icon icon="mdi:minus" /></Button
-								>
-								<Mastery
-									value={skill.value}
-									max={rules.maxMastery}
-									class="h-8 w-max border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
-								/>
-								<Button
-									variant="bold"
-									disabled={skill.value >= rules.maxMastery || maxSumReached}
-									onclick={() =>
-										verbose(() => character.fn[AR_KEY]!.updateSkill(skill, skill.value + 1))}
-									><Icon icon="mdi:plus" /></Button
-								>
-							</div>
+							<NumberBox
+								min={0}
+								max={rules.maxMastery}
+								disabled={{
+									increase: skill.value >= rules.maxMastery || maxSumReached
+								}}
+								value={skill.value}
+								onIncrease={() =>
+									verbose(() => character.fn[AR_KEY]!.updateSkill(skill, skill.value + 1))}
+								onDecrease={() =>
+									verbose(() => character.fn[AR_KEY]!.updateSkill(skill, skill.value - 1))}
+							>
+								{#snippet customValue(val)}
+									<Mastery
+										value={val}
+										max={rules.maxMastery}
+										class="h-8 w-max border-t-2 border-b-2 border-obsidian-500/20 px-3 text-center"
+									/>
+								{/snippet}
+							</NumberBox>
 						{/if}
 					{/each}
 				</div>

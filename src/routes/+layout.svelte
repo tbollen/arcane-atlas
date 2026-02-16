@@ -109,14 +109,15 @@
 		{/if}
 	</div>
 {/if}
+
 <!-- FOOTER -->
-<footer
+<!-- <footer
 	class="border-t-2 border-threat-500 bg-obsidian-50 px-4 py-2
 	text-center print:hidden"
 	style="margin-top: {navbarHeight}px;"
 >
 	<p class="text-sm text-muted-foreground">© 2025 Arcane Atlas. All rights reserved.</p>
-</footer>
+</footer> -->
 
 <style>
 	:global(main section) {

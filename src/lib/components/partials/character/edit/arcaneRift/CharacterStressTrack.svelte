@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Header } from '$lib/components/typography';
+	import { NumberBox } from '$lib/components/ui/number-box';
 
 	// Utils
 	import { AR_KEY } from '$lib/gameSystems';
@@ -34,32 +35,19 @@
 					</p>
 				</div>
 				<!-- Value controls -->
-				<div
-					id="char-{stressTrack.variant}-valuecontrol"
-					class="flex w-max flex-shrink-0 items-center gap-2"
-				>
-					<Button
-						variant="bold"
-						disabled={stressTrack.max <= 1}
-						onclick={() =>
-							verbose(() =>
-								character.fn[AR_KEY]!.setStressTrackMax(stressTrack.variant, stressTrack.max - 1)
-							)}><Icon icon="mdi:minus" /></Button
-					>
-					<div
-						class="flex h-8 w-14 items-center justify-center border-t-2 border-b-2 border-obsidian-500/20 px-3"
-					>
-						{stressTrack.max}
-					</div>
-					<Button
-						variant="bold"
-						disabled={stressTrack.max >= rules.maxAllowed}
-						onclick={() =>
-							verbose(() =>
-								character.fn[AR_KEY]!.setStressTrackMax(stressTrack.variant, stressTrack.max + 1)
-							)}><Icon icon="mdi:plus" /></Button
-					>
-				</div>
+				<NumberBox
+					value={stressTrack.max}
+					min={1}
+					max={rules.maxAllowed}
+					onIncrease={() =>
+						verbose(() =>
+							character.fn[AR_KEY]!.setStressTrackMax(stressTrack.variant, stressTrack.max + 1)
+						)}
+					onDecrease={() =>
+						verbose(() =>
+							character.fn[AR_KEY]!.setStressTrackMax(stressTrack.variant, stressTrack.max - 1)
+						)}
+				/>
 			</div>
 		{/each}
 	</div>

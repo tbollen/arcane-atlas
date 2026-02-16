@@ -6,6 +6,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button/';
 	import { Badge } from '$lib/components/ui/badge';
+	import SystemBadge from '$lib/components/ui/badge/systemBadge.svelte';
 
 	// Utils
 	import type { StoredCharacter } from '$lib/domain/characters/character.svelte.js';
@@ -48,7 +49,10 @@
 			<Button
 				class="place-self-center text-inherit"
 				variant="link"
-				href="/character/{character.id}?edit=1"
+				href="/character/{character.id}?mode=edit"
+				onclick={() => {
+					setActiveCharacter(character);
+				}}
 			>
 				Edit
 				<Icon icon="mdi:pencil" />
@@ -62,9 +66,9 @@
 		</p>
 	</div>
 	<footer id="footer" class=" flex flex-col gap-0.5 bg-obsidian-500/5 px-1 py-2 text-start">
-		<div id="badgeRow" class="flex flex-row flex-wrap items-center">
+		<div id="badgeRow" class="flex flex-row flex-wrap items-center gap-2">
 			{#each character.systems as system}
-				<Badge variant="bold" class="h-min">{system}</Badge>
+				<SystemBadge gameSystem={system} class="h-min" />
 			{/each}
 			<Button
 				class="ml-auto"

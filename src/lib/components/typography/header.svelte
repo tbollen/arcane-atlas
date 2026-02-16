@@ -37,7 +37,7 @@
 	let {
 		ref = $bindable(null),
 		children,
-		variant,
+		variant = 'h1',
 		addition = 'none',
 		tag,
 		class: className,

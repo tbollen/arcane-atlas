@@ -1,77 +1,25 @@
 <script lang="ts">
 	// Class and type imports
-	import {
-		CharacterStore,
-		StoredCharacter,
-		type PrismaCharacterExtended
-	} from '$lib/domain/characters/character.svelte.js';
+	import { StoredCharacter } from '$lib/domain/characters/character.svelte.js';
 	import { StoredCard } from '$lib/domain/cards/cardStore.svelte.js';
 
-	// Stores
-	import { activeCharacter as activeCharacterStore } from '$lib/stores/activeCharacter.svelte.js';
-
 	// Utils
-	import { ck } from '$lib/utils/storage/keys.js';
-	import type { UserID, CharacterID } from '$lib/domain/';
+	import type { UserID } from '$lib/domain/';
 	import { toast } from 'svelte-sonner';
-	import type { User as PrismaUser, Character as PrismaCharacter } from '@prisma/client';
-	import { spinner } from '$lib/stores/loadingSpinner.svelte.js';
-
-	// API
-	import CHARACTER_API from '$lib/utils/api/characters_api';
+	import type { User as PrismaUser } from '@prisma/client';
 
 	// UI Components
 	import Icon from '@iconify/svelte';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Header } from '$lib/components/typography';
-
-	// Partials
-	import { CharacterGeneralFields } from '$lib/components/partials/character/edit/';
-
-	// Deck imports
-	import Deck from '$lib/components/playdeck/Deck.svelte';
-	import { fallbackDeck, type StoredDeck } from '$lib/components/playdeck';
-	import {
-		defaultDeckConfig,
-		type DeckConfig
-	} from '$lib/components/playdeck/modules/deckConfig.js';
 
 	// Svelte
-	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import { getContext, onMount } from 'svelte';
-	import CharacterCards from '$lib/components/partials/character/edit/CharacterCards.svelte';
-	import CharacterGameSystems from '$lib/components/partials/character/edit/CharacterGameSystems.svelte';
+	import CharacterPage from './CharacterPage.svelte';
 
 	// Page init
 	const characterID = page.params.characterId;
 	let isNewCharacter: boolean = $derived(characterID == 'new');
-	// svelte-ignore state_referenced_locally
-	let isEditing: boolean = $state(isNewCharacter);
-
-	///////////////////////////////////////
-	// Active character
-	let characterIsResolved: boolean = $state(false);
-	let activeCharacter = $derived(activeCharacterStore.activeCharacter);
-	$effect(() => {
-		// If the active character changes, and it's not the current character, redirect to that character's page
-		if (window && characterIsResolved && activeCharacter && activeCharacter.id !== characterID) {
-			if (characterID === 'new' && isNewCharacter) return; // Don't redirect if creating new character
-			// Ask for confirmation before redirecting
-			const confirm = window.confirm(
-				'The active character has changed. Do you want to switch to the new character?'
-			);
-			if (confirm) {
-				window.location.href = `/character/${activeCharacter.id}${isEditing ? '?edit=1' : ''}`;
-			}
-		}
-	});
-
-	///////////////////////////////////////
 
 	// Get props data
 	let { data } = $props();
@@ -96,7 +44,6 @@
 		// If slug is 'new', create new character
 		if (characterID == 'new') {
 			let character = StoredCharacter.new({ userId: data.user.id as UserID });
-			isNewCharacter = true;
 			resolve(character);
 		}
 		// Check if character exists in database
@@ -107,7 +54,6 @@
 					character: data.character,
 					user: data.user as PrismaUser
 				});
-				// let character = characterStore.getCharacter(characterID ?? '');
 				resolve(character);
 			} catch (error) {
 				toast.error(`Error loading character: ${error}`);
@@ -115,87 +61,6 @@
 			}
 		}
 	});
-
-	////////////////////////
-	// DECK
-	let deck: StoredDeck | undefined = $state(); //local state to allow reactivity, without binding to character
-	// Deck config TODO: make editable and add sb entry
-	const deckConfig: DeckConfig = defaultDeckConfig;
-
-	// Character promise resolving
-	$effect(() => {
-		characterPromise.then((character) => {
-			deck = character.deck ?? fallbackDeck;
-			// Notify user
-			toast.success(`Loaded character: ${character.name}`);
-
-			// Set active character store
-			activeCharacterStore.set(character);
-			characterIsResolved = true;
-		});
-	});
-
-	onMount(() => {
-		const urlParams = new URLSearchParams(window.location.search);
-		if (urlParams.get('edit') == '1' || isNewCharacter) {
-			isEditing = true;
-		}
-	});
-
-	// FUNCTIONS
-	// API shorthands with UI feedback
-	function deleteCharacter(character: PrismaCharacter) {
-		if (confirm('Are you sure you want to delete this character?')) {
-			spinner.set('delete', 'Deleting...');
-			CHARACTER_API.delete(character)
-				.then(() => {
-					toast.success('Character deleted');
-					window.location.href = '/character';
-				})
-				.catch((error) => {
-					toast.error(`Error deleting character: ${error}`);
-				})
-				.finally(() => {
-					setTimeout(() => {
-						spinner.complete();
-					}, 500);
-				});
-		}
-	}
-
-	function createCharacter(character: PrismaCharacter) {
-		spinner.set('create', 'Creating...');
-		CHARACTER_API.create(character)
-			.then(() => {
-				toast.success('Character created');
-				goto(`/character/${character.id}`);
-			})
-			.catch((error) => {
-				toast.error(`Error creating character: ${error}`);
-			})
-			.finally(() => {
-				setTimeout(() => {
-					spinner.complete();
-				}, 500);
-			});
-	}
-
-	function saveCharacter(character: PrismaCharacter) {
-		spinner.set('save', 'Saving...');
-		CHARACTER_API.update(character)
-			.then(() => {
-				toast.success('Character updated');
-			})
-			.catch((error) => {
-				toast.error(`Error updating character: ${error}`);
-			})
-			.finally(() => {
-				setTimeout(() => {
-					spinner.complete();
-					invalidateAll();
-				}, 500);
-			});
-	}
 </script>
 
 {#await characterPromise}
@@ -205,57 +70,13 @@
 		<Spinner class="size-36" variant="Knight" />
 	</main>
 {:then character}
-	{#if isEditing}
-		<main class="content">
-			<div class="mb-6 flex flex-col gap-6">
-				<!-- CHARACTER EDITING -->
-				<CharacterGeneralFields {character} />
-				<CharacterCards {character} cards={userCards} />
-				<CharacterGameSystems {character} />
-			</div>
-
-			<!-- BUTTONS & CONTROLS -->
-			<div class="flex flex-row">
-				{#if isNewCharacter}
-					<Button
-						variant="success"
-						spinner={{ id: 'create' }}
-						onclick={() => createCharacter(character.toPrisma())}
-					>
-						<Icon icon="mdi:sparkles" />Create
-					</Button>
-				{:else}
-					<Button
-						variant="success"
-						spinner={{ id: 'save' }}
-						onclick={() => saveCharacter(character.toPrisma())}
-					>
-						<Icon icon="mdi:floppy" />Save
-					</Button>
-					<Button
-						variant="destructive"
-						spinner={{ id: 'delete' }}
-						onclick={() => deleteCharacter(character.toPrisma())}
-					>
-						<Icon icon="mdi:delete" />Delete
-					</Button>
-				{/if}
-			</div>
-		</main>
-	{:else}
-		<!-- PLAYDECK -->
-		{#if deck}
-			<!-- Ensure deck is loaded -->
-			<Deck {character} bind:deck config={deckConfig} cards={userCards} />
-		{:else}
-			Can't load deck...
-		{/if}
-	{/if}
-{:catch error}<main class="content flex flex-col">
+	<CharacterPage {character} {userCards} characterID={characterID!} {isNewCharacter} />
+{:catch error}
+	<main class="content flex flex-col">
 		<h1 class="mb-4 text-2xl font-semibold">Error loading character</h1>
 		<p>{error}</p>
-		<Button class="mx-auto mt-4" variant="destructive" href="/character"
-			><Icon icon="mdi:arrow-left" />Back to Character overview</Button
-		>
+		<Button class="mx-auto mt-4" variant="destructive" href="/character">
+			<Icon icon="mdi:arrow-left" />Back to Character overview
+		</Button>
 	</main>
 {/await}
