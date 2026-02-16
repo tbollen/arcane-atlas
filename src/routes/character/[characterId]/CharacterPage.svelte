@@ -89,10 +89,8 @@
 		const foundMode = editModes.find((m) => m.value === mode)?.value;
 		// Set mode or default to first mode
 		editMode = foundMode ?? editModes[0].value;
-		// Update url params
-		const url = new URL(window.location.href);
-		url.searchParams.set('mode', editMode);
-		window.history.replaceState({}, '', url.toString());
+		// Update url params using goto (reactive)
+		goto(`?mode=${editMode}`, { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
 	// Dialog state
