@@ -372,7 +372,6 @@
 									const element = document.getElementById(itemId);
 									if (element) {
 										element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-										toast.info(`Navigated to ${content.name}`);
 									}
 								}, 200); // Wait for accordion animation
 							}
